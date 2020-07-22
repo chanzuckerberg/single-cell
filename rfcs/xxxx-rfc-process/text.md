@@ -32,7 +32,7 @@ The following are the steps to writing and approving a new RFC (not modifying):
 5. When you are ready for review, create a pull request. Add your approvers (and any other people you'd like to review your work) as reviewers on the PR. 
 6. As a courtesy, post a heads up on the [#org-sci-eng-single-cell](https://chanzuckerbergteam.slack.com/archives/GQGPP7925) Slack channel that there is a design available for review, specifically calling out the approvers. Generally, two weeks is nice for substantial designs to get reviewed, but use your best judgement on how much time you'd like for your design to be under review.
 7. Once all comments are addressed and the *approvers* have approved your pull request, **change the name of your directory** from `XXXX-name-of-rfc` to pick the next number (for example, this one will be `0000-rfc-process`).
-8. Push your design! Delete your branch! Close your design ticket! Code away!
+8. Merge your PR! Delete your branch! Close your design ticket! Code away!
 
 
 ## How to update an existing RFC
