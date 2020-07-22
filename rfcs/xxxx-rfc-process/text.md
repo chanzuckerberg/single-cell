@@ -2,9 +2,9 @@
 
 **Authors:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com)
 
-**Approvers:** [Timmy Huang](mailto:thuang@chanzuckerberg.com), [Marcus Kinsella](mkinsella@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com)
+**Approvers:** [Timmy Huang](mailto:thuang@chanzuckerberg.com), [Marcus Kinsella](mkinsella@chanzuckerberg.com)
 
-**Reviewers:** [Madison Dunitz](madison.dunitz@chanzuckerberg.com), [Brian McCandless](bmccandless@chanzuckerberg.com), [Trent Smith](trent.smith@chanzuckerberg.com), [Colin Megill](colin.megill@chanzuckerberg.com), [Seve Badajoz](sbadajoz@chanzuckerberg.com)
+**Reviewers:** [Madison Dunitz](madison.dunitz@chanzuckerberg.com), [Brian McCandless](bmccandless@chanzuckerberg.com), [Trent Smith](trent.smith@chanzuckerberg.com), [Colin Megill](colin.megill@chanzuckerberg.com), [Seve Badajoz](sbadajoz@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com)
 
 ## tl;dr 
 

@@ -11,7 +11,6 @@
 
 This section should be one or two sentences describing the overall gist of the design. Someone should be able to read it and understand whether they should (or want) to continue reading the whole document.
 
-
 ## Problem Statement | Background
 
 This section should provide some details on why you are creating this design. What problems are you trying to solve here?
