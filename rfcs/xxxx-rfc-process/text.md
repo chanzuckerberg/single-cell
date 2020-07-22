@@ -1,4 +1,4 @@
-# RFC Process <img style="float: right;" src="./imgs/monkey_mascot.jpg">
+# RFC Process <img style="float: right; width: 20px" src="./imgs/monkey_mascot.jpg">
 
 **Authors:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com)
 
