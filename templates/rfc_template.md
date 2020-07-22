@@ -7,7 +7,7 @@
 
 **Approvers:** [Friendly Tech Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly PM Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly Tech Person2](mailto:some.nice.person@chanzuckerberg.com)
 
-##tl;dr 
+## tl;dr 
 
 This section should be one or two sentences describing the overall gist of the design. Someone should be able to read it and understand whether they should (or want) to continue reading the whole document.
 
