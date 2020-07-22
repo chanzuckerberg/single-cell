@@ -37,7 +37,9 @@ The following are the steps to writing and approving a new RFC (not modifying):
 
 ## How to update an existing RFC
 
-The following are the steps to revising an existing RFC:
+Minor and trivial changes may be made freely, with no announcement by the author(s) of the RFCs. Such changes include correcting typos, re-wordings, and the like.
+
+If the change is major, the following are the steps to revising an existing RFC:
 
 1. Create a new branch of the `cellxgene-rfcs` repo.
 2. Make your changes in the appropriate RFC. If there are new approvers, **append** them to the list of approvers at the top of the RFC.
