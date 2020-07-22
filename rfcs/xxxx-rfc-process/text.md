@@ -15,7 +15,7 @@ This RFC contains the details about the RFC process for all cellxgene related de
 
 Previously the "RFC" (a.k.a. "design doc review") process was executed on Google Docs. There were two problems
 
-1. Updates were quite tricky to make. Do you update the doc directly? Do you have a changelog? which version is latest? Do you need to apply the change in the changelog in the body of the doc? 
+1. Updates were quite tricky to make. Do you update the doc directly? Do you have a changelog? Wghich version is latest? Do you need to apply the change in the changelog in the body of the doc? 
 2. Designs decisions were not easily accessibly by our external community. How does the external community, with whom we have a close relationship, keep track of our decisions and progress if the designs are hidden in a private Google Drive?
 
 In order to alleviate these questions and concerns, we have moved to Github to keep track of our RFCs moving forward.
