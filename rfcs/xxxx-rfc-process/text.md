@@ -32,7 +32,7 @@ The following are the steps to writing and approving a new RFC (not modifying):
 5. When you are ready for review, create a pull request. Add your approvers (and any other people you'd like to review your work) as reviewers on the PR. Please note that [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com) and [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com) are required Reviewers for all RFCs so that CZI Central Infra and CZI Security teams are aware of cellxgene technical work. They may be removed as reviewers if the RFC is non-technical. 
 6. As a courtesy, post a heads up on the [#org-sci-eng-single-cell](https://chanzuckerbergteam.slack.com/archives/GQGPP7925) Slack channel that there is a design available for review, specifically calling out the approvers. Generally, two weeks is nice for substantial designs to get reviewed, but use your best judgement on how much time you'd like for your design to be under review.
 7. Once all comments are addressed and the *approvers* have approved your pull request, **change the name of your directory** from `XXXX-name-of-rfc` to pick the next number (for example, this one will be `0000-rfc-process`).
-8. Push your design! Delete your branch! Close your design ticket! Code away!
+8. Merge your PR! Delete your branch! Close your design ticket! Code away!
 
 
 ## How to update an existing RFC
@@ -43,7 +43,7 @@ The following are the steps to revising an existing RFC:
 2. Make your changes in the appropriate RFC. If there are new approvers, **append** them to the list of approvers at the top of the RFC.
 3. Create a pull request. This is probably the most important step and most different step from creating a branch new RFC. In the top level comment of the pull request, ensure that you succinctly summarize the changes. Also note in the top level comment of the RFC who the approvers are of the specific pull request. This is done so that later in `blame` you can easily find out the commits that affected a file (RFC) and who was involved.
 4. As a courtesy, post a heads up on the [#org-sci-eng-single-cell](https://chanzuckerbergteam.slack.com/archives/GQGPP7925) Slack channel that there is a design modification available for review, specifically calling out the approvers. Use your best judgement on how much time you'd like for your modification to be under review, but roughly should be anywhere from a couple days to 2 weeks, depending on the size of the change. Note that huge changes like re-architecting probably warrants its own RFC.
-5. Once all comments are addressed and the *approvers* have approved your pull request, push the change!
+5. Once all comments are addressed and the *approvers* have approved your pull request, merge the PR!
 6. Delete your branch.
 
 
