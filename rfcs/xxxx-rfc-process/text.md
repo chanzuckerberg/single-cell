@@ -21,6 +21,16 @@ Previously the "RFC" (a.k.a. "design doc review") process was executed on Google
 In order to alleviate these questions and concerns, we have moved to Github to keep track of our RFCs moving forward.
 
 
+## When do you need to create an RFC?
+
+- Your project will take more than 1 month to complete.
+- Your project affects more than 1 discipline (i.e. requires frontend work and backend work).
+- Your idea outlines a core abstraction of the project upon which other features will be built.
+- Your project would benefit from an in-depth review and discussion from your peers.
+- You'd like to have a record of an investigative project that you did that recommends future work direction. (See [IETF Informational RFCs](https://www.ietf.org/standards/process/informational-vs-experimental/))
+
+Generally, err on the side of writing a small RFC over implementing a project without a written design.
+
 ## How to create a new RFC
 
 The following are the steps to writing and approving a new RFC (not modifying):
