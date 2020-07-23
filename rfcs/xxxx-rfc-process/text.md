@@ -4,7 +4,7 @@
 
 **Approvers:** [Timmy Huang](mailto:thuang@chanzuckerberg.com), [Marcus Kinsella](mailto:mkinsella@chanzuckerberg.com)
 
-**Reviewers:** [Madison Dunitz](madison.dunitz@chanzuckerberg.com), [Brian McCandless](bmccandless@chanzuckerberg.com), [Trent Smith](trent.smith@chanzuckerberg.com), [Colin Megill](colin.megill@chanzuckerberg.com), [Seve Badajoz](sbadajoz@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com)
+**Reviewers:** [Madison Dunitz](mailto:madison.dunitz@chanzuckerberg.com), [Brian McCandless](mailto:bmccandless@chanzuckerberg.com), [Trent Smith](mailto:trent.smith@chanzuckerberg.com), [Colin Megill](mailto:colin.megill@chanzuckerberg.com), [Seve Badajoz](mailto:sbadajoz@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com)
 
 ## tl;dr 
 
