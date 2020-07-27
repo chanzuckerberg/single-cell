@@ -1,0 +1,40 @@
+{
+  "name": "cellxgene-rfcs",
+  "version": "1.0.0",
+  "description": "This repository contains a collection of documents that reflect various design decisions that have been made for the cellxgene project. The `templates` directory contains templates which can be copied in order to create a new RFC. The `rfcs` directory contains a list of approved RFCs. The process followed by development team to create and approve an RFC will be the first RFC.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chanzuckerberg/cellxgene-rfcs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chanzuckerberg/cellxgene-rfcs/issues"
+  },
+  "homepage": "https://github.com/chanzuckerberg/cellxgene-rfcs#readme",
+  "devDependencies": {
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.11",
+    "markdownlint": "^0.20.4",
+    "prettier": "^2.0.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,css}": "prettier --write",
+    "*.md": [
+      "markdownlint",
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "markdownlint-cli": "^0.23.2"
+  }
+}
