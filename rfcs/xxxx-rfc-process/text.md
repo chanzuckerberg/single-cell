@@ -35,7 +35,7 @@ Generally, err on the side of writing a small RFC over implementing a project wi
 
 The following are the steps to writing and approving a new RFC (not modifying):
 
-1. Create a new branch of the `cellxgene-rfcs` repo.
+1. Create a new branch of the `cellxgene-rfcs` repo. Suggested branch naming: `username/name-of-rfc-title`.
 2. Create a new directory under the `rfcs` directory named `XXXX-name-of-rfc`, where `name-of-rfc` is the name of your RFC, not those words directly.
 3. Copy over the contents of the `templates` directory into your newly created directory. This contains a folder for images and the RFC template.
 4. Rename `rfc_template.md` to `text.md` and edit it. Add images that you'd like to include in the `imgs` folder.
@@ -51,7 +51,7 @@ Minor and trivial changes may be made freely, with no announcement by the author
 
 If the change is major, the following are the steps to revising an existing RFC:
 
-1. Create a new branch of the `cellxgene-rfcs` repo.
+1. Create a new branch of the `cellxgene-rfcs` repo. Suggested branch naming: `username/name-of-rfc-title-amendment`.
 2. Make your changes in the appropriate RFC. If there are new approvers, **append** them to the list of approvers at the top of the RFC.
 3. Create a pull request. This is probably the most important step and most different step from creating a branch new RFC. In the top level comment of the pull request, ensure that you succinctly summarize the changes. The commit message should be a complete summary of the changes and why there were made. Also note in the top level comment of the RFC who the approvers are of the specific pull request. The thoroughness in the commit messages and top level comment is required so that the history of the RFC is much more easily accessible and comprehensible.
 4. As a courtesy, post a heads up on the [#org-sci-eng-single-cell](https://chanzuckerbergteam.slack.com/archives/GQGPP7925) Slack channel that there is a design modification available for review, specifically calling out the approvers. Use your best judgement on how much time you'd like for your modification to be under review, but roughly should be anywhere from a couple days to 2 weeks, depending on the size of the change. Note that huge changes like re-architecting probably warrants its own RFC.
