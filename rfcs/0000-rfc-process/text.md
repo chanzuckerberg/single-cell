@@ -35,7 +35,7 @@ Generally, err on the side of writing a small RFC over implementing a project wi
 
 The following are the steps to writing and approving a new RFC (not modifying):
 
-1. Create a new branch of the `cellxgene-rfcs` repo. Suggested branch naming: `username/name-of-rfc-title`.
+1. Create a new branch of the `chanzuckerberg/single-cell` repo. Suggested branch naming: `username/name-of-rfc-title`.
 2. Create a new directory under the `rfcs` directory named `XXXX-name-of-rfc`, where `name-of-rfc` is the name of your RFC, not those words directly.
 3. Copy over the contents of the `templates` directory into your newly created directory. This contains a folder for images and the RFC template.
 4. Rename `rfc_template.md` to `text.md` and edit it. Add images that you'd like to include in the `imgs` folder.
