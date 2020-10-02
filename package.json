@@ -30,8 +30,8 @@
   "lint-staged": {
     "*.{js,css}": "prettier --write",
     "*.md": [
-      "markdownlint",
-      "prettier --write"
+      "prettier --write",
+      "markdownlint --fix"
     ]
   },
   "dependencies": {
