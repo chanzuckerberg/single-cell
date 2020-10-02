@@ -61,8 +61,8 @@ This process was initially done on Google Docs. As mentioned earlier, the proces
 
 ## References
 
-[0][ietf's github process](https://tools.ietf.org/html/draft-ietf-git-using-github-06)
+\[0][IETF's Github Process](https://tools.ietf.org/html/draft-ietf-git-using-github-06)
 
-[1][google developer documentation style guide](https://developers.google.com/style/highlights#introduction_1)
+\[1][Google Developer Documentation Style Guide](https://developers.google.com/style/highlights#introduction_1)
 
-[2][data coordination platform rfc process](https://github.com/HumanCellAtlas/dcp-community/blob/master/rfcs/text/0001-rfc-process.md)
+\[2][Data Coordination Platform RFC Process](https://github.com/HumanCellAtlas/dcp-community/blob/master/rfcs/text/0001-rfc-process.md)
