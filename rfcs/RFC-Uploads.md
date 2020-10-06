@@ -1,7 +1,7 @@
 # User Uploads
 
 
-## for the cellxgene Data Portal
+## For the cellxgene Data Portal
 
 **Authors:** [Trent Smith](mailto:trent.smith@chanzuckerberg.com)
 
@@ -16,14 +16,12 @@ A user can upload files of any size to Data Portal using either a shared link fr
 - CSP(Cloud Storage Provider) - Cloud storage services such as Dropbox or Google Drive.
 - Shared Link - A link from a CSP that give the bearer of that link access to private data.
 - DP(Data Portal) - The cellxgene Data Portal.
-- NF(non-functional) - refers to a non functional requirement.
-- F(functional requirement) - refers to a functional requirement.
 - Small File - a file < 5 GB in size.
 - Large File - a file > 5 GB in size.
 
 ## Problem Statement | Background
 
-One of the primary goals of the DP is to allow users to upload their own dataset. These data set can vary in
+One of the primary goals of the DP is to allow users to upload their own data sets. These data sets can vary in
 size from a few MB to several GB. User may want to upload from their local machine or from their CSP. For
 user that want to upload from their local machine, they must be able to resume an upload in the event their connection
 is interrupted. For users that want to upload data sets from their CSP, they are able to provide a shared link from
@@ -41,64 +39,73 @@ their CSP that we can used to upload directly to our storage.
 Nonfunctional requirements are not directly related to the user story but may instead reflect some technical aspect of the implementation, such as latency. [Here's](https://en.wikipedia.org/wiki/Non-functional_requirement) a more comprehensive list of nonfunctional requirements.
 
 
-1. NF: Cloud to Cloud uploads will retry if they fail.
-1. NF: A user can upload a single file up to 30GB in size.
+1. Cloud to Cloud uploads will retry if they fail.
+1. A user can upload a single file up to 30GB in size.
 
 ## Detailed Design | Architecture | Implementation
 ![Upload Design](https://app.lucidchart.com/publicSegments/view/a74f747f-d071-41ea-949f-52f38a98747a/image.png)
 Figure 1: The Upload Design
 
 ### Data Portal Browser App
-The Data Portal Browser App will be used authenticate the user, and interact with the Data Portal Backend to upload files.
-It will also use AWS JS SDK to upload files from local storage to AWS. These feature will extend the existing Data Portal
+The DP Browser App will be used authenticate the user, and interact with the DP Backend to upload files.
+It will also use AWS JS SDK to upload files from local storage to AWS. These feature will extend the existing DP
 Frontend.
 
 ### Data Portal Backend
-The Data Portal Backend is responsible for handling users requests. It will generated presigned URL and access tokens 
-for the Data Portal Browser App to facilitate the uploading of files. It will also enqueue shared links for downloading.
-This additional functionality can be built into the existing Data Portal Backend Lambda.
+The DP Backend is responsible for handling users requests. It will generated presigned URL and access tokens 
+for the DP Browser App to facilitate the uploading of files. It will also enqueue shared links for downloading.
+This additional functionality can be built into the existing DP Backend Lambda.
 
 ### Download Queue
 The Download Queue is an [AWS SQS](https://aws.amazon.com/sqs/) that will track pending and in progress download jobs.
 
+#### Download Job Entry
+These are the fields that will be in the download job placed in the queue:
+- Link - a to the link to download. Use to retrieve the file from CSP.
+- collect_id - identifies the collection. Used to determine the storage location.
+- dataset_id - identifies the dataset. Used to determine the storage location
+- asset_id - identifies the asset. Used to determine the storage location, and file name.
+- file size - the size of the asset to download. Used to determine the download method, and EC2 instance size.
+
 ### Data Portal APIs
-The Data Portal Browser App will use these endpoint to interact with the Backend using these APIs. These are the new
+The DP Browser App will use these endpoint to interact with the Backend using these APIs. These are the new
 API needs to complete an upload.
 
-#### POST {collection_id}/{dataset_id}/upload/link
-An authenticated user can send a request to upload a file from a shared link to their dataset in their collection.
+#### POST {collection_id}/{data set_id}/upload/link
+An authenticated user can send a request to upload a file from a shared link to their data set in their collection.
 
 ##### Request
 - Link - a shared link to the file
 - collection_id - identifies the collection
-- dataset_id - identifies the dataset
+- data set_id - identifies the data set
+
 ##### Response
 - Asset_uuid - identifies the name of the new file created.
 
 #### POST {collection_id}/{dataset_id}/upload/file
-An authenticated user can send a request to upload a file directly from their local machine to their dataset in their 
+An authenticated user can send a request to upload a file directly from their local machine to their data set in their 
 collection.
 
 ##### Request
 - File size - the size of the file to be uploaded
 - collection_id - identifies the collection
-- dataset_id - identifies the dataset
+- data set_id - identifies the data set
 
 ##### Response
-- Access Token - allows the user to  upload their file to S3. 
-- Presigned URL - allows the user to upload their file to S3.
+- Access Token - allows the user to  upload their file to S3 in multiple parts. 
+- Presigned URL - allows the user to upload their file to S3 in a single part.
 - asset_uuid - identifies the name of the new file created.
 
 #### POST /dp/v1/dataset/{dataset_uuid}/asset/{asset_uuid}/upload
-Used to request an access token to continue uploading a file to S3 by an authenticated user who owns the dataset. An 
+Used to request an access token to continue uploading a file to S3 by an authenticated user who owns the data set. An 
 error is returned if the file upload has been completed already.
 
 ##### Request
-- dataset_id - identifies the dataset.
+- data set_id - identifies the data set.
 - asset_id - identifies the asset.
 
 ##### Response
-- Access Token - allows the user to  upload their file to S3.
+- Access Token - allows the user to  upload their file to S3 in multiple parts. 
 
 ### AWS STS
 The AWS STS service will be used to generate temporary credential the user can use to upload a file to S3. The backend
@@ -109,7 +116,7 @@ functionality to generate a token with temporary access to upload to S3. Accordi
 
 The IAM policies bellow will be combined to limit the access of the token generate to only allow the bearer to upload the 
 file in the session policy resource. The session policy will be generated at the time of the request, and will use the
-asset_uuid generated by the server and the dataset_uuid provided in the request.
+asset_uuid generated by the server and the data set_uuid provided in the request.
 
 #### Assumed Role IAM Policy
 ```json
@@ -143,7 +150,7 @@ asset_uuid generated by the server and the dataset_uuid provided in the request.
         "s3:AbortMultipartUpload"
       ],
       "Resource": [
-        "arn:aws:s3:::upload-bucket/{dataset_uuid}/{asset_uuid}"
+        "arn:aws:s3:::upload-bucket/{data set_uuid}/{asset_uuid}"
       ]
     }
 }
@@ -174,7 +181,6 @@ sharable links. Only sharable links should only point to a single file, not a fo
 Using the browser App, the user will make a *POST {collection_id}/{dataset_id}/upload/link* request to upload the file 
 by providing the sharable link in the request body. The response will contain the asset uuid, that the user can use to 
 check the status of the upload
-
 
 #### 3. Sanitize
 To prevent [server side request forgery](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery) the
@@ -215,7 +221,7 @@ info.
 
 ### Local to Cloud Flow
 Local to cloud upload will allow users to upload files from their local machine to the cloud. Uploads happen though the 
-Data Portal browser App directly to S3. For small files <5GB, uploads can be accomplished using presigned URLS. For large files >5GB 
+DP browser App directly to S3. For small files <5GB, uploads can be accomplished using presigned URLS. For large files >5GB 
 the user must perform a multipart upload. Now to walk though the local to cloud flow, see figure 2.
 
 ![Local to Cloud](https://app.lucidchart.com/publicSegments/view/80361b71-5317-478b-921e-0ead5152c865/image.png)
@@ -263,11 +269,23 @@ RFC.
 1. Verify a local download can be resumed.
 1. Verify the download queue is not cleared until the file is store in S3.
 
-### [Optional] Monitoring and error reporting
+### Monitoring and error reporting
+
+- Monitor the length of the Download queue. If it gets too long we may need to increase the number of EC2 instance
+- Log downloading failure on the EC2 instances.
 
 ## [Optional] Alternatives
 
-Especially for larger designs, you probably considered more than one design so it’s worthwhile to briefly list the others and a short note on why you decided against it.
+### Download using SMB
+Dropbox and Google drive support syncing files to a server using using their desktop application. This used SMB protocol
+to sync your local storage with what is in the cloud. This will allow a user to share a file with us using by adding us
+to their shared folder. This would cause the file to sync to our system. This approach would solve the download problem,
+and at the same time introduce more uploading and cleanup problems. The download to our server would be asynchronous, 
+which would mean the server needs to be up 100% of the time. We would need to provide instruction to users on how to share
+their files with our account. The file names would be controlled by the user until they are synced into our server. 
+From that point we would need to map the files to their file name uploaded to S3. If we had a cluster of servers I'm not
+sure if the SMB protocol would duplicate the files across all of the server or if we can tell the servers which files to
+clone.
 
 
 ## References
