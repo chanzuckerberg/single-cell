@@ -86,12 +86,12 @@ An authenticated user can send a request to upload a file from a shared link to 
 An authenticated user can send a request to upload a file directly from their local machine to their data set in their 
 collection.
 
-##### Request
+##### Request: POST {collection_id}/{dataset_id}/upload/file
 - File size - the size of the file to be uploaded
 - collection_id - identifies the collection
 - data set_id - identifies the data set
 
-##### Response
+##### Response: POST {collection_id}/{dataset_id}/upload/file
 - Access Token - allows the user to  upload their file to S3 in multiple parts. 
 - Presigned URL - allows the user to upload their file to S3 in a single part.
 - asset_uuid - identifies the name of the new file created.
@@ -100,11 +100,11 @@ collection.
 Used to request an access token to continue uploading a file to S3 by an authenticated user who owns the data set. An 
 error is returned if the file upload has been completed already.
 
-##### Request
+##### Request: POST /dp/v1/dataset/{dataset_uuid}/asset/{asset_uuid}/upload
 - data set_id - identifies the data set.
 - asset_id - identifies the asset.
 
-##### Response
+##### Response: POST /dp/v1/dataset/{dataset_uuid}/asset/{asset_uuid}/upload
 - Access Token - allows the user to  upload their file to S3 in multiple parts. 
 
 ### AWS STS
