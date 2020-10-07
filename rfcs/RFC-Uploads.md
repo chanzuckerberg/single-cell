@@ -345,3 +345,4 @@ Any relevant documents or prior art should be clearly listed here. Any citation 
 - [Original Ticket](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/25)
 - [Dropbox Content Hash](https://www.dropbox.com/developers/reference/content-hash)
 - [aws-s3-upload-integrity](https://stackoverflow.com/questions/42208998/aws-s3-upload-integrity)
+- [HCA Upload Service](https://docs.google.com/document/d/1PiO-0ThE7GxQpw7XqkK8P9d8E8xP8K9ssMCR0w4WTd4/edit) - lot of good ideas and things to consider.
