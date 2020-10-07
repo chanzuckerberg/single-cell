@@ -22,7 +22,7 @@ A user can upload files of any size to Data Portal using either a shared link fr
 
 One of the primary goals of the DP is to allow users to upload their own data sets. These data sets can vary in
 size from a few MB to several GB. User may want to upload from their local machine or from their CSP. For
-user that want to upload from their local machine, they must be able to resume an upload in the event their connection
+users that want to upload from their local machine, they must be able to resume an upload in the event their connection
 is interrupted. For users that want to upload data sets from their CSP, they are able to provide a shared link from
 their CSP that we can used to upload directly to our storage.
 
