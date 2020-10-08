@@ -4,7 +4,9 @@
 
 **Authors:** [Trent Smith](mailto:trent.smith@chanzuckerberg.com)
 
-**Approvers:** [Friendly Tech Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly PM Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly Tech Person2](mailto:some.nice.person@chanzuckerberg.com), [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com), [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
+**Approvers:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com), [Timmy Huang](mailto:thuang@chanzuckerberg.com), 
+[Marcus Kinsella](mailto:mkinsella@chanzuckerberg.com), [Eduardo Lopez](mailto:elopez@chanzuckerberg.com), [Brian Raymore](mailto:braymor@chanzuckerberg.com)
+[Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
 
 ## tl;dr
 
