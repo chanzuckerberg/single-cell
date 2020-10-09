@@ -161,7 +161,11 @@ section.
 
 #### PUT submission/{submission_id}/upload/link
 
-An authenticated user can upload a file from a shared link to a data set in their submission.
+An authenticated user can upload a file from a shared link to a data set in their submission. 
+
+If the upload is in an error state, this endpoint can be used with the dataset_id to restart the submission. If a new 
+link is provided, the new link will be used. If the submissions is not in an error state, or is complete, this endpoint 
+will return the current status of the submission.
 
 **Request:**
 
@@ -177,7 +181,7 @@ An authenticated user can upload a file from a shared link to a data set in thei
 | Key        | Description                                                                |
 | ---------- | -------------------------------------------------------------------------- |
 | dataset_id | identifies the data set the file will be associated with after validation. |
-| status     | Provides the current status of the upload. The status can be 
+| status     | Provides the current status of the upload			  |
 
 **Error Responses:**
 
@@ -214,6 +218,7 @@ If the size of the file is >5GB, then an access token will be returned.
 | Access Token  | allows the user to upload their file to S3 in multiple parts. |
 | Presigned URL | allows the user to upload their file to S3 in a single part.  |
 | dataset_id    | identifies the name of the new file created.                  |
+| status     | Provides the current status of the upload.			  |
 
 **Error Responses:**
 
@@ -221,6 +226,20 @@ If the size of the file is >5GB, then an access token will be returned.
 | ---- | ----------------------------------------------------------------------------------------------------------------------- |
 | 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress upload. |
 | 400  | if the file type is invalid                                                                                            |
+
+#### Upload States
+
+When uploading a file it is important to know what state the upload is in. The API documentation returns a *status* in 
+response. This status informs the user the current state of the upload. An upload follows this state diagram:
+
+![Upload States](https://app.lucidchart.com/publicSegments/view/a952f3e9-2ef9-4398-866b-d1455feeaec5/image.png)
+Figure 2: Upload State Diagram
+
+The states are describes as follow:
+- Uploading: The file is actively being uploaded.
+- Error: the upload as failed. A new link or file must be uploaded.
+- Waiting: The link is in the download queue.
+- Complete: The upload was completed successfully
 
 ### Upload Flows
 
@@ -230,10 +249,10 @@ sections details the user interactions required, and how the Data Portal backend
 #### Cloud to Cloud Upload Flow
 
 Cloud to cloud upload requires the user to provide a shareable link for a file on their CSP from which DP can upload
-the file to the S3 bucket. Now to walk through the cloud to cloud flow, see figure 1.
+the file to the S3 bucket. Now to walk through the cloud to cloud flow, see figure 3.
 
 ![Cloud to Cloud](https://app.lucidchart.com/publicSegments/view/e1e72143-c108-4c7f-bf6c-053d98256c1f/image.png)
-**Figure 2:** Architecture of a user uploading from their cloud to our cloud.
+**Figure 3:** Architecture of a user uploading from their cloud to our cloud.
 
 ##### 1. Get Share Link
 
@@ -299,10 +318,10 @@ the upload process will be restarted. The retry logic will be an exponential bac
 
 Local to cloud upload will allow users to upload files from their local machine to the cloud. Uploads happen though the
 DP browser App directly to S3. For small files <5GB, uploads can be accomplished using pre-signed URLs. For large files >5GB
-a multipart upload must be performed. Now to walk through the local to cloud flow, see figure 2.
+a multipart upload must be performed. Now to walk through the local to cloud flow, see figure 4.
 
 ![Local to Cloud](https://app.lucidchart.com/publicSegments/view/80361b71-5317-478b-921e-0ead5152c865/image.png)
-**Figure 3:** Architecture for uploading from a local machine to our cloud.
+**Figure 4:** Architecture for uploading from a local machine to our cloud.
 
 ##### 1. Upload File
 
