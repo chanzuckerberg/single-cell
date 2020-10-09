@@ -62,8 +62,10 @@ upload files from local storage to AWS. These features will extend the existing 
 
 The DP Backend is responsible for handling API requests. It will generate pre-signed URLs and access tokens
 for the DP Browser App to facilitate the uploading of files. It will also enqueue shared links for downloading.
-This additional functionality can be built into the existing DP Backend Lambda. The backend will also be responsible for
-performing quick validation of the file being uploaded
+This additional functionality can be built into the existing DP Backend Lambda. 
+
+The backend will also be responsible for performing validation of the file being uploaded. The validation is
+performed during the initial request to upload. 
 
 #### Download Queue
 
@@ -77,7 +79,6 @@ These are the fields that will be in the download job placed in the queue:
 - Link - a to the link to download. Use to retrieve the file from CSP.
 - submission_id - identifies the submission. Used to determine the storage location.
 - dataset_id - identifies the dataset. Used to determine the storage location
-- file_size - the size of the asset to download. Used to determine the download method and EC2 instance size.
 - file_name - the name of the file being downloaded
 
 #### AWS STS
@@ -169,12 +170,14 @@ An authenticated user can upload a file from a shared link to a data set in thei
 | Link          | a shared link to the file                                 |
 | submission_id | identifies the submission                                 |
 | attestation   | A boolean value indicating if the file is for attestation |
+| _Optional_ dataset_id | identifies the dataset being uploaded. Used to check status of upload|
 
 **Response:**
 
 | Key        | Description                                                                |
 | ---------- | -------------------------------------------------------------------------- |
 | dataset_id | identifies the data set the file will be associated with after validation. |
+| status     | Provides the current status of the upload. The status can be 
 
 **Error Responses:**
 
@@ -273,20 +276,18 @@ It also gives us the ability to retry a download if one of the servers fails to 
 
 Spin up EC2 instances with enough storage to download the whole file. TODO: See if spot instances could be used.
 
-##### 6. Download the File
+##### 6. Stream File
 
-The most time will be spent here downloading the file. Most CSPs offer a way to validate the integrity of your download
-by providing a hash of the data. This hash can be compared with the hash of the downloaded file. If the hash does not match,
-then reattempt the download.
+The shared link is used to stream the file from one cloud to another. The most time will be spent streaming the file 
+from the CSP to S3. Most CSPs offer a way to validate the integrity of a download
+by providing a hash of the data, for example [Dropbox Content Hash](https://www.dropbox.com/developers/reference/content-hash).
+As the data is streaming from the CSP, the hash of the file will be calculated as it arrives, and again as it's 
+uploaded to S3. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
+will be used when uploading to S3 to verify the integrity of each chunk. The AWS SDK will be useful in simplifying the
+upload to S3.
 
-##### 7. Upload to S3
-
-If the file is >5GB in size, upload the file directly to s3 without writing to disk. For files <5GB, the file must
-be completely downloaded before it can be uploaded to s3. The AWS SDK will be used to upload large files in parts.
-Once the upload is complete, the download job will be removed from the queue.
-
-Before uploading calculate the expected hash. Use the [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
-during a PutObject request to verify the integrity of each chunk.
+Once the upload is complete, the download job will be removed from the queue. If the final hash does not match, then 
+the upload process will be restarted. The retry logic will be an exponential back off, with a max retry of 5 times.
 
 > QUESTION? Do we need to tell the user or the DB when the file is done do uploading? This makes me think we need an endpoint
 > to finalize the upload. The endpoint will look for the expected file, and if it's found, update the database with the file
@@ -371,7 +372,6 @@ Any relevant documents or prior art should be clearly listed here. Any citation 
 - [S3 IAM Permissions](https://docs.aws.amazon.com/AmazonS3/latest/dev/list_amazons3.html)
 - [AWS S3 Multipart Upload Permissions](https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html)
 - [Original Ticket](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/25)
-- [Dropbox Content Hash](https://www.dropbox.com/developers/reference/content-hash)
-- [aws-s3-upload-integrity](https://stackoverflow.com/questions/42208998/aws-s3-upload-integrity)
 - [HCA Upload Service](https://docs.google.com/document/d/1PiO-0ThE7GxQpw7XqkK8P9d8E8xP8K9ssMCR0w4WTd4/edit) - lot of good ideas and things to consider.
 - [Corpora High Level Architecture](https://docs.google.com/document/d/1d8tv2Ub5b3E7Il85adOAUcG8P05N6UBZJ3XbhJSRrFs/edit#heading=h.3hln6w2kzoyt)
+- [AWS-S3-upload-integrity](https://stackoverflow.com/questions/42208998/aws-s3-upload-integrity)
