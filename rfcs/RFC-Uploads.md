@@ -181,7 +181,7 @@ An authenticated user can upload a file from a shared link to a data set in thei
 | Code | Description                                                                                                             |
 | ---- | ----------------------------------------------------------------------------------------------------------------------- |
 | 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress upload. |
-| 400  | if the files type is invalid                                                                                            |
+| 400  | if the file type is invalid                                                                                            |
 
 #### POST submission/{submission_id}/upload/file
 
@@ -217,7 +217,7 @@ If the size of the file is >5GB, then an access token will be returned.
 | Code | Description                                                                                                             |
 | ---- | ----------------------------------------------------------------------------------------------------------------------- |
 | 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress upload. |
-| 400  | if the files type is invalid                                                                                            |
+| 400  | if the file type is invalid                                                                                            |
 
 ### Upload Flows
 
