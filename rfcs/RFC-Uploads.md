@@ -256,8 +256,8 @@ server-side request forgery.
 
 ###### How to download from a shared link
 
-- Dropbox <https://help.dropbox.com/files-folders/share/force-download>
-- Google Drive <https://www.labnol.org/internet/direct-links-for-google-drive/28356/>
+- [Dropbox](https://help.dropbox.com/files-folders/share/force-download)
+- [Google Drive](https://www.labnol.org/internet/direct-links-for-google-drive/28356/)
 
 ##### 4. _Optional_ Queue
 
@@ -292,6 +292,8 @@ the upload process will be restarted. The retry logic will be an exponential bac
 > QUESTION? Do we need to tell the user or the DB when the file is done do uploading? This makes me think we need an endpoint
 > to finalize the upload. The endpoint will look for the expected file, and if it's found, update the database with the file
 > info.
+
+> TODO: How do we log when a download fails, and how is that propagated to the user.
 
 #### Local to Cloud Flow
 
