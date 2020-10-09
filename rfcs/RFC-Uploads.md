@@ -241,6 +241,9 @@ The states are describes as follow:
 - Waiting: The link is in the download queue.
 - Complete: The upload was completed successfully
 
+These states will need to be stores in a database or table until the upload is complete. This could be in the existing 
+postgresSQL database or a simple key, value storage system like DynamoDB.
+
 ### Upload Flows
 
 There are two methods for uploading data to the DP. They are Cloud to Cloud and Local to Cloud. The follow
@@ -291,9 +294,9 @@ It also gives us the ability to retry a download if one of the servers fails to 
 - The CSP experience and outage
 - The user has reached their daily bandwidth allowance from their CSP. [more info](https://help.dropbox.com/files-folders/share/banned-links)
 
-##### 5. Start EC2 Instance to Download File
+##### 5. Start an Instance to Download File
 
-Spin up EC2 instances with enough storage to download the whole file. TODO: See if spot instances could be used.
+An EC2 instance, docker container, or AWS lambda can be used to complete this task.
 
 ##### 6. Stream File
 
