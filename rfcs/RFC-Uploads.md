@@ -340,7 +340,8 @@ multipart upload is started using the AWS SDK. If a pre-signed URL is returned a
 The implementation uses an access token and the AWS JS SDK to upload the file directly to S3. The hash of each chunk must be  
 calculated locally and supplied in the [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
 as part of Put Object request. This will verify the integrity of each chunk during the upload. If the hash does not match
-the chunk will be rejected.
+the chunk will be rejected. The AWS S3 API will do the heavy lifting as far as managing the [multipart upload](https://docs.aws.amazon.com/AmazonS3/latest/dev/uploadobjusingmpu.html). 
+The access token will provide sufficient permissions to allow a multipart upload using AWS JS SDK.
 
 ##### User Upload Limitation
 
