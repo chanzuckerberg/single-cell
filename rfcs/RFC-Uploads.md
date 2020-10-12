@@ -80,6 +80,7 @@ These are the fields that will be in the download job placed in the queue:
 - submission_id - identifies the submission. Used to determine the storage location.
 - dataset_id - identifies the dataset. Used to determine the storage location
 - file_name - the name of the file being downloaded
+- attestation - 
 
 #### AWS STS
 
@@ -232,7 +233,7 @@ If the size of the file is >100MB, then an access token will be returned.
 When uploading a file it is important to know what state the upload is in. The API documentation returns a *status* in 
 response. This status informs the user the current state of the upload. An upload follows this state diagram:
 
-![Upload States](https://app.lucidchart.com/publicSegments/view/a952f3e9-2ef9-4398-866b-d1455feeaec5/image.png)
+![Upload States](https://app.lucidchart.com/publicSegments/view/5fe0858f-eb93-4b64-9842-6f25cad371f3/image.png)
 Figure 2: Upload State Diagram
 
 The states are describes as follow:
@@ -240,6 +241,7 @@ The states are describes as follow:
 - Error: the upload as failed. A new link or file must be uploaded.
 - Waiting: The link is in the download queue.
 - Complete: The upload was completed successfully
+- Canceled: The upload has been canceled by the user.
 
 These states will need to be stores in a database or table until the upload is complete. This could be in the existing 
 postgresSQL database or a simple key, value storage system like DynamoDB.
