@@ -17,8 +17,8 @@ A user can upload files of any size to Data Portal using either a shared link fr
 - CSP(Cloud Storage Provider) - Cloud storage services such as Dropbox or Google Drive.
 - Shared Link - A link from a CSP that gives the bearer of that link access to private data.
 - DP(Data Portal) - The cellxgene Data Portal.
-- Small File - a file < 5 GB in size.
-- Large File - a file > 5 GB in size.
+- Small File - a file < 100 MB in size.
+- Large File - a file > 100 MB in size.
 
 ## Problem Statement | Background
 
@@ -198,8 +198,8 @@ Asset_uuid can be included to retrieve a new access token if you were unable to 
 expired. An error will be returned if the upload has already been completed. The user must own the submission and be
 the one who initiated the upload to retrieve an additional access token.
 
-If the size of the file being upload is <5GB, then a pre-signed URL will be returned.
-If the size of the file is >5GB, then an access token will be returned.
+If the size of the file being upload is <100MB, then a pre-signed URL will be returned.
+If the size of the file is >100MB, then an access token will be returned.
 
 **Request:**
 
@@ -320,7 +320,7 @@ the upload process will be restarted. The retry logic will be an exponential bac
 #### Local to Cloud Flow
 
 Local to cloud upload will allow users to upload files from their local machine to the cloud. Uploads happen though the
-DP browser App directly to S3. For small files <5GB, uploads can be accomplished using pre-signed URLs. For large files >5GB
+DP browser App directly to S3. For small files <100MB, uploads can be accomplished using pre-signed URLs. For large files >5GB
 a multipart upload must be performed. Now to walk through the local to cloud flow, see figure 4.
 
 ![Local to Cloud](https://app.lucidchart.com/publicSegments/view/80361b71-5317-478b-921e-0ead5152c865/image.png)
