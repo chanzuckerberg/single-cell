@@ -155,10 +155,14 @@ These are the fields that will be in the download job placed in the queue:
 
 #### Upload Service
 
-A compute resource within the AWS cloud. It will receive download jobs from the Download Queue. Those jobs contain
+A computing resource within the AWS cloud. It will receive download jobs from the Download Queue. Those jobs contain
 the information need by the compute resource to download a file from DropBox and upload it to S3. The computer resource
 will also verify the integrity of the download and upload. The compute resource will also change the state of the
 upload in the Upload table as needed.
+
+While the download job is processing, the computing resource with occasionally poll the upload table for a cancel
+pending status. If the cancel pending status is set, the computing resource will delete any data uploaded to S3,
+remove the download job from the queue, and change the status of the upload to canceled.
 
 If an error occurs while processing the upload, the compute resource will return the download job to the queue and
 update the upload table.
