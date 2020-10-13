@@ -5,7 +5,7 @@
 **Authors:** [Trent Smith](mailto:trent.smith@chanzuckerberg.com)
 
 **Approvers:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com), [Timmy Huang](mailto:thuang@chanzuckerberg.com),
-[Marcus Kinsella](mailto:mkinsella@chanzuckerberg.com), [Eduardo Lopez](mailto:elopez@chanzuckerberg.com), [Brian Raymore](mailto:braymor@chanzuckerberg.com)
+[Marcus Kinsella](mailto:mkinsella@chanzuckerberg.com), [Eduardo Lopez](mailto:elopez@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com)
 [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
 
 ## tl;dr
@@ -43,6 +43,7 @@ This specification does not cover the validation of the data or the process for 
 1. A user can upload a single file up to 30GB in size.
 1. Shared links referring to more than one file will be rejected.
 1. The status of an upload must be tracked and queryable.
+1. Only .h5ad files are accepted.
 
 ## Detailed Design | Architecture | Implementation
 
@@ -104,7 +105,8 @@ by providing a hash of the data, for example [Dropbox Content Hash](https://www.
 As the data is streaming from the CSP, the hash of the file will be calculated as it arrives, and again as it's
 uploaded to S3. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
 will be used when uploading to S3 to verify the integrity of each chunk. The AWS SDK will be useful in simplifying the
-upload to S3.
+upload to S3. For calculating the checksum while streaming, [checksumming_io](https://github.com/HumanCellAtlas/checksumming_io)
+can be used.
 
 Once the upload is complete, the download job will be removed from the queue. If the final hash does not match, then
 the upload process will be restarted. The retry logic will be an exponential backoff, with a max retry of 5 times.
@@ -136,8 +138,9 @@ It will be used to authenticate the user and interact with the DP Backend to upl
 The DP Backend is responsible for handling API requests. It will enqueue shared links for downloading, and update the
 upload status. This additional functionality can be built into the existing DP Backend Lambda.
 
-The backend will also be responsible for performing validation of the file being uploaded. The validation is
-performed during the initial request to upload.
+The backend will also be responsible for performing a simple validation of the file being uploaded. The validation is
+performed during the initial request to upload. The validation consists of verifying the extension of the file is
+".h5ad".
 
 #### Download Queue
 
@@ -148,7 +151,7 @@ The download jobs are used by the upload service to know where to download the f
 
 These are the fields that will be in the download job placed in the queue:
 
-- Link - a to the link to download. Use to retrieve the file from CSP.
+- Link - the link to download. Use to retrieve the file from CSP.
 - submission_id - identifies the submission. Used to determine the storage location.
 - dataset_id - identifies the dataset. Used to determine the storage location
 - file_name - the name of the file being downloaded
@@ -180,7 +183,9 @@ The upload table is a DynamoDB table that tracks the current status of uploads. 
 
 The upload bucket is a separate bucket or separate bucket location within our main bucket. It is used to stage files
 before moving to the main bucket. Uploading files to a staging buckets makes it easier to clean up canceled, partial,
-or otherwise abandoned uploads, without accidentally deleting files actively being served by the Data Portal.
+or otherwise abandoned uploads, without accidentally deleting files actively being served by the Data Portal. Central
+Infra also provides a [bucket template](https://github.com/chanzuckerberg/cztack/tree/main/aws-s3-private-bucket) to help
+manage stale multipart uploads.
 
 S3 event can be used to trigger additional processing such as validation, once the upload has completed. The additional
 processing is outside the scope of this RFC.
@@ -222,10 +227,10 @@ to waiting once it has been accepted and is in the download queue.
 
 **Error Responses:**
 
-| Code | Description                                                                                                             |
-| ---- | ----------------------------------------------------------------------------------------------------------------------- |
-| 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress upload. |
-| 400  | if the file type is invalid                                                                                             |
+| Code | Description                                                                                                      |
+| ---- | ---------------------------------------------------------------------------------------------------------------- |
+| 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress. |
+| 400  | if the file type is invalid                                                                                      |
 
 #### Delete submission/{submission_id}/upload
 
@@ -319,6 +324,7 @@ The upload job has failed to download after several retries. The state of the up
 1. Verify a shared folder from DropBox cannot be uploaded.
 1. Verify uploaded files are removed from the upload bucket, once they moved to the primary bucket.
 1. Verify an uploaded file can be overwritten.
+1. Verify only files with the extension .h5ad are accepted.
 
 ### Monitoring and error reporting
 
