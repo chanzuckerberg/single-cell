@@ -61,7 +61,7 @@ the file to the S3 bucket. Now to walk through the cloud to cloud flow, see figu
 #### 1. Get Share Link
 
 The user must generate a sharable link from their DropBox. Sharable links should only point to a single file, not a
-folder or submission of files.
+directory of files.
 
 #### 2. Share Link
 
