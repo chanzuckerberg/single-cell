@@ -10,7 +10,7 @@
 
 ## tl;dr
 
-A user can upload files of any size to Data Portal from a DropBox link.
+A user can upload files, up to 30GB in size, to Data Portal from a DropBox link.
 
 ## Glossary
 
