@@ -92,8 +92,6 @@ upload the file.
 - DropBox experience an outage
 - The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their DropBox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
 
-
-
 #### 5. Start an Instance to Download File
 
 An EC2 instance, docker container, or AWS lambda can be used to complete this task. Once a compute resource is spawned,
@@ -141,17 +139,16 @@ The DP Backend is responsible for handling API requests. It will enqueue shared 
 upload status. This additional functionality can be built into the existing DP Backend Lambda.
 
 The backend will also be responsible for performing a simple validation of the file being uploaded. The validation is
-performed during the initial request to upload. The validation consists of verifying the extension of the file is one of
-of the [supported types](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations).
+performed during the initial request to upload. The validation consists of verifying the extension of the file is a [supported type](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations).
 
 #### Upload Queue
 
 The Upload Queue is an [AWS SQS](https://aws.amazon.com/sqs/) that will track pending upload jobs.
-The upload jobs are used by the upload service to know where to download the file from before uploading them to S3. 
-For the first implementation, the job sleep time will be 15min. Eventually the job sleep time will depend on the size 
+The upload jobs are used by the upload service to know where to download the file from before uploading them to S3.
+For the first implementation, the job sleep time will be 15min. Eventually, the job sleep time will depend on the size
 of the file being uploaded.
 
-Cloudwatch event can be used to monitor the SQS length. Additional compute resource can be spawned in response an
+Cloudwatch events can be used to monitor the SQS length. Additional compute resource can be spawned in response to an
 increase in jobs in the queue.
 
 ##### Upload Job Entry
@@ -166,7 +163,7 @@ These are the fields that will be in the upload job placed in the queue:
 #### Upload Service
 
 A computing resource within the AWS cloud. It will receive upload jobs from the Upload Queue. Those jobs contain
-the information needed by the compute resource to download a file from DropBox and upload it to S3. The compute resource
+the information needed by the compute resource to download a file from DropBox and upload it to S3. The computing resource
 will also verify the integrity of the download and upload. The compute resource will also change the state of the
 upload in the Upload table as needed.
 
@@ -174,11 +171,11 @@ While the upload job is processing, the compute resource with occasionally poll 
 pending status. If the cancel pending status is set, the compute resource will delete any data uploaded to S3,
 remove the upload job from the queue, and change the status of the upload to canceled.
 
-If an unrecoverable error occurs while processing the upload, the compute resource will return the upload job to the 
+If an unrecoverable error occurs while processing the upload, the compute resource will return the upload job to the
 queue and update the upload table.
 
-If an error is encounter that cannot be fixed by retrying, the upload status will changed to failed. The error can be 
-returned 
+If an error is encountered that cannot be fixed by retrying, the upload status will change to failed. The error can be
+returned
 
 ##### Upload Table
 
@@ -231,11 +228,11 @@ to waiting once it has been accepted and is in the upload queue.
 
 **Response:**
 
-| Key        | Description                                                                |
-| ---------- | -------------------------------------------------------------------------- |
-| dataset_id | identifies the dataset the file will be associated with after validation.  |
-| status     | Provides the current status of the upload                                  |
-| message	 | An error message if the upload failed									  |
+| Key        | Description                                                               |
+| ---------- | ------------------------------------------------------------------------- |
+| dataset_id | identifies the dataset the file will be associated with after validation. |
+| status     | Provides the current status of the upload                                 |
+| message    | An error message if the upload failed                                     |
 
 **Error Responses:**
 
@@ -327,7 +324,7 @@ The upload job has failed to download after several retries. The state of the up
 1. Verify that a small file can be uploaded using a shared link from Dropbox.
 1. Verify the upload queue is not cleared until the file is store in S3.
 1. Verify a failed upload is marked as failed.
-1. Verify a upload is retried if it fails.
+1. Verify an upload is retried if it fails.
 1. Verify only the owner can query the status of an upload.
 1. Verify only the owner can upload toa dataset to their collection.
 1. Verify partial uploads are erased from S3 if they fail or are canceled.
@@ -335,13 +332,13 @@ The upload job has failed to download after several retries. The state of the up
 1. Verify a shared folder from DropBox cannot be uploaded.
 1. Verify uploaded files are removed from the upload bucket, once they moved to the primary bucket.
 1. Verify an uploaded file can be overwritten.
-1. Verify only [accepted file types](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations) 
-are allowed.
+1. Verify only [accepted file types](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations)
+   are allowed.
 
 ### Monitoring and error reporting
 
 - Monitor the length of the upload queue. If it gets too long, then increase the number of compute instances used.
-- Log failure on the computeresource.
+- Log failure on the compute resource.
 
 ## [Optional] Alternatives
 
