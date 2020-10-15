@@ -236,20 +236,19 @@ section.
 An authenticated user can upload a file from a shared link to a dataset in their submission.
 
 If the upload is in an error state, this endpoint can be used with the dataset_id to restart the submission. If a new
-link is provided, the new link will be used. If the submissions are not in an error state or complete, this endpoint
-will return the current status of the submission.
+link is provided, the new link will be used. If the submission is not in an error state, this endpoint will
+return an error.
 
 Starting an upload causes the database to be updated with a new dataset. The dataset will set the initial state of the upload
 to waiting once it has been accepted and is in the upload queue.
 
 **Request:**
 
-| Parameter             | Description                                                                                                                                           |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Link                  | a shared link to the file                                                                                                                             |
-| submission_id         | identifies the submission                                                                                                                             |
-| _Optional_ dataset_id | identifies the dataset being uploaded. Used to check the status of the upload.                                                                        |
-| _Optional_ overwrite  | A boolean, indicating if the user would like to overwrite the file that was uploaded. The upload status must be complete for the dataset_id provided. |
+| Parameter             | Description                                                                    |
+| --------------------- | ------------------------------------------------------------------------------ |
+| Link                  | a shared link to the file                                                      |
+| submission_id         | identifies the submission                                                      |
+| _Optional_ dataset_id | identifies the dataset being uploaded. Used to check the status of the upload. |
 
 **Response:**
 
@@ -260,11 +259,12 @@ to waiting once it has been accepted and is in the upload queue.
 
 **Error Responses:**
 
-| Code | Description                                                                                                     |
-| ---- | --------------------------------------------------------------------------------------------------------------- |
-| 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress |
-| 400  | if the file type is invalid.                                                                                    |
-| 413  | if the links refer to a file that exceeds the max size allowed.                                                 |
+| Code | Description                                                                               |
+| ---- | ----------------------------------------------------------------------------------------- |
+| 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission |
+| 400  | if the file type is invalid.                                                              |
+| 409  | if there is an existing submissions in progress with the same dataset_id.                 |
+| 413  | if the links refer to a file that exceeds the max size allowed.                           |
 
 #### GET submission/{submission_id}/upload
 
