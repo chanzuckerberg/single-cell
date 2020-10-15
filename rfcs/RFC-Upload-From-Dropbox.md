@@ -62,7 +62,7 @@ directory of files.
 
 #### 2. Share Link
 
-Using the browser App, make a _POST {submission_id}/upload/link_ request to upload the file
+Using the browser App, make a _POST {submission_id}/upload/link_request to upload the file
 by providing the sharable link in the request body. The response will contain the dataset_id, that can be used to
 check the status of the upload
 
@@ -185,7 +185,7 @@ If an unrecoverable error occurs while processing the upload, the computing reso
 queue and update the upload table.
 
 If an error is encountered that cannot be fixed by retrying, the upload status will change to failed. The error can be
-returned
+returned using the _GET submission/{submission_id}/upload_endpoint with the_dataset_id_ associated with the upload.
 
 ##### Upload Table
 
