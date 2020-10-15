@@ -1,4 +1,4 @@
-# User Uploads From Drop Box
+# User Uploads From DropBox
 
 ## For the cellxgene Data Portal
 
@@ -21,8 +21,8 @@ A user can upload files, up to 30GB in size, to Data Portal from a DropBox link.
 
 ## Problem Statement | Background
 
-One of the primary goals of the DP is to allow users to upload their own files. These files consist of data sets.
-These data sets can vary in size from a few MB to several GB. Users can provide a shared link from their DropBox that
+One of the primary goals of the DP is to allow users to upload their own files. These files consist of datasets.
+These datasets can vary in size from a few MB to several GB. Users can provide a shared link from their DropBox that
 is used to upload directly to S3.
 
 This specification does not cover the validation of the data or the process for a user to complete a submission.
@@ -36,6 +36,7 @@ This specification does not cover the validation of the data or the process for 
 1. A user can restart a failed upload from the DP Browser App.
 1. The user must be authenticated before uploading.
 1. A user who has not yet agreed to the Portal policies must not be able to upload their file.
+1. Supports the upload of AnnData, Loom, or Seurat v3 RDS. See [Reference](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations).
 
 ### Nonfunctional requirements
 
@@ -43,7 +44,6 @@ This specification does not cover the validation of the data or the process for 
 1. A user can upload a single file up to 30GB in size.
 1. Shared links referring to more than one file will be rejected.
 1. The status of an upload must be tracked and queryable.
-1. Only .h5ad files are accepted.
 
 ## Detailed Design | Architecture | Implementation
 
@@ -85,12 +85,14 @@ The queue stores the links that need to be processed. It buffers the downstream 
 allows us to spin up servers as needed. It also gives us the ability to retry a download if one of the servers to fails
 upload the file.
 
-##### Why might the download fail
+##### Why Might the Upload Fail
 
 - The downloading server ran out of storage.
 - The downloading server crashed.
-- DropBox experience and outage
-- The user has reached their daily bandwidth allowance from their DropBox. [more info](https://help.dropbox.com/files-folders/share/banned-links)
+- DropBox experience an outage
+- The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their DropBox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
+
+
 
 #### 5. Start an Instance to Download File
 
@@ -139,36 +141,44 @@ The DP Backend is responsible for handling API requests. It will enqueue shared 
 upload status. This additional functionality can be built into the existing DP Backend Lambda.
 
 The backend will also be responsible for performing a simple validation of the file being uploaded. The validation is
-performed during the initial request to upload. The validation consists of verifying the extension of the file is
-".h5ad".
+performed during the initial request to upload. The validation consists of verifying the extension of the file is one of
+of the [supported types](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations).
 
-#### Download Queue
+#### Upload Queue
 
-The Download Queue is an [AWS SQS](https://aws.amazon.com/sqs/) that will track pending download jobs.
-The download jobs are used by the upload service to know where to download the file from before uploading them to S3.
+The Upload Queue is an [AWS SQS](https://aws.amazon.com/sqs/) that will track pending upload jobs.
+The upload jobs are used by the upload service to know where to download the file from before uploading them to S3. 
+For the first implementation, the job sleep time will be 15min. Eventually the job sleep time will depend on the size 
+of the file being uploaded.
 
-##### Download Job Entry
+Cloudwatch event can be used to monitor the SQS length. Additional compute resource can be spawned in response an
+increase in jobs in the queue.
 
-These are the fields that will be in the download job placed in the queue:
+##### Upload Job Entry
 
-- Link - the link to download. Use to retrieve the file from CSP.
+These are the fields that will be in the upload job placed in the queue:
+
+- Link - the link to file to download. Use to retrieve the file from DropBox.
 - submission_id - identifies the submission. Used to determine the storage location.
-- dataset_id - identifies the dataset. Used to determine the storage location
-- file_name - the name of the file being downloaded
+- dataset_id - identifies the dataset. Used to determine the storage location.
+- file_name - the name of the file being downloaded.
 
 #### Upload Service
 
-A computing resource within the AWS cloud. It will receive download jobs from the Download Queue. Those jobs contain
-the information need by the compute resource to download a file from DropBox and upload it to S3. The computer resource
+A computing resource within the AWS cloud. It will receive upload jobs from the Upload Queue. Those jobs contain
+the information needed by the compute resource to download a file from DropBox and upload it to S3. The compute resource
 will also verify the integrity of the download and upload. The compute resource will also change the state of the
 upload in the Upload table as needed.
 
-While the download job is processing, the computing resource with occasionally poll the upload table for a cancel
-pending status. If the cancel pending status is set, the computing resource will delete any data uploaded to S3,
-remove the download job from the queue, and change the status of the upload to canceled.
+While the upload job is processing, the compute resource with occasionally poll the upload table for a cancel
+pending status. If the cancel pending status is set, the compute resource will delete any data uploaded to S3,
+remove the upload job from the queue, and change the status of the upload to canceled.
 
-If an error occurs while processing the upload, the compute resource will return the download job to the queue and
-update the upload table.
+If an unrecoverable error occurs while processing the upload, the compute resource will return the upload job to the 
+queue and update the upload table.
+
+If an error is encounter that cannot be fixed by retrying, the upload status will changed to failed. The error can be 
+returned 
 
 ##### Upload Table
 
@@ -178,6 +188,7 @@ The upload table is a DynamoDB table that tracks the current status of uploads. 
 - status - the current state of the upload.
 - progress - the current progress of the upload.
 - owner - the id of the user who owns this collection.
+- message - error message if the upload fails.
 
 #### Upload Bucket
 
@@ -200,14 +211,14 @@ section.
 
 #### PUT submission/{submission_id}/upload/link
 
-An authenticated user can upload a file from a shared link to a data set in their submission.
+An authenticated user can upload a file from a shared link to a dataset in their submission.
 
 If the upload is in an error state, this endpoint can be used with the dataset_id to restart the submission. If a new
 link is provided, the new link will be used. If the submissions are not in an error state or complete, this endpoint
 will return the current status of the submission.
 
-Starting an upload causes the database to be updated with a new data set. The dataset will set the initial state of the upload
-to waiting once it has been accepted and is in the download queue.
+Starting an upload causes the database to be updated with a new dataset. The dataset will set the initial state of the upload
+to waiting once it has been accepted and is in the upload queue.
 
 **Request:**
 
@@ -222,8 +233,9 @@ to waiting once it has been accepted and is in the download queue.
 
 | Key        | Description                                                                |
 | ---------- | -------------------------------------------------------------------------- |
-| dataset_id | identifies the data set the file will be associated with after validation. |
+| dataset_id | identifies the dataset the file will be associated with after validation.  |
 | status     | Provides the current status of the upload                                  |
+| message	 | An error message if the upload failed									  |
 
 **Error Responses:**
 
@@ -232,7 +244,7 @@ to waiting once it has been accepted and is in the download queue.
 | 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress. |
 | 400  | if the file type is invalid                                                                                      |
 
-#### Delete submission/{submission_id}/upload
+#### DELETE submission/{submission_id}/upload
 
 Cancels an existing upload job. Any data that has started to upload is removed, and the upload status is changed to
 cancel pending until the job has been cleared up.
@@ -271,13 +283,13 @@ There are several different states that an upload can be in. The table below def
 | --- | -------------- | ------------------------------------------------------------------------------------------- |
 | S0  | Start          | The upload is never actually in this state.                                                 |
 | S1  | Waiting        | The upload is enqueued, and waiting for computing resources.                                |
-| S2  | uploading      | The file is actively being uploaded.                                                        |
-| S3  | Completed      | The upload was completed successfully.                                                      |
+| S2  | Uploading      | The file is actively being uploaded.                                                        |
+| S3  | Uploaded       | The upload was completed successfully.                                                      |
 | S4  | Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
 | S5  | Cancel Pending | The upload is in the process of being canceled                                              |
 | S6  | Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
 
-These states will be stores in the upload table until the upload is complete.
+Once the upload is complete validation can begin.
 
 ##### S0 - >S1
 
@@ -299,7 +311,7 @@ Once the upload has been canceled by the compute resource the state will be canc
 
 ##### S2 -> S3
 
-The upload has been completed. The state of the upload is complete.
+The upload has been completed. The state of the upload is uploaded.
 
 ##### S2 -> S1
 
@@ -313,23 +325,23 @@ The upload job has failed to download after several retries. The state of the up
 
 1. Verify that a large file can be uploaded using a shared link from Dropbox.
 1. Verify that a small file can be uploaded using a shared link from Dropbox.
-1. Verify the download queue is not cleared until the file is store in S3.
-1. Verify a failed download is marked as failed.
-1. Verify a download is retried if it fails.
+1. Verify the upload queue is not cleared until the file is store in S3.
+1. Verify a failed upload is marked as failed.
+1. Verify a upload is retried if it fails.
 1. Verify only the owner can query the status of an upload.
 1. Verify only the owner can upload toa dataset to their collection.
 1. Verify partial uploads are erased from S3 if they fail or are canceled.
 1. Verify a user can start another upload if the original upload failed, or was canceled.
-1. Verify a complete upload cannot be canceled.
 1. Verify a shared folder from DropBox cannot be uploaded.
 1. Verify uploaded files are removed from the upload bucket, once they moved to the primary bucket.
 1. Verify an uploaded file can be overwritten.
-1. Verify only files with the extension .h5ad are accepted.
+1. Verify only [accepted file types](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations) 
+are allowed.
 
 ### Monitoring and error reporting
 
-- Monitor the length of the Download queue. If it gets too long, then increase the number of compute instances used.
-- Log downloading failure on the computing resource.
+- Monitor the length of the upload queue. If it gets too long, then increase the number of compute instances used.
+- Log failure on the computeresource.
 
 ## [Optional] Alternatives
 
