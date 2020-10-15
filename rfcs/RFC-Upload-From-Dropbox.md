@@ -392,7 +392,7 @@ The upload job has failed to download after several retries. The state of the up
 - Monitor the length of the upload queue. If it gets too long, then increase the number of computing instances used.
 - Log failure on the computing resource.
 
-## [Optional] Alternatives
+## Alternatives Considered
 
 ### Download using SMB
 
