@@ -397,11 +397,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 ### API Design
 
 
-```
-
-
-#### GET /v1/submission
-```
+```GET /v1/submission```
 
 
 **Description**: Lists all submissions by their UUIDs that currently exist in Corpora. If a parameter is specified as a filter, then only submissions that meet the given criteria will be returned.
@@ -420,11 +416,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 2. 400 Invalid parameter
 
 
-```
-
-
-#### GET /v1/submission/{project_uuid}
-```
+```GET /v1/submission/{project_uuid}```
 
 
 **Description**: Returns all available metadata information about a project submission, including URIs of datasets that are attached to the project.
@@ -445,11 +437,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 3. 404 Submission not found
 
 
-```
-
-
-#### PUT /v1/submission/{project_uuid}/file
-```
+```PUT /v1/submission/{project_uuid}/file```
 
 
 **Description**: Adds a dataset file or a legal file to the project’s S3 bucket. If a legal file is uploaded (verified by a standard name), then the requirement for attestation for the project will be satisfied and accordingly noted in the submission entity. A quick validation will be performed to ensure that if the file is a data file, then the extension is one of the accepted types (i.e. `.loom`, `.h5ad,` or `.rds`). If a file already exists with the same name, it will replace it and increment the revision value of the dataset.
@@ -473,11 +461,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 4. 404 Submission not found: `{status, message}`
 
 
-```
-
-
-#### DELETE /v1/submission/{project_uuid}
-```
+```DELETE /v1/submission/{project_uuid}```
 
 
 **Description**: Deletes the submission associated with the given project UUID. This does not delete the project if the project associated with the submission has been previously publicly published.
@@ -497,11 +481,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 3. 404 Project not found
 
 
-```
-
-
-#### DELETE /v1/submission/{project_uuid}/dataset
-```
+```DELETE /v1/submission/{project_uuid}/dataset```
 
 
 **Description**: Deletes a file from the project’s S3 bucket if the file exists. If no such file exists, then a warning will be outputted.
@@ -522,11 +502,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 3. 404 Submission or file not found
 
 
-```
-
-
-#### POST /v1/submission
-```
+```POST /v1/submission```
 
 
 **Description**: Opens a new submission with a unique UUID if a submission is not already open for a project. If a project UUID is not provided, then a project UUID will be generated. Otherwise, the project details based on the given project UUID will be used to pre-populate the newly created submission entity. If no project UUID is given, then this call will also create a new folder with the generated project UUID in the data portal S3 bucket. On success, a message will be returned with the project’s UUID.
@@ -546,11 +522,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 2. 401 Unauthorized user
 
 
-```
-
-
-#### POST /v1/submission/{project_uuid}/validate
-```
+```POST /v1/submission/{project_uuid}/validate```
 
 
 **Description**: Validates the project according to the guidelines below in the Validation section and outputs the result, specifying all errors. The result of the validation is also stored in the backend database.
@@ -570,11 +542,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 3. 404 Submission not found
 
 
-```
-
-
-#### POST /v1/submission/{project_uuid}/save
-```
+```POST /v1/submission/{project_uuid}/save```
 
 
 **Description**: if needed, extracts the project-level metadata from the datasets or uses the given project-level metadata imputed via the body parameter and saves it to the database. The new project metadata state will be returned in the response on success.
@@ -595,11 +563,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 4. 404 Submission not found
 
 
-```
-
-
-#### POST /v1/submission/{project_uuid}/publish
-```
+```POST /v1/submission/{project_uuid}/publish```
 
 
 **Description**: 
@@ -625,11 +589,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 
 
 
-```
-
-
-#### GET /v1/project
-```
+```GET /v1/project```
 
 
 **Description**: this lists all projects and their UUIDs that currently exist in the data portal. If a parameter is specified as a filter, then only projects that meet the status criteria will be outputted.
@@ -651,11 +611,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 2. 400 Invalid query parameter
 
 
-```
-
-
-#### GET /v1/project/{project_uuid}
-```
+```GET /v1/project/{project_uuid}```
 
 
 **Description**: this will return all datasets attributes and associated attributes of a project with the given UUID.
@@ -676,11 +632,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 3. 404 Project not found
 
 
-```
-
-
-#### DELETE /v1/project/{project_uuid}
-```
+```DELETE /v1/project/{project_uuid}```
 
 
 **Description**: Deletes an entire project from Corpora, including any generated artifacts/assets and deployments. If no such project exists, then a warning will be outputted. 
@@ -705,11 +657,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 
 
 
-```
-
-
-#### POST /v1/dataset/{dataset_uuid}/asset/{asset_uuid}
-```
+```POST /v1/dataset/{dataset_uuid}/asset/{asset_uuid}```
 
 
 **Description:** Request to download a file which on success will generate a pre-signed URL to download the dataset.
@@ -865,10 +813,6 @@ The Data Model has significantly changed since the original approval of this des
 *   [MINOR] Addition of `development_stage` and `development_stage_ontology` to the Dataset table to match the addition of the metadata in the Corpora Schema.
 *   [MINOR] Addition of `link_name` to the ProjectLinks table. This is needed in order to display on the frontend some user-friendly name that represents where the link will take you instead of displaying the raw link itself.
 *   [PATCH] Updating the cardinality of the relationship for the DatasetContributor table. This was simply a mistake. One dataset can appear in the table multiple times and one contributor can appear in the table multiple times. The cardinality made it seem like they could only appear once a piece.
-
-
-
-<p id="gdcalert7" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image7.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert8">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
 ![alt_text](imgs/updated_relational_diagram.png)
