@@ -204,6 +204,8 @@ The table will have the following columns:
 - dataset_id - primary key. This field is used to identify the upload job.
 - status - the current state of the upload. This field is updated to inform the user of the current state of the upload.
 - progress - the current progress of the upload. While the file is actively being uploaded the progress of the upload
+- **status** - the current state of the upload. This field is updated to inform the user of the current state of the upload.
+  The possible values are define in the [upload state table](#upload-state-table) .
   will be updated. If the size of the file to be uploaded is known, the progress will indicate how much has been
   uploaded over the total file size. If the total file size is not known, the progress will not be updated. This field is
   returned using `GET submission/{submission_id}/upload`.
@@ -338,6 +340,8 @@ There are several different states that an upload can be in. The table below def
 | S4  | Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
 | S5  | Cancel Pending | The upload is in the process of being canceled                                              |
 | S6  | Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
+
+**Table:** <a name="upload-state-table"></a>Upload State Table
 
 Once the upload is complete validation can begin.
 
