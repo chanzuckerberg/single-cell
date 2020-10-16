@@ -129,7 +129,8 @@ be 5 times, with exponential back off.
 
 #### 8. Failed Uploads
 
-If an upload fails enough times, it will be removed from the download queue. The upload status will change to failed.
+If an upload is retried and fails enough times(see [retry](#7-retry) during upload, it will be removed from the upload
+queue. The upload status will change to _Failed_.
 
 #### 9. Validation Hand Off
 
@@ -186,8 +187,9 @@ the upload to _Canceled_.
 If an unrecoverable error occurs while processing the upload, the computing resource will return the upload job to the
 queue and update the upload table.
 
-If an error is encountered that cannot be fixed by retrying, the upload status will change to failed. The error can be
-returned using the _GET submission/{submission_id}/upload_endpoint with the_dataset_id_ associated with the upload.
+If an error is encountered that cannot be fixed by retrying, the upload status will change to _Failed_. The error can be
+returned using the _[GET submission/{submission_id}/upload](#GET-submission-submission_id}-upload)_ endpoint with the
+dataset id associated with the upload.
 
 ##### Upload Table
 
@@ -201,17 +203,16 @@ CloudFront cache if the existing database was used.
 
 The table will have the following columns:
 
-- dataset_id - primary key. This field is used to identify the upload job.
-- status - the current state of the upload. This field is updated to inform the user of the current state of the upload.
-- progress - the current progress of the upload. While the file is actively being uploaded the progress of the upload
+- **dataset_id** - primary key. This field is used to identify the upload job.
 - **status** - the current state of the upload. This field is updated to inform the user of the current state of the upload.
   The possible values are define in the [upload state table](#upload-state-table) .
+- **progress** - the current progress of the upload. While the file is actively being uploaded the progress of the upload
   will be updated. If the size of the file to be uploaded is known, the progress will indicate how much has been
   uploaded over the total file size. If the total file size is not known, the progress will not be updated. This field is
-  returned using `GET submission/{submission_id}/upload`.
-- owner - the id of the user who owns this collection. This field is used to enforce if the user authorized to view the
+  returned using _[GET submission/{submission_id}/upload](#GET-submission-submission_id-upload)_.
+- **owner** - the id of the user who owns this collection. This field is used to enforce if the user authorized to view the
   remaining fields.
-- message - error message if the upload fails. This field is updated when an error occurs that should be visible to the
+- **message** - error message if the upload fails. This field is updated when an error occurs that should be visible to the
   owner.
 
 #### Upload Bucket
@@ -341,7 +342,7 @@ There are several different states that an upload can be in. The table below def
 | S5  | Cancel Pending | The upload is in the process of being canceled                                              |
 | S6  | Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
 
-**Table:** <a name="upload-state-table"></a>Upload State Table
+<a name="upload-state-table">**Table:** Upload State Table </a>
 
 Once the upload is complete validation can begin.
 
