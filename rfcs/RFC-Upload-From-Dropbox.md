@@ -319,13 +319,9 @@ _Cancel Pending_ until the job has been cleared up.
 
 **Response:**
 
-| Code | Description                     |
-| ---- | ------------------------------- |
-| 202  | The cancel request is accepted. |
-
-| Key    | Description                                |
-| ------ | ------------------------------------------ |
-| status | Provides the current status of the upload. |
+| Code | Description                                                                |
+| ---- | -------------------------------------------------------------------------- |
+| 202  | The cancel request is accepted. The upload status is now _Cancel Pending_. |
 
 **Error Responses:**
 
