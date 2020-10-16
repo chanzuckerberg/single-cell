@@ -14,10 +14,12 @@ A user can upload files, up to 30GB in size, to Data Portal from a DropBox link.
 
 ## Glossary
 
-- Shared Link - A link from DropBox that gives the bearer of that link access to private data.
-- DP(Data Portal) - The cellxgene Data Portal.
-- Small File - a file < 100 MB in size.
-- Large File - a file > 100 MB in size.
+- **Shared Link** - A link from DropBox that gives the bearer of that link access to private data.
+- **DP(Data Portal)** - The cellxgene Data Portal.
+- **Small File** - a file < 100 MB in size.
+- **Large File** - a file > 100 MB in size.
+- **Collection** - a collection of datasets uploaded and published by a users.
+- **Submission** - a collection that is going through the publishing process.
 
 ## Problem Statement | Background
 
@@ -63,7 +65,7 @@ directory of files.
 #### 2. Share Link
 
 Using the browser App, make a _POST {submission_id}/upload/link_request to upload the file
-by providing the sharable link in the request body. The response will contain the dataset_id, that can be used to
+by providing the sharable link in the request body. The response will contain the_dataset_id_, that can be used to
 check the status of the upload
 
 #### 3. Sanitize
@@ -80,7 +82,7 @@ DropBox looks like _<https://www.dropbox.com/s/{folder_id}/{file_id}url?dl=0>_. 
 
 The URL will be sanitized by verifying it matches the expected format using regex. The URL must also refer to the correct DropBox domain. The URL will be rejected if it does not match.
 
-The backend will also create an entry in the upload table using the dataset_id as the key, and set the status to waiting.
+The backend will also create an entry in the upload table using the _dataset_id_as the key, and set the status to_Waiting_.
 
 #### 4. Queue
 
@@ -90,15 +92,14 @@ upload the file.
 
 ##### Why Might the Upload Fail
 
-- The downloading server ran out of storage.
 - The downloading server crashed.
-- DropBox experience an outage
+- DropBox experienced an outage
 - The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their DropBox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
 
 #### 5. Start an Instance to Download File
 
 An EC2 instance, docker container, or AWS lambda can be used to complete this task. Once a computing resource is spawned,
-it will change the upload status to uploading.
+it will change the upload status to _Uploading_.
 
 #### 6. Stream File
 
@@ -112,18 +113,19 @@ upload to S3. For calculating the checksum while streaming, [checksumming_io](ht
 can be used.
 
 Once the upload is complete, the download job will be removed from the queue. If the final hash does not match, then
-the upload process will be restarted. The retry logic will be an exponential backoff, with a max retry of 5 times.
+the upload process will be retried.
 
 While streaming the file, the computing resource will periodically check if the upload has been canceled using the upload
-table. If the upload status is cancel pending, the computing resource will stop the stream, delete any data that has been uploaded,
+table. If the upload status is _Cancel Pending_, the computing resource will stop the stream, delete any data that has been uploaded,
 mark the job as complete in the queue, and set the status of the upload to cancelled.
 
 Where possible, the progress of the upload will be calculated and updated in the upload table.
 
 #### 7. Retry
 
-If the upload fails for any reason, the computing resource will mark the status of the upload as waiting, and return the upload
-job to the queue.
+If the upload fails for any reason, the computing resource will mark the status of the upload as _Waiting_, and return the upload
+job to the queue. The number of times an upload job is retried will be adjustable. Initially the number of retries will
+be 5 times, with exponential back off.
 
 #### 8. Failed Uploads
 
@@ -153,7 +155,7 @@ performed during the initial request to upload. The validation consists of verif
 
 #### Upload Queue
 
-The Upload Queue is an [AWS SQS](https://aws.amazon.com/sqs/) that will track pending upload jobs.
+The upload queue is an [AWS SQS](https://aws.amazon.com/sqs/) that will track pending upload jobs.
 The upload jobs are used by the upload service to know where to download the file from before uploading them to S3.
 For the first implementation, the job sleep time will be 15min. Eventually, the job sleep time will depend on the size
 of the file being uploaded.
@@ -165,21 +167,21 @@ increase in jobs in the queue.
 
 These are the fields that will be in the upload job placed in the queue:
 
-- Link - the link to file to download. Use to retrieve the file from DropBox.
-- submission_id - identifies the submission. Used to determine the storage location.
-- dataset_id - identifies the dataset. Used to determine the storage location.
-- file_name - the name of the file being downloaded.
+- **link** - the link to file to download. Use to retrieve the file from DropBox.
+- **submission_id** - identifies the submission. Used to determine the storage location.
+- **dataset_id** - identifies the dataset. Used to determine the storage location.
+- **file_name** - the name of the file being downloaded.
 
 #### Upload Service
 
-A computing resource within the AWS cloud. It will receive upload jobs from the Upload Queue. Those jobs contain
+A computing resource within the AWS cloud. It will receive upload jobs from the upload queue. Those jobs contain
 the information needed by the computing resource to download a file from DropBox and upload it to S3. The computing resource
 will also verify the integrity of the download and upload. The computing resource will also change the state of the
 upload in the Upload table as needed.
 
-While the upload job is processing, the computing resource with occasionally poll the upload table for a cancel
-pending status. If the cancel pending status is set, the computing resource will delete any data uploaded to S3,
-remove the upload job from the queue, and change the status of the upload to canceled.
+The computing resource will poll the upload table for a _Cancel Pending_ status. If the _Cancel Pending_ status is set, the
+computing resource will delete any data uploaded to S3, remove the upload job from the queue, and change the status of
+the upload to _Canceled_.
 
 If an unrecoverable error occurs while processing the upload, the computing resource will return the upload job to the
 queue and update the upload table.
@@ -193,7 +195,7 @@ The upload table is a DynamoDB table that tracks the current status of uploads.
 
 DynamoDB was favored over adding additional fields to the existing Database. The upload table will be updated and queried
 frequently by the browser app and the upload service. The browser app will query periodically for upload progress.
-The upload service will query the upload table for a cancel pending status, and to update the progress and status of
+The upload service will query the upload table for a _Cancel Pending_ status, and to update the progress and status of
 the upload. With the current database cached behind CloudFront, the upload service would constantly need to clear the
 CloudFront cache if the existing database was used.
 
@@ -235,12 +237,12 @@ section.
 
 An authenticated user can upload a file from a shared link to a dataset in their submission.
 
-If the upload is in an error state, this endpoint can be used with the dataset_id to restart the submission. If a new
+If the upload is in an error state, this endpoint can be used with the _dataset_id_ to restart the submission. If a new
 link is provided, the new link will be used. If the submission is not in an error state, this endpoint will
 return an error.
 
 Starting an upload causes the database to be updated with a new dataset. The dataset will set the initial state of the upload
-to waiting once it has been accepted and is in the upload queue.
+to _Waiting_ once it has been accepted and is in the upload queue.
 
 **Request:**
 
@@ -259,12 +261,12 @@ to waiting once it has been accepted and is in the upload queue.
 
 **Error Responses:**
 
-| Code | Description                                                                               |
-| ---- | ----------------------------------------------------------------------------------------- |
-| 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission |
-| 400  | if the file type is invalid.                                                              |
-| 409  | if there is an existing submissions in progress with the same dataset_id.                 |
-| 413  | if the links refer to a file that exceeds the max size allowed.                           |
+| Code | Description                                                                                 |
+| ---- | ------------------------------------------------------------------------------------------- |
+| 401  | if _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission |
+| 400  | if the file type is invalid.                                                                |
+| 409  | if there is an existing submissions in progress with the same _dataset_id_.                 |
+| 413  | if the links refer to a file that exceeds the max size allowed.                             |
 
 #### GET submission/{submission_id}/upload
 
@@ -287,15 +289,15 @@ Checks the status of an existing upload job.
 
 **Error Responses:**
 
-| Code | Description                                                                                                             |
-| ---- | ----------------------------------------------------------------------------------------------------------------------- |
-| 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress upload. |
-| 400  | if the parameters supplied are invalid.                                                                                 |
+| Code | Description                                                                                                               |
+| ---- | ------------------------------------------------------------------------------------------------------------------------- |
+| 401  | if _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission or upload in-progress upload. |
+| 400  | if the parameters supplied are invalid.                                                                                   |
 
 #### DELETE submission/{submission_id}/upload
 
 Cancels an existing upload job. Any data that has started to upload is removed, and the upload status is changed to
-cancel pending until the job has been cleared up.
+_Cancel Pending_ until the job has been cleared up.
 
 **Request:**
 
@@ -312,10 +314,10 @@ cancel pending until the job has been cleared up.
 
 **Error Responses:**
 
-| Code | Description                                                                                                             |
-| ---- | ----------------------------------------------------------------------------------------------------------------------- |
-| 401  | if dataset_id or submission_id does not exist, or if the user does not own the submission or upload in-progress upload. |
-| 400  | if the parameters supplied are invalid.                                                                                 |
+| Code | Description                                                                                                                     |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | if _dataset_id_or_submission_id_ does not exist, if the user does not own the submission, or the upload is in state _Uploaded_. |
+| 400  | if the parameters supplied are invalid.                                                                                         |
 
 #### Upload Status and State
 
@@ -349,32 +351,32 @@ An upload moves from S1 to S2 when the file is actively being uploaded to S3.
 
 ##### S2 -> S5
 
-Once a user requests an upload to be canceled the state changes to Cancel Pending. The cancellation may not happen
-immediately, therefore the status of the upload is changed to cancel pending until the upload has been canceled by the
+Once a user requests an upload to be canceled the state changes to _Cancel Pending_. The cancellation may not happen
+immediately, therefore the status of the upload is changed to _Cancel Pending_ until the upload has been canceled by the
 computing resource processing the job.
 
 ##### S5 -> S6
 
-Once the upload has been canceled by the computing resource the state will be canceled.
+Once the upload has been canceled by the computing resource the state will be _Canceled_.
 
 ##### S2 -> S3
 
-The upload has been completed. The state of the upload is uploaded.
+The upload has been completed. The state of the upload is _Uploaded_.
 
 ##### S2 -> S1
 
-If the upload fails, the job returns to the queue to be retried at a later time. The state changes to waiting.
+If the upload fails, the job returns to the queue to be retried at a later time. The state changes to _Waiting_.
 
 #### S2 -> S4
 
-The upload job has failed to download after several retries. The state of the upload is failed.
+The upload job has failed to download after several retries. The state of the upload is _Failed_.
 
 ### Test plan
 
 1. Verify that a large file can be uploaded using a shared link from Dropbox.
 1. Verify that a small file can be uploaded using a shared link from Dropbox.
 1. Verify the upload queue is not cleared until the file is store in S3.
-1. Verify a failed upload is marked as failed.
+1. Verify a failed upload is marked as _Failed_.
 1. Verify an upload is retried if it fails.
 1. Verify only the owner can query the status of an upload.
 1. Verify only the owner can upload toa dataset to their collection.
