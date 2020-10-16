@@ -211,7 +211,7 @@ The table will have the following columns:
   uploaded over the total file size. If the total file size is not known, the progress will not be updated. This field is
   returned using _[GET submission/{submission_id}/upload](#GET-submission-submission_id-upload)_.
 - **owner** - the id of the user who owns this collection. This field is used to enforce if the user authorized to view the
-  remaining fields.
+  remaining columns.
 - **message** - error message if the upload fails. This field is updated when an error occurs that should be visible to the
   owner.
 
@@ -251,25 +251,29 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 
 | Parameter             | Description                                                                    |
 | --------------------- | ------------------------------------------------------------------------------ |
-| Link                  | a shared link to the file                                                      |
-| submission_id         | identifies the submission                                                      |
-| _Optional_ dataset_id | identifies the dataset being uploaded. Used to check the status of the upload. |
+| Link                  | A shared link to the file.                                                     |
+| submission_id         | Identifies the submission.                                                     |
+| _Optional_ dataset_id | Identifies the dataset being uploaded. Used to check the status of the upload. |
 
 **Response:**
 
+| Code | Description                        |
+| ---- | ---------------------------------- |
+| 202  | The upload is accepted and queued. |
+
 | Key        | Description                                                               |
 | ---------- | ------------------------------------------------------------------------- |
-| dataset_id | identifies the dataset the file will be associated with after validation. |
-| status     | Provides the current status of the upload                                 |
+| dataset_id | Identifies the dataset the file will be associated with after validation. |
+| status     | Provides the current status of the upload.                                |
 
 **Error Responses:**
 
-| Code | Description                                                                                 |
-| ---- | ------------------------------------------------------------------------------------------- |
-| 401  | if _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission |
-| 400  | if the file type is invalid.                                                                |
-| 409  | if there is an existing submissions in progress with the same _dataset_id_.                 |
-| 413  | if the links refer to a file that exceeds the max size allowed.                             |
+| Code | Description                                                                                  |
+| ---- | -------------------------------------------------------------------------------------------- |
+| 401  | If _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission. |
+| 400  | If the file type is invalid.                                                                 |
+| 409  | If there is an existing submissions in progress with the same _dataset_id_.                  |
+| 413  | If the links refer to a file that exceeds the max size allowed.                              |
 
 #### GET submission/{submission_id}/upload
 
@@ -277,12 +281,16 @@ Checks the status of an existing upload job.
 
 **Request:**
 
-| Parameter     | Description                          |
-| ------------- | ------------------------------------ |
-| submission_id | identifies the submission            |
-| dataset_id    | identifies the dataset to be queried |
+| Parameter     | Description                           |
+| ------------- | ------------------------------------- |
+| submission_id | Identifies the submission.            |
+| dataset_id    | Identifies the dataset to be queried. |
 
 **Response:**
+
+| Code | Description            |
+| ---- | ---------------------- |
+| 200  | The status is returned |
 
 | Key      | Description                                   |
 | -------- | --------------------------------------------- |
@@ -294,8 +302,8 @@ Checks the status of an existing upload job.
 
 | Code | Description                                                                                                               |
 | ---- | ------------------------------------------------------------------------------------------------------------------------- |
-| 401  | if _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission or upload in-progress upload. |
-| 400  | if the parameters supplied are invalid.                                                                                   |
+| 401  | If _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission or upload in-progress upload. |
+| 400  | If the parameters supplied are invalid.                                                                                   |
 
 #### DELETE submission/{submission_id}/upload
 
@@ -304,12 +312,16 @@ _Cancel Pending_ until the job has been cleared up.
 
 **Request:**
 
-| Parameter     | Description                           |
-| ------------- | ------------------------------------- |
-| submission_id | identifies the submission             |
-| dataset_id    | identifies the dataset being canceled |
+| Parameter     | Description                            |
+| ------------- | -------------------------------------- |
+| submission_id | Identifies the submission.             |
+| dataset_id    | Identifies the dataset being canceled. |
 
 **Response:**
+
+| Code | Description                     |
+| ---- | ------------------------------- |
+| 202  | The cancel request is accepted. |
 
 | Key    | Description                                |
 | ------ | ------------------------------------------ |
@@ -319,8 +331,8 @@ _Cancel Pending_ until the job has been cleared up.
 
 | Code | Description                                                                                                                     |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 401  | if _dataset_id_or_submission_id_ does not exist, if the user does not own the submission, or the upload is in state _Uploaded_. |
-| 400  | if the parameters supplied are invalid.                                                                                         |
+| 401  | If _dataset_id_or_submission_id_ does not exist, if the user does not own the submission, or the upload is in state _Uploaded_. |
+| 400  | If the parameters supplied are invalid.                                                                                         |
 
 #### Upload Status and State
 
