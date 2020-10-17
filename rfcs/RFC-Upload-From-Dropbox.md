@@ -38,7 +38,7 @@ This specification does not cover the validation of the data or the process for 
 1. A user can restart a failed upload from the DP Browser App.
 1. The user must be authenticated before uploading.
 1. A user who has not yet agreed to the Portal policies must not be able to upload their file.
-1. Supports the upload of AnnData, Loom, or Seurat v3 RDS. See [Reference](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations).
+1. Restrict upload file format to either AnnData, Loom, or Seurat v3 RDS. See [Reference](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations).
 
 ### Nonfunctional requirements
 
