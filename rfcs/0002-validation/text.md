@@ -79,7 +79,7 @@ There are six main components involved in validation and processing:
 
 The relevant part of the portal database is three tables: `dataset`, `artifacts`, and `deployment_directories`.
 
-![Database Schema](images/db_schema.png)
+![Database Schema](imgs/db_schema.png)
 
 The `dataset` table tracks the status of datasets and various metadata about them that is used by the portal frontend.
 There are three status fields:
