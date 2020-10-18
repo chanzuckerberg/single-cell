@@ -1,7 +1,5 @@
 # Validation and Conversion of Uploaded Datasets
 
-## [Optional] Subtitle of my design
-
 **Authors:** [Marcus Kinsella](mkinsella@chanzuckerberg.com)
 
 **Approvers:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com), [Trent
@@ -13,7 +11,7 @@ We want uploaded datasets to follow our schema and be converted into multiple fi
 able to create datasets that follow the schema and the process and infrastructure we use to verify that and reformat the
 dataset.
 
-## Problem Statement | Background
+## Problem Statement
 
 There isn't a broad community consensus around how single cell datasets should be stored and annotated. This
 makes it harder to integrate these datasets, which is bad because that's a main aim of our single cell work. So, we have
@@ -37,7 +35,7 @@ The key requirement here is that users can prepare their own datasets without in
 with all the other work to support self-submission: file upload, collection create, private/public publication.
 
 
-## Detailed Design | Architecture | Implementation
+## Detailed Design
 
 ### Overview
 
@@ -126,7 +124,8 @@ will trigger the execution of the Fargate task when a new dataset file is added 
 
 The format conversions in steps 6 and 7 can occur in parallel, but they're also slower and sometimes use a lot of
 memory. There are existing tools that can perform the conversions: [sceasy](https://github.com/cellgeni/sceasy),
-commands in Seurat, and `cellxgene convert`.
+[commands in
+Seurat](https://satijalab.org/seurat/v3.0/conversion_vignette.html), and `cellxgene convert`.
 
 The main step that impacts submitter user experience is 4. Users will want to know as quickly as possible whether their
 file has been accepted, so this is updated in the DB before any other work takes place.
