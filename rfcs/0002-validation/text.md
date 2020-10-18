@@ -4,9 +4,10 @@
 
 **Authors:** [Marcus Kinsella](mkinsella@chanzuckerberg.com)
 
-**Approvers:** [Friendly Tech Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly PM Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly Tech Person2](mailto:some.nice.person@chanzuckerberg.com), [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com), [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com) 
+**Approvers:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com), [Trent
+Smith](mailto:trent.smith@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com)
 
-## tl;dr 
+## tl;dr
 
 We want uploaded datasets to follow our schema and be converted into multiple file formats. This describes how users are
 able to create datasets that follow the schema and the process and infrastructure we use to verify that and reformat the
@@ -38,36 +39,97 @@ with all the other work to support self-submission: file upload, collection crea
 
 ## Detailed Design | Architecture | Implementation
 
-There are two main phases for the preparation of a dataset. In the first, the submitter is working with their dataset
-locally, preparing it so it follows the schema and is in an accepted file format. We have command line tools to help
-with that are part of cellxgene. The second phase occurs after the dataset file is uploaded, and that it the phase we
-are mainly concerned about here.
+### Overview
 
-Through some upload process (described in an RFC elsewhere) a dataset file ends up in S3. Initially, that file is
-expected be in the AnnData HDF5 format, but eventually other formats will be supported as well. Once that happens, we
-need to validate and convert that file, which occurs in a number of steps:
+![Three Phases of Dataset Creation](imgs/three_phases.png)
 
-1. Localize the uploaded file to the local storage of some instance (HDF5 doesn't like remote files usually).
-2. Run the validation tool on the file. This is the same tool that's available to users via the cellxgene CLI, so this
-   is really just verifying that they ran it. This should only take a couple of seconds and use little memory.
-3. Update the database with the result of validation. If it fails, stop here.
-4. Convert the uploaded file to the Loom format.
-5. Convert the uploaded file to a Seurat object and save it.
-6. Convert the uploaded file to a SingleCellExperiment object and save it.
-7. Copy the converted files back to S3 and update the database with their locations.
+There are three main phases in the creation of a new dataset in the data portal:
 
-Steps 4, 5, and 6 can occur in parallel. They're also slower and sometimes use a lot of memory. They're performed using
-community tools like [sceasy](https://github.com/cellgeni/sceasy), which can have tricky dependencies. Generally, the
-step whose time impacts user experience is 2. Users will want to know right away if their file is accepted, but they're
-more willing to wait for conversion to complete.
+1. The submitter prepares a dataset file. This is done locally, outside the data portal, assisted by tooling we provide.
+   The outcome of this phase is a file in a format the data portal accepts that follows the schema.
+2. The submitter needs to then upload the dataset file to the portal. This involves things like creating a collection
+   and performing whatever consent/attestation is required. Then the submitter actually uploads the file, a process
+   which is described in detail in other RFCs.
+3. The uploaded file then needs to be validated and processed so it can be available via the portal. This involves four
+   main tasks:
+   - Validating that the file follows the schema.
+   - Updating the portal database with information about the uploaded file, things like tissue or ethnicity that come
+     from the schema.
+   - Converting the uploaded file to different formats and associating those with the dataset.
+   - Creating a cellxgene deployment for the dataset.
 
-The simplest approach is to run all the steps in a single container. The memory requirements for steps 4, 5, and 6 are
-much higher than the other steps, but all the other steps are very fast. And several of the steps share complex
-dependencies, so running them together can keep things simpler.
 
-This can be implemented with a pretty standard Fargate/ECS setup that's triggered by events in the uploaded files
-bucket. We can create an image with all the dependencies for the various R and python scripts and include that in a task
-that gets executed after every new upload.
+This RFC is concerned with phase 3.
+
+### Relevant Components
+
+There are six main components involved in validation and processing:
+
+![High-level Validation Architecture](imgs/validation_architecture.png)
+
+1. Staging bucket. The S3 bucket where uploaded file are placed by the upload process.
+2. Artifact bucket. The S3 bucket where artifacts associated with datasets are stored and served.
+3. cellxgene deployment bucket. The S3 bucket configured to serve datasets via cellxgene.
+4. Portal database. The database where information about datasets is stored. The portal API queries this database when
+   responding to requests.
+5. Validation and processing image. The Docker image containing the dependencies and script to validate and process.
+6. Validation and processing Fargate task. The task definition for executing the image with AWS Fargate.
+
+#### Portal Database Schema
+
+The relevant part of the portal database is three tables: `dataset`, `artifacts`, and `deployment_directories`.
+
+![Database Schema](images/db_schema.png)
+
+The `dataset` table tracks the status of datasets and various metadata about them that is used by the portal frontend.
+There are three status fields:
+
+- upload\_status: uploading, uploaded, canceled
+- validation\_status: validating, valid, invalid
+- artifact\_status: creating, complete
+
+The `artifacts` table tracks the different downloadable files associated with a dataset. This stores the format of the
+download and the bucket and object key in the artifact bucket.
+
+The `deployment_directories` table tracks the cellxgene deployments associated with a dataset and the URL where the
+deployment can be accessed.
+
+### Handoff from Upload
+
+At the end of the upload process there must be two elements present in AWS:
+
+1. A row in the `dataset` table with `id` and `collection_id` populated and `upload_status` set to "uploaded".
+2. A dataset file in the staging bucket with a `x-amz-meta-dataset-id` metadata field whose value is the `id` of the new
+   row in the `dataset` table.
+
+A [CloudWatch Event](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/CloudWatch-Events-tutorial-ECS.html)
+will trigger the execution of the Fargate task when a new dataset file is added to the staging bucket.
+
+### Steps of the Fargate Task
+
+1. Check the `dataset` table to verify that the expected row exists and `upload_status` is "uploaded". To avoid possible
+   race conditions from the upload process, wait and recheck if this isn't true.
+2. Set the `validation_status` in `dataset` to "validating".
+3. Localize the uploaded file. HDF5 doesn't usually work with remote files very well.
+4. Run the `cellxgene schema validate` command to do a shallow validation of the dataset file.
+   - If this has a non-zero exit code, set `validation_status` to "invalid", write stdout from the command to
+     `processing_message`, and halt.
+   - Otherwise, set `validation_status` to "valid" and `artifact_status` to "creating".
+5. Read the appropriate values from the dataset file and upload the JSONB fields in the `dataset` table for tissue,
+   assay, etc.
+6. For format in `{loom, h5ad, rds}`
+   - If the format does not match the format of the uploaded dataset file, run a conversion script.
+   - Copy the file to the artifact bucket.
+   - Insert a row into `artifacts` with the format and S3 key.
+7. Convert to cxg, copy to the cellxgene deployment bucket, and insert a row into `deployment_directories`.
+8. Set `artifact_status` to "complete".
+
+The format conversions in steps 6 and 7 can occur in parallel, but they're also slower and sometimes use a lot of
+memory. There are existing tools that can perform the conversions: [sceasy](https://github.com/cellgeni/sceasy),
+commands in Seurat, and `cellxgene convert`.
+
+The main step that impacts submitter user experience is 4. Users will want to know as quickly as possible whether their
+file has been accepted, so this is updated in the DB before any other work takes place.
 
 
 ### Monitoring and error reporting
@@ -77,5 +139,3 @@ that gets executed after every new upload.
 
 Other teams at CZI have used Airflow to orchestrate ETL tasks. Airflow comes with a nicer interface and more flexbility
 around triggering tasks but more overhead in terms of infrastructure to maintain.
-
-## References
