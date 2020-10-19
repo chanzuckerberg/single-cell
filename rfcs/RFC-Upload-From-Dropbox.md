@@ -65,7 +65,7 @@ directory of files.
 #### 2. Share Link
 
 It is assumed that the user has authenticated, agreed to the Portal policy, and started creating a new collection.
-Using the browser App, make a _[POST {submission_id}/upload/link](#post-submission-submission_id-upload-link)_ request to upload the file,
+Using the browser App, make a _[POST /submissions/{submission_id}/upload/link](#post-submission-submission_id-upload-link)_ request to upload the file,
 providing the sharable link in the request body. The response will contain the _dataset_id_, which can be used to
 check the status of the upload.
 
@@ -255,7 +255,7 @@ endpoints and how they are used. These are the new API endpoints needed to compl
 These APIs replace the [PUT /v1/submission/{project_uuid}/file](https://docs.google.com/document/d/1d8tv2Ub5b3E7Il85adOAUcG8P05N6UBZJ3XbhJSRrFs/edit#heading=h.3hln6w2kzoyt)
 section.
 
-#### POST submission/{submission_id}/upload/link
+#### POST submissions/{submission_id}/upload/link
 
 An authenticated user can upload a file from a shared link to a dataset in their submission.
 
@@ -268,10 +268,10 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 
 **Request:**
 
-| Parameter             | Description                                                                    |
-| --------------------- | ------------------------------------------------------------------------------ |
-| Link                  | A shared link to the file.                                                     |
-| submission_id         | Identifies the submission.                                                     |
+| Parameter             | Description                                                             |
+| --------------------- | ----------------------------------------------------------------------- |
+| Link                  | A shared link to the file.                                              |
+| submission_id         | Identifies the submission.                                              |
 | _Optional_ dataset_id | Identifies the dataset being uploaded. Used to restart a failed upload. |
 
 **Response:**
@@ -294,7 +294,7 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 | 409  | If there is an existing submission in progress with the same _dataset_id_.                   |
 | 413  | If the links refer to a file that exceeds the max size allowed.                              |
 
-#### GET submission/{submission_id}/upload
+#### GET submissions/{submission_id}/upload
 
 Checks the status of an existing upload job.
 
@@ -324,7 +324,7 @@ Checks the status of an existing upload job.
 | 401  | If _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission or upload in-progress upload. |
 | 400  | If the parameters supplied are invalid.                                                                                   |
 
-#### DELETE submission/{submission_id}/upload
+#### DELETE submissions/{submission_id}/upload
 
 Cancels an existing upload job. Any data that has started to upload is removed, and the upload status is changed to
 _Cancel Pending_ until the job has been cleared up.
@@ -449,3 +449,4 @@ files to clone.
 - [Corpora High Level Architecture](https://docs.google.com/document/d/1d8tv2Ub5b3E7Il85adOAUcG8P05N6UBZJ3XbhJSRrFs/edit#heading=h.3hln6w2kzoyt)
 - [AWS-S3-upload-integrity](https://stackoverflow.com/questions/42208998/aws-s3-upload-integrity)
 - [Diagrams](https://app.lucidchart.com/invitations/accept/81a342d2-c092-4855-a6bc-6320e4f9bea1)
+- [Slides](https://docs.google.com/presentation/d/1EkwEDQpDPOeuxcbqR7TvDKCyk34dGPViz7PNIBBa25I/edit?usp=sharing)
