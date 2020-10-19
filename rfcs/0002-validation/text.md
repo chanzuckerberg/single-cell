@@ -7,9 +7,9 @@ Smith](mailto:trent.smith@chanzuckerberg.com), [Brian Raymor](mailto:braymor@cha
 
 ## tl;dr
 
-We want uploaded datasets to follow our schema and be converted into multiple file formats. This describes how users are
-able to create datasets that follow the schema and the process and infrastructure we use to verify that and reformat the
-dataset.
+We want datasets in the portal to follow our schema, be viewable in cellxgene, and be available for download in multiple
+file formats. This RFC describes the process and infrastructure for validating uploaded datasets and processing them so
+they are fully available in the portal.
 
 ## Problem Statement
 
@@ -18,20 +18,18 @@ makes it harder to integrate these datasets, which is bad because that's a main 
 a simple schema that we want all datasets to adhere to. If all the datasets we store at least follow this schema, then
 our data corpus will be usable for data integration research and the production of atlases.
 
-The problem is that getting a dataset to follow the schema isn't trivial. The schema is pretty lightweight, but there's
-a bunch of data munging, relabeling of columns, etc. that's at best a pain and at worst beyond the capabilities of some
-submitters. So we want some tooling to help with that, and we also want to make sure that before we actually add a
-dataset to the portal/cellxgene we verify that it follows the schema.
+While the schema is pretty lightweight, we still need to double-check that uploaded datasets follow it. And, if the
+dataset does not, we want to give the submitter some prompt and useful message explaining why.
 
-Finally, single cell datasets come in different formats that are associated with different toolchains. We want to
-support as many of those toolchains as we can, so we're going to convert datasets into different formats. It seems to
-make sense to do this right after validation is complete since we're already parsing the original file anyway, and
-there's not really a good reason to delay converting.
+Another complication is that single cell datasets come in different formats that are associated with different
+toolchains. We want to support as many of those toolchains as we can, so we're going to convert datasets into
+different formats. It seems to make sense to do this right after validation is complete since we're already parsing
+the original file anyway, and there's not really a good reason to delay converting.
 
 ## Product Requirements
 
 The key requirement here is that users can prepare their own datasets without intervention from CZI. This goes along
-with all the other work to support self-submission: file upload, collection create, private/public publication.
+with all the other work to support self-submission: file upload, collection creation, and publication.
 
 ## Detailed Design
 
@@ -129,7 +127,23 @@ file has been accepted, so this is updated in the DB before any other work takes
 
 ### Monitoring and error reporting
 
+The initial volume of submitted datasets is expected to be relatively low, on the order of tens per month. So we likely
+will not need a very complex monitoring solution at first.
+
+There are two main types of errors we should anticipate. The first is a failure of the submitted dataset to validate.
+This isn't quite an "error" as it's part of the expected functioning of the system, but it nevertheless results in a
+dataset that is not properly loaded into the portal. In that case, the dataset is marked as "invalid" in the database
+along with an error message that the frontend can display to the user.
+
+The other is an unexpected failure during the Fargate task execution. In the initial implementation, these can be found
+and investigated manually via a CloudWatch dashboard. As we get a better understanding of failure and recovery modes, we
+can configure ECS events to automate error handling.
+
 ## Alternatives
 
 Other teams at CZI have used Airflow to orchestrate ETL tasks. Airflow comes with a nicer interface and more flexbility
 around triggering tasks but more overhead in terms of infrastructure to maintain.
+
+After discussion with the infra team, we agreed that the simpler, single-ECS-task approach was a reasonable starting
+point. But if our monitoring needs increase, or we want to use the Airflow parallelization patterns, we should consider
+using Airflow in the future.
