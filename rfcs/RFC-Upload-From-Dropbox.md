@@ -64,7 +64,8 @@ directory of files.
 
 #### 2. Share Link
 
-Using the browser App, make a _[POST {submission_id}/upload/link_request](#post-submission-submission_id-upload-link)_ to upload the file,
+It is assumed that the user has authenticated, agreed to the Portal policy, and started creating a new collection.
+Using the browser App, make a _[POST {submission_id}/upload/link](#post-submission-submission_id-upload-link)_ request to upload the file,
 providing the sharable link in the request body. The response will contain the _dataset_id_, which can be used to
 check the status of the upload.
 
@@ -271,7 +272,7 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 | --------------------- | ------------------------------------------------------------------------------ |
 | Link                  | A shared link to the file.                                                     |
 | submission_id         | Identifies the submission.                                                     |
-| _Optional_ dataset_id | Identifies the dataset being uploaded. Used to check the status of the upload. |
+| _Optional_ dataset_id | Identifies the dataset being uploaded. Used to restart a failed upload. |
 
 **Response:**
 
