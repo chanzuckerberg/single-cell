@@ -72,12 +72,13 @@ To support gene sets four tables will be added to the cellxgene relational datab
 **Figure 1** Cellxgene data schema, tables to be added (as described above) are in red
 #### Imported CSV
 GeneSet CSV
-- A file containing a comma separated list of genes and (optionally) details about why they were included. Each gene should be on a new line The name of the file will be used as the name of the gene set (see dataset_id.csv for example)
+- A file containing a comma separated list of the gene set name, genes and (optionally) details about why they were included. Each gene should be on a new line.
 ```
-GENE,COMMENTS
-a23,I picked this gene because I think it causes cancer
-b46,I picked this gene because I think it prevents cancer
-c19,I picked this gene because it has a funny name
+GENESET,GENE,COMMENTS
+SET1, a23,I picked this gene because I think it causes cancer
+SET1, b46,I picked this gene because I think it prevents cancer
+SET2, c19,I picked this gene because it has a funny name
+SET2, d57,
 ```
 #### Exported CSV
 Exported File
