@@ -40,6 +40,8 @@ jobs:
       ##########################
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+            fetch-depth: 0
 
       ################################
       # Run Linter against code base #
@@ -50,4 +52,3 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MARKDOWN_CONFIG_FILE: .markdownlint.json
