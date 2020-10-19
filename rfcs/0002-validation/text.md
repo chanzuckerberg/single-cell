@@ -28,12 +28,10 @@ support as many of those toolchains as we can, so we're going to convert dataset
 make sense to do this right after validation is complete since we're already parsing the original file anyway, and
 there's not really a good reason to delay converting.
 
-
 ## Product Requirements
 
 The key requirement here is that users can prepare their own datasets without intervention from CZI. This goes along
 with all the other work to support self-submission: file upload, collection create, private/public publication.
-
 
 ## Detailed Design
 
@@ -55,7 +53,6 @@ There are three main phases in the creation of a new dataset in the data portal:
      from the schema.
    - Converting the uploaded file to different formats and associating those with the dataset.
    - Creating a cellxgene deployment for the dataset.
-
 
 This RFC is concerned with phase 3.
 
@@ -130,9 +127,7 @@ Seurat](https://satijalab.org/seurat/v3.0/conversion_vignette.html), and `cellxg
 The main step that impacts submitter user experience is 4. Users will want to know as quickly as possible whether their
 file has been accepted, so this is updated in the DB before any other work takes place.
 
-
 ### Monitoring and error reporting
-
 
 ## Alternatives
 
