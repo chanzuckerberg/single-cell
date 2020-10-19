@@ -283,7 +283,6 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 | Key        | Description                                                               |
 | ---------- | ------------------------------------------------------------------------- |
 | dataset_id | Identifies the dataset the file will be associated with after validation. |
-| status     | Provides the current status of the upload.                                |
 
 **Error Responses:**
 
