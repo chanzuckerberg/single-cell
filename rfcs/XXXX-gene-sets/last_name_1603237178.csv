@@ -1,0 +1,7 @@
+GENESET,GENE,PVALUE,LOGFOLD,CELLSET1_CATEGORY.LABEL,CELLSET2_CATEGORY.LABEL,COMMENTS
+SET1, a23, .05, 2, tissue.lung, tissue.heart, I picked this gene because I think it causes cancer
+SET1, b46, .01, 4, tissue.lung, tissue.heart, I picked this gene because I think it prevents cancer
+SET1, c19, .35, 2, tissue.lung, tissue.heart, I picked this gene because it has a funny name
+SET2, d57, .09, 3, cluster.1, cluster.2,
+SET2, d48, .04, 4, cluster.1, cluster.2,
+SET2, d89, .06, 5, cluster.1, cluster.2,
