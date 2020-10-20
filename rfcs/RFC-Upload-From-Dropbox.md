@@ -206,12 +206,12 @@ _dataset_id_ associated with the upload.
 
 #### Upload Table
 
-The upload table is a DynamoDB table that tracks the current status of uploads.
+The upload table is a database table that tracks the current status of uploads.
 
-DynamoDB was favored over adding additional fields to the existing Database. The upload table will be updated and queried
+The upload table will be updated and queried
 frequently by the browser app and the upload service. The browser app will query periodically for upload progress.
 The upload service will query the upload table for a _Cancel Pending_ status, and to update the progress and status of
-the upload. With the current database cached behind CloudFront, the upload service would constantly need to clear the
+the upload. With the current database cached behind CloudFront, the upload service will constantly need to clear the
 CloudFront cache if the existing database was used.
 
 The table will have the following columns:
