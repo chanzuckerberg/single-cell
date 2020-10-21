@@ -41,20 +41,20 @@ Fully supporting persistence of differential expression results is out of the sc
 ### Relational Database
 To support gene sets three tables will be added to the cellxgene relational database
 - Gene
-   - UUID (generated)
-   - GeneName
-   - OntologyId?
+  - UUID (generated)
+  - GeneName
+  - OntologyId?
 - GeneGeneSetLink
-   - UUID
-   - Gene UUID
-   - GeneSet UUID
-   - Comments (optional)
+  - UUID
+  - Gene UUID
+  - GeneSet UUID
+  - Comments (optional)
 - GeneSet
-   - UUID (generated)
-   - GeneSet Name (required)
-   - Gene Count (generated)
-   - User UUID
-   - Dataset UUID
+  - UUID (generated)
+  - GeneSet Name (required)
+  - Gene Count (generated)
+  - User UUID
+  - Dataset UUID
 
 
 ![Cellxgene Data Schema](imgs/Cellxgene_rds_schema.png)
