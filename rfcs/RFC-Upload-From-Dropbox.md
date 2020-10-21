@@ -86,7 +86,7 @@ The URL will be verified it matches the expected format using regex. The URL mus
 #### 4. Upload Step Function/ Update Database
 
 Once the request has been verified, the Data Portal backend will create an entry in the upload table using the
-_dataset_id_as the key and set the status to \_Waiting_. The backend will also kick off the upload step function.
+_dataset_id_ as the key and set the status to _Waiting_. The backend will also kick off the upload step function.
 The step function will handle reties and direct responses to the correct handlers.
 
 ##### Why Might the Upload Fail
@@ -121,13 +121,13 @@ Where possible, the progress of the upload will be calculated and updated in the
 
 If the upload fails for any reason, the upload container will mark the status of the upload as _Waiting_. If the error
 can be retried a retry response will be returned by the upload container. The step function will handle retrying the
-task. The number of times an upload job is retried will be adjustable. Initially, the number of retries will
+upload. The number of times an upload job is retried will be adjustable. Initially, the number of retries will
 be 5 times, with exponential back off.
 
 #### 8. Failed Uploads
 
 If an upload is retried and fails enough times(see Retry section) during upload or fails with an error that a retry
-will not fix, it will be cleanup by the upload cleanup handler. Cleanup involved removing the upload from storage and
+will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
 updating the upload table with the _Failed_ status.
 
 #### 9. Validation Hand Off
@@ -169,8 +169,6 @@ ends if the function fails, completes, or is canceled.
 
 Step functions can be named when created. The name of the step function must include the dataset_id to make it easier to
 identify.
-
-#####
 
 ##### Upload Job Entry
 
