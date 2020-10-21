@@ -39,11 +39,12 @@ with all the other work to support self-submission: file upload, collection crea
 
 There are three main phases in the creation of a new dataset in the data portal:
 
-1. The submitter prepares a dataset file. This is done locally, outside the data portal, assisted by tooling we provide.
+1. The submitter prepares a dataset file. This is done locally, outside the data portal, assisted by
+   [tooling we provide](https://github.com/chanzuckerberg/cellxgene/blob/mckinsel/remix/dev_docs/schema_guide.md)
    The outcome of this phase is a file in a format the data portal accepts that follows the schema.
 2. The submitter needs to then upload the dataset file to the portal. This involves things like creating a collection
    and performing whatever consent/attestation is required. Then the submitter actually uploads the file, a process
-   which is described in detail in other RFCs.
+   which is described in detail in [other RFCs](https://github.com/chanzuckerberg/single-cell/pull/71).
 3. The uploaded file then needs to be validated and processed so it can be available via the portal. This involves four
    main tasks:
    - Validating that the file follows the schema.
