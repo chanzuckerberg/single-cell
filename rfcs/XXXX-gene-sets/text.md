@@ -8,7 +8,7 @@
 
 This RFC contains the details about the data format for the gene set feature. It will support the import and export of differential
  expression results and allow a user to upload their own gene sets for analysis.
- 
+
 ## Glossary
 - Gene set - List of genes
 - Differential expression - A statistic (typically logfold and p-value) describing the difference in gene expression between two sets of cells. It may refer to stats specific to one gene (differential expression value) or many (differential expression analysis). When referring to many genes it is typically capped (eg top 10 most differentially expressed genes)
@@ -67,7 +67,7 @@ identifiers for the cell sets that were compared to produce those values and det
 Each gene should be on a new line. Only gene set (name) and gene are required fields. The name of the file will be based on the
 user name and a timestamp rounded to the nearest second. If cells from two different datasets are being compared the datasest name
 should be appended to the cellset label (eg dataset1.categoryA.label1)
-```
+```CSV
 GENESET,GENE,PVALUE,LOGFOLD,CELLSET1_CATEGORY.LABEL,CELLSET2_CATEGORY.LABEL,COMMENTS
 SET1, a23, .05, 2, tissue.lung, tissue.heart, I picked this gene because I think it causes cancer
 SET1, b46, .01, 4, tissue.lung, tissue.heart, I picked this gene because I think it prevents cancer
