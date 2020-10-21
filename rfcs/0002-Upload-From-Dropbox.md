@@ -8,7 +8,7 @@
 [Marcus Kinsella](mailto:mkinsella@chanzuckerberg.com), [Eduardo Lopez](mailto:elopez@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com)
 [Ryan King](mailto:ryan.king@chanzuckerberg.com), [Brian McCandless](bmccandless@chanzuckerberg.com)
 
-## tl;dr
+## TL;DR
 
 A user can upload files, up to 30GB in size, to Data Portal from a DropBox link.
 
@@ -54,7 +54,7 @@ This specification does not cover the validation of the data or the process for 
 Cloud to cloud upload requires the user to provide a shareable link for a file on their DropBox from which DP can upload
 the file to the S3 bucket. Now to walk through the cloud to cloud flow, see figure below.
 
-![Cloud to Cloud](https://app.lucidchart.com/publicSegments/view/e1e72143-c108-4c7f-bf6c-053d98256c1f/image.png)
+![Cloud to Cloud](https://app.lucidchart.com/publicSegments/view/cbfd836d-061b-4c5c-b484-9fbc6e4c810c/image.png)
 **Figure:** Architecture of a user uploading from their cloud to our cloud.
 
 #### 1. Get Share Link
@@ -83,13 +83,11 @@ DropBox looks like _<https://www.dropbox.com/s/{folder_id}/{file_id}url?dl=0>_. 
 
 The URL will be verified it matches the expected format using regex. The URL must also refer to the correct DropBox domain. The URL will be rejected if it does not match.
 
-The backend will also create an entry in the upload table using the _dataset_id_as the key, and set the status to_Waiting_.
+#### 4. Upload Step Function/ Update Database
 
-#### 4. Queue
-
-The queue stores the links that need to be processed. It buffers the downstream servers from upload requests. This
-allows us to spin up servers as needed. It also gives us the ability to retry a download if one of the servers to fails
-upload the file.
+Once the request has been verified, the Data Portal backend will create an entry in the upload table using the
+_dataset_id_ as the key and set the status to _Waiting_. The backend will also kick off the upload step function.
+The step function will handle reties and direct responses to the correct handlers.
 
 ##### Why Might the Upload Fail
 
@@ -99,8 +97,8 @@ upload the file.
 
 #### 5. Start Upload Task
 
-The upload service is used to complete this task. Once an SQS event is fired, the Upload Job Handler retrieves the upload
-job and starts an upload task. An upload container will startup to handle the task and will change the upload status to _Uploading_.
+The upload step function will start an upload container and provide all of the parameters required to run. The upload
+container will change the upload status in the upload table to _Uploading_ before streaming.
 
 #### 6. Stream File
 
@@ -111,27 +109,26 @@ As the data is streaming from the CSP, the hash of the file will be calculated a
 uploaded to S3. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
 will be used when uploading to S3 to verify the integrity of each chunk. The AWS SDK will be useful in simplifying the
 upload to S3. For calculating the checksum while streaming, [checksumming_io](https://github.com/HumanCellAtlas/checksumming_io)
-can be used.
-
-If the final hash does not match, then the upload process will be retried. Once the upload is complete, the upload job
-will be removed from the queue.
+can be used. If the final hash does not match, then the upload process will be retried.
 
 While streaming the file, the upload container will periodically check if the upload has been canceled using the upload
 table. If the upload status is _Cancel Pending_, the upload container will stop the stream, delete any data that has been uploaded,
-mark the job as complete in the queue, and set the status of the upload to cancelled.
+and set the status of the upload to cancelled.
 
 Where possible, the progress of the upload will be calculated and updated in the upload table.
 
 #### 7. Retry
 
-If the upload fails for any reason, the upload container will mark the status of the upload as _Waiting_, and return the upload
-job to the queue. The number of times an upload job is retried will be adjustable. Initially, the number of retries will
+If the upload fails for any reason, the upload container will mark the status of the upload as _Waiting_. If the error
+can be retried a retry response will be returned by the upload container. The step function will handle retrying the
+upload. The number of times an upload job is retried will be adjustable. Initially, the number of retries will
 be 5 times, with exponential back off.
 
 #### 8. Failed Uploads
 
-If an upload is retried and fails enough times(see [retry](#upload-queue)) during upload, it will be removed from the upload
-queue and moved to the dead letter queue. The DLQ Handler will change upload status to _Failed_.
+If an upload is retried and fails enough times(see Retry section) during upload or fails with an error that a retry
+will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
+updating the upload table with the _Failed_ status.
 
 #### 9. Validation Hand Off
 
@@ -155,21 +152,23 @@ upload status. This additional functionality can be built into the existing DP B
 The backend will also be responsible for performing a simple validation of the file being uploaded. The validation is
 performed during the initial request to upload. The validation consists of verifying the extension of the file is a [supported type](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations)and the size of the file does not exceed our limits(see [non-functional requirements](#non-functional-requirements)).
 
-#### Upload Queue
+The upload table will first be updated by the DP Backend. The dataset_id and initial upload status will be set after the
+request has been validated.
 
-The upload queue is an [AWS SQS](https://aws.amazon.com/sqs/) that will track pending upload jobs. It acts as a buffer between the upload service and the upload requests. This buffer allows computing resources to be scaled as the length of the queue changes.
+The final job of the backend is to start the upload step function which handles the rest of the upload process.
 
-The upload jobs are used by the upload service to know where to download the file from before uploading them to S3.
-For the first implementation, the job sleep time will be 15min. Eventually, the job sleep time will depend on the size
-of the file being uploaded.
+#### Upload Step Function
 
-The upload queue will initially be configured to retry an upload 5 times before moving it to the dead letter queue. Every
-time an upload fails, it is placed back into the queue with longer sleep times. The sleep time determines when the upload
-job will be available for processing agian. The length of time to sleep will increase exponentially with each consecutive
-failure. This retry pattern is known as exponential backoff.
+![Upload Step Function](https://app.lucidchart.com/publicSegments/view/f688ac04-ae05-4dbd-b4ef-b51a88520622/image.png)
+Figure: Step Function State Diagram
 
-Cloudwatch events can be used to monitor the SQS length. Additional computing resource can be spawned in response to an
-increase in jobs in the queue.
+AWS Step Functions will be used to coordinate the retries and error response of the upload container. Once the backend
+kicks off the step function, a container will be spawned to perform the upload. If an error occurs during the upload, the
+step function will handle retrying the upload or directing the job to the upload cleanup handler. The step function will
+ends if the function fails, completes, or is canceled.
+
+Step functions can be named when created. The name of the step function must include the dataset_id to make it easier to
+identify.
 
 ##### Upload Job Entry
 
@@ -180,25 +179,21 @@ These are the fields that will be in the upload job placed in the queue:
 - **dataset_id** - identifies the dataset. Used to determine the storage location.
 - **file_name** - the name of the file being downloaded.
 
-#### Upload Service
+#### Upload Container
 
-The upload service is a computing resource within the AWS cloud. It consists of the Upload Job Handler an AWS lambda
-configured to receive [SQS event notifications](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-lambda-function-trigger.html)
-and the Upload Container a longer-lived ECS container.
+The upload container is a docker container running on AWS Fargate. Fargate provides the on-demand scalability needed to perform
+the upload without manual intervention. The upload container will be triggered by an AWS Step Function which will manage
+the starting, stopping, retries, and error handling of the container.
 
-The lambda will handle the SQS events and retrieve the upload jobs. It will then schedule ECS tasks to perform the upload
-with the information in the upload job. The upload job contains all of the information need by the container to upload a
-file from DropBox to S3.
-
-The ECS container will verify the integrity of the download and upload. It will also change the
+The container will verify the integrity of the download and upload. It will also change the
 state of the upload in the upload table as needed.
 
-The ECS container will poll the upload table for a _Cancel Pending_ status. If the _Cancel Pending_ status is set, the
+The container will poll the upload table for a _Cancel Pending_ status. If the _Cancel Pending_ status is set, the
 container will delete any data uploaded to S3, remove the upload job from the queue, and change the status of
 the upload to _Canceled_.
 
-If an unrecoverable error occurs while processing the upload, the ECS container will return the upload job to the
-queue and update the upload table.
+If an unrecoverable error occurs while processing the upload, the upload container will return a response to the step function
+indicating an error has occurred.
 
 If an error is encountered that cannot be fixed by retrying, the upload status will change to _Failed_. The error can be
 returned using the _[GET submission/{submission_id}/upload](#GET-submission-submission_id}-upload)_ endpoint with the
@@ -209,9 +204,9 @@ _dataset_id_ associated with the upload.
 The upload table is a database table that tracks the current status of uploads.
 
 The upload table will be updated and queried
-frequently by the browser app and the upload service. The browser app will query periodically for upload progress.
-The upload service will query the upload table for a _Cancel Pending_ status, and to update the progress and status of
-the upload. With the current database cached behind CloudFront, the upload service will constantly need to clear the
+frequently by the browser app and the upload container. The browser app will query periodically for upload progress.
+The upload container will query the upload table for a _Cancel Pending_ status, and to update the progress and status of
+the upload. With the current database cached behind CloudFront, the upload container will constantly need to clear the
 CloudFront cache if the existing database was used.
 
 The table will have the following columns:
@@ -223,10 +218,17 @@ The table will have the following columns:
   will be updated. If the size of the file to be uploaded is known, the progress will indicate how much has been
   uploaded over the total file size. If the total file size is not known, the progress will not be updated. This field is
   returned using _[GET submission/{submission_id}/upload](#GET-submission-submission_id-upload)_.
-- **owner** - the id of the user who owns this collection. This field is used to enforce if the user authorized to view the
+- **owner** - the id of the user who owns this collection. This field is used to enforce if the user is authorized to view the
   remaining columns.
 - **message** - error message if the upload fails. This field is updated when an error occurs that should be visible to the
   owner.
+
+#### Upload Cleanup Handler
+
+The upload cleanup handler is invoked by the step function when an upload exhausts its retries or fails with an error
+that cannot be fixed by retrying. The handler will set the upload status to failed and set the message field in the
+upload table. The error can be returned using the _GET dataset/{dataset_id}/status_ endpoint with the  
+_dataset_id_ associated with the upload.
 
 #### Upload Bucket
 
@@ -240,12 +242,6 @@ S3 event can be used to trigger additional processing such as validation, once t
 processing is outside the scope of this RFC.
 
 Files are uploaded to {collection_id}/{dataset_id}/{file_name} in the upload bucket.
-
-#### DLQ Handler
-
-The DLQ handler is an AWS lambda configure to receive [SQS event notifications](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-lambda-function-trigger.html)
-from the dead letter queue. The dead letter queue is populated whenever an upload job is retired and fails beyond the
-configured limit. The DLQ handler updates the status of an upload in the upload table to failed.
 
 ### Data Portal APIs
 
@@ -293,16 +289,15 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 | 409  | If there is an existing submission in progress with the same _dataset_id_.                   |
 | 413  | If the links refer to a file that exceeds the max size allowed.                              |
 
-#### GET submissions/{submission_id}/upload
+#### GET datasets/{dataset_id}/status
 
 Checks the status of an existing upload job.
 
 **Request:**
 
-| Parameter     | Description                           |
-| ------------- | ------------------------------------- |
-| submission_id | Identifies the submission.            |
-| dataset_id    | Identifies the dataset to be queried. |
+| Parameter  | Description                           |
+| ---------- | ------------------------------------- |
+| dataset_id | Identifies the dataset to be queried. |
 
 **Response:**
 
@@ -318,22 +313,23 @@ Checks the status of an existing upload job.
 
 **Error Responses:**
 
-| Code | Description                                                                                                               |
-| ---- | ------------------------------------------------------------------------------------------------------------------------- |
-| 401  | If _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission or upload in-progress upload. |
-| 400  | If the parameters supplied are invalid.                                                                                   |
+| Code | Description                                                                                                                 |
+| ---- | --------------------------------------------------------------------------------------------------------------------------- |
+| 401  | If _dataset_id_ does not exist, the user does not own the submission associated with the dataset, or upload is in-progress. |
+| 400  | If the parameters supplied are invalid.                                                                                     |
 
-#### DELETE submissions/{submission_id}/upload
+#### DELETE datasets/{dataset_id}
 
 Cancels an existing upload job. Any data that has started to upload is removed, and the upload status is changed to
-_Cancel Pending_ until the job has been cleared up.
+_Cancel Pending_ until the job has been cleared up. If the dataset has already started validation, this endpoint will
+cancel the validation and delete the upload from s3. If the dataset is already part of a public collection, this endpoint
+will return an error.
 
 **Request:**
 
-| Parameter     | Description                            |
-| ------------- | -------------------------------------- |
-| submission_id | Identifies the submission.             |
-| dataset_id    | Identifies the dataset being canceled. |
+| Parameter  | Description                            |
+| ---------- | -------------------------------------- |
+| dataset_id | Identifies the dataset being canceled. |
 
 **Response:**
 
@@ -343,10 +339,10 @@ _Cancel Pending_ until the job has been cleared up.
 
 **Error Responses:**
 
-| Code | Description                                                                                                                    |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 401  | If _dataset_id_or_submission_id_ does not exist, if the user does not own the submission or the upload is in state _Uploaded_. |
-| 400  | If the parameters supplied are invalid.                                                                                        |
+| Code | Description                                                                                                                         |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | If _dataset_id_ does not exist, the user does not own the submission associated with the dataset, or upload is complete and public. |
+| 400  | If the parameters supplied are invalid.                                                                                             |
 
 #### Upload Status and State
 
@@ -361,7 +357,7 @@ There are several different states that an upload can be in. The table below def
 | #   | states         | Description                                                                                 |
 | --- | -------------- | ------------------------------------------------------------------------------------------- |
 | S0  | Start          | The upload is never actually in this state.                                                 |
-| S1  | Waiting        | The upload is enqueued, and waiting for the upload service.                                 |
+| S1  | Waiting        | The upload is enqueued, and waiting for the upload container.                               |
 | S2  | Uploading      | The file is actively being uploaded.                                                        |
 | S3  | Uploaded       | The upload was completed successfully.                                                      |
 | S4  | Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
@@ -384,11 +380,11 @@ An upload moves from S1 to S2 when the file is actively being uploaded to S3.
 
 Once a user requests an upload to be canceled the state changes to _Cancel Pending_. The cancellation may not happen
 immediately, therefore the status of the upload is changed to _Cancel Pending_ until the upload has been canceled by the
-upload service.
+upload container.
 
 ##### S5 -> S6
 
-Once the upload has been canceled by the upload service the state will be _Canceled_.
+Once the upload has been canceled by the upload container the state will be _Canceled_.
 
 ##### S2 -> S3
 
@@ -396,7 +392,7 @@ The upload has been completed. The state of the upload is _Uploaded_.
 
 ##### S2 -> S1
 
-If the upload fails, the job returns to the queue to be retried at a later time. The state changes to _Waiting_.
+If the upload fails, the job sleeps for a short time before running again. The state changes to _Waiting_.
 
 #### S2 -> S4
 
@@ -422,8 +418,8 @@ The upload job has failed to download after several retries. The state of the up
 
 ### Monitoring and error reporting
 
-- Monitor the length of the upload queue. If it gets too long, then increase the number of computing instances used.
-- Log failure on the computing resource.
+- Monitor the log messages associated with each step function executing. This will help with debugging failed uploads.
+- Include the dataset_id in the log generated. This will help find the associated log messages.
 
 ## Alternatives Considered
 
@@ -438,6 +434,12 @@ their files with our account. The file names would be controlled by the user unt
 From that point, a mapping of files to their file name uploaded to S3 would be needed. Given a cluster of servers, I'm not
 certain if the SMB protocol would duplicate the files across all of the servers or if the servers can be instructed which
 files to clone.
+
+### Manage uploads using SQS
+
+The upload jobs could be manages using SQS. This would require a primary queue and a dead letter queue as well as plumbing
+in between to connect everything up. Step functions offered all of the same functionality, but required significantly less
+connecting logic.
 
 ## References
 
