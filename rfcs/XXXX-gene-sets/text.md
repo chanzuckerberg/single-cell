@@ -7,12 +7,14 @@
 ## tl;dr
 
 This RFC contains the details about the data format for the gene set feature. It will support the import and export of differential
- expression results and allow a user to upload their own gene sets for analysis.
+expression results and allow a user to upload their own gene sets for analysis.
 
 ## Glossary
+
 - Gene set - List of genes
 - Differential expression - A statistic (typically logfold and p-value) describing the difference in gene expression between two sets of cells. It may refer to stats specific to one gene (differential expression value) or many (differential expression analysis). When referring to many genes it is typically capped (eg top 10 most differentially expressed genes)
 - LogFold - A ratio of the difference in expression levels. Typically calculated by taking the log2 of the gene expression value for each cell and then finding the mean of that value for each set of cells. Because the data is already log2 transformed you can then take the difference between the two means as the logfold value
+
 ## Problem Statement | Background
 
 Gene sets are the expected output of differential expression analysis in cellxgene. Two (non-overlaping) sets of cells
@@ -22,10 +24,15 @@ cells, that gene is identified and presented to the user. To ensure consistency 
 data format for storing references to these genes and any accompanying statistical data.
 
 Product Requirements
+
 ### Users should be able to export differential expression results
+
 Currently cellxgene users can choose two sets of cells and compute/display the log fold and adjusted p-value of the top ten differentially expressed genes. Additionally we display a histogram of the gene expression levels of the selected cells for each gene in the right side bar.
+
 - [US1] A user should be able to export a gene set, if the gene set was created by differential expression, the pvalue, log fold change, and category label fields will be populated in addition to the gene name. This will be available in a csv file (see data formats below for more detail).
+
 ### Users should be able to upload their own gene sets and see them in the right side bar with the option to apply them within current cellxgene functionalities, if the same gene ontology was used when generating the current dataset and the geneset uploaded by the user (ie the gene names match)
+
 - [US2] A user should be able to upload a geneset via a csv file (see data formats below for more detail) for a dataset.
 - [US3] A user should be able to upload a geneset they previously downloaded from cellxgene
 - [US4] When a user uploads a geneset, that list of genes should appear in the right side bar
@@ -34,12 +41,14 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 
 ## Detailed Design | Architecture | Implementation
 
-
 ### Data model
 
 Fully supporting persistence of differential expression results is out of the scope of this RFC. But the data model described below has been designed to allow for differential expression persistence in the future.
+
 ### Relational Database
+
 To support gene sets three tables will be added to the cellxgene relational database
+
 - Gene
   - UUID (generated)
   - GeneName
@@ -56,17 +65,20 @@ To support gene sets three tables will be added to the cellxgene relational data
   - User UUID
   - Dataset UUID
 
-
 ![Cellxgene Data Schema](imgs/Cellxgene_rds_schema.png)
 **Figure 1** Cellxgene data schema, tables to be added (as described above) are in red
+
 #### Imported CSV
+
 GeneSet CSV
+
 - A file containing a header listing the fields (`GENESET,GENE,PVALUE,LOGFOLD,CELLSET1_CATEGORY.LABEL,CELLSET2_CATEGORY.LABEL,COMMENTS`)
- and a comma separated list of the gene set name, genes, pvalue, logfold value,
-identifiers for the cell sets that were compared to produce those values and details about why they were included.
-Each gene should be on a new line. Only gene set (name) and gene are required fields. The name of the file will be based on the
-user name and a timestamp rounded to the nearest second. If cells from two different datasets are being compared the datasest name
-should be appended to the cellset label (eg dataset1.categoryA.label1)
+  and a comma separated list of the gene set name, genes, pvalue, logfold value,
+  identifiers for the cell sets that were compared to produce those values and details about why they were included.
+  Each gene should be on a new line. Only gene set (name) and gene are required fields. The name of the file will be based on the
+  user name and a timestamp rounded to the nearest second. If cells from two different datasets are being compared the datasest name
+  should be appended to the cellset label (eg dataset1.categoryA.label1)
+
 ```CSV
 GENESET,GENE,PVALUE,LOGFOLD,CELLSET1_CATEGORY.LABEL,CELLSET2_CATEGORY.LABEL,COMMENTS
 SET1, a23, .05, 2, tissue.lung, tissue.heart, I picked this gene because I think it causes cancer
