@@ -112,7 +112,8 @@ and set the status of the upload to cancelled.
 Where possible, the progress of the download will be calculated and updated in the upload table.
 
 #### 7. Validation
-
+##### A. Validation
+##### B. Generation
 
 #### 8. Upload
 
@@ -120,18 +121,22 @@ Once the file have been validated, it will be uploaded to S3. The [Content-MD5 h
 will be used when uploading to S3 to verify the integrity of each chunk. The AWS SDK will be useful in simplifying the
 upload to S3. 
 
-#### 9. Retry
+#### 9. Failed Uploads
+
+If an upload is retried and fails enough times(see Retry section) during upload or fails with an error that a retry
+will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
+updating the upload table with the _Failed_ status.
+
+#### 10. Update
+
+Once the files have been upload to S3, the dataset will be updated in the database with the assets and links to the assets.
+
+#### Retry
 
 If the upload fails for any reason, the upload container will mark the status of the upload as _Waiting_. If the error
 can be retried a retry response will be returned by the upload container. The step function will handle retrying the
 upload. The number of times an upload job is retried will be adjustable. Initially, the number of retries will
 be 5 times, with exponential back off.
-
-#### 8. Failed Uploads
-
-If an upload is retried and fails enough times(see Retry section) during upload or fails with an error that a retry
-will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
-updating the upload table with the _Failed_ status.
 
 ### Components
 
