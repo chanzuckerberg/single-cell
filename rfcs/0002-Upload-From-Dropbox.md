@@ -19,15 +19,12 @@ A user can upload files, up to 30GB in size, to Data Portal from a DropBox link.
 - **Small File** - a file < 100 MB in size.
 - **Large File** - a file > 100 MB in size.
 - **Collection** - a collection of datasets uploaded and published by a user.
-- **Submission** - a collection that is going through the publishing process.
 
 ## Problem Statement | Background
 
 One of the primary goals of the DP is to allow users to upload their own files. These files consist of datasets.
 These datasets can vary in size from a few MB to several GB. Users can provide a shared link from their DropBox that
 is used to upload directly to S3.
-
-This specification does not cover the validation of the data or the process for a user to complete a submission.
 
 ## Product Requirements
 
@@ -65,7 +62,7 @@ directory of files.
 #### 2. Share Link
 
 It is assumed that the user has authenticated, agreed to the Portal policy, and started creating a new collection.
-Using the browser App, make a _[POST /submissions/{submission_id}/upload/link](#post-submission-submission_id-upload-link)_ request to upload the file,
+Using the browser App, make a _[POST /collections/{collection_id}/upload/link](#post-collection-collection_id-upload-link)_ request to upload the file,
 providing the sharable link in the request body. The response will contain the _dataset_id_, which can be used to
 check the status of the upload.
 
@@ -95,29 +92,35 @@ The step function will handle reties and direct responses to the correct handler
 - DropBox experienced an outage.
 - The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their DropBox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
 
-#### 5. Start Upload Task
+#### 5. Start Container
 
-The upload step function will start an upload container and provide all of the parameters required to run. The upload
-container will change the upload status in the upload table to _Uploading_ before streaming.
+The upload step function will start an upload container and provide all of the parameters required to run. The container
+ will change the upload status in the upload table to _Uploading_ before downloading.
 
 #### 6. Stream File
 
-The shared link is used to stream the file from one cloud to another. The most time will be spent streaming the file
-from the DropBox to S3. DropBox offers a way to validate the integrity of a download
+The shared link is used to download the file from DropBox into the container. DropBox offers a way to validate the integrity of a download
 by providing a hash of the data, for example [Dropbox Content Hash](https://www.dropbox.com/developers/reference/content-hash).
-As the data is streaming from the CSP, the hash of the file will be calculated as it arrives, and again as it's
-uploaded to S3. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
-will be used when uploading to S3 to verify the integrity of each chunk. The AWS SDK will be useful in simplifying the
-upload to S3. For calculating the checksum while streaming, [checksumming_io](https://github.com/HumanCellAtlas/checksumming_io)
-can be used. If the final hash does not match, then the upload process will be retried.
+As the data is downloaded, the hash of the file will be calculated as it arrives. For calculating the checksum while downloading, 
+[checksumming_io](https://github.com/HumanCellAtlas/checksumming_io) can be used. If the final hash does not match, 
+then the download process will be retried.
 
-While streaming the file, the upload container will periodically check if the upload has been canceled using the upload
-table. If the upload status is _Cancel Pending_, the upload container will stop the stream, delete any data that has been uploaded,
+While download the file, the upload container will periodically check if the job has been canceled using the upload
+table. If the upload status is _Cancel Pending_, the upload container will stop the stream, delete any data that has been downloaded,
 and set the status of the upload to cancelled.
 
-Where possible, the progress of the upload will be calculated and updated in the upload table.
+Where possible, the progress of the download will be calculated and updated in the upload table.
 
-#### 7. Retry
+#### 7. Validation
+
+
+#### 8. Upload
+
+Once the file have been validated, it will be uploaded to S3. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
+will be used when uploading to S3 to verify the integrity of each chunk. The AWS SDK will be useful in simplifying the
+upload to S3. 
+
+#### 9. Retry
 
 If the upload fails for any reason, the upload container will mark the status of the upload as _Waiting_. If the error
 can be retried a retry response will be returned by the upload container. The step function will handle retrying the
@@ -129,11 +132,6 @@ be 5 times, with exponential back off.
 If an upload is retried and fails enough times(see Retry section) during upload or fails with an error that a retry
 will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
 updating the upload table with the _Failed_ status.
-
-#### 9. Validation Hand Off
-
-Once the upload completes successfully, an [S3 event](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-is emitted by the upload bucket to inform the validation service to begin processing.
 
 ### Components
 
@@ -162,10 +160,10 @@ The final job of the backend is to start the upload step function which handles 
 ![Upload Step Function](https://app.lucidchart.com/publicSegments/view/f688ac04-ae05-4dbd-b4ef-b51a88520622/image.png)
 Figure: Step Function State Diagram
 
-AWS Step Functions will be used to coordinate the retries and error response of the upload container. Once the backend
-kicks off the step function, a container will be spawned to perform the upload. If an error occurs during the upload, the
+AWS Step Functions will be used to coordinate the retries and error response of the containers. Once the backend
+kicks off the step function, a container will be spawned to perform the upload and validation. If an error occurs during that time, the
 step function will handle retrying the upload or directing the job to the upload cleanup handler. The step function will
-ends if the function fails, completes, or is canceled.
+end if the function fails, completes, or is canceled.
 
 Step functions can be named when created. The name of the step function must include the dataset_id to make it easier to
 identify.
@@ -175,17 +173,16 @@ identify.
 These are the fields that will be in the upload job placed in the queue:
 
 - **link** - the link to file to download. Use to retrieve the file from DropBox.
-- **submission_id** - identifies the submission. Used to determine the storage location.
+- **collection_id** - identifies the collection. Used to determine the storage location.
 - **dataset_id** - identifies the dataset. Used to determine the storage location.
 - **file_name** - the name of the file being downloaded.
 
-#### Upload Container
+#### Upload/Validation Container
 
-The upload container is a docker container running on AWS Fargate. Fargate provides the on-demand scalability needed to perform
-the upload without manual intervention. The upload container will be triggered by an AWS Step Function which will manage
+The container is an EC2 instance. The upload container will be triggered by an AWS Step Function which will manage
 the starting, stopping, retries, and error handling of the container.
 
-The container will verify the integrity of the download and upload. It will also change the
+The container will verify the integrity of the download and upload , and handle file validation. It will also change the
 state of the upload in the upload table as needed.
 
 The container will poll the upload table for a _Cancel Pending_ status. If the _Cancel Pending_ status is set, the
@@ -196,7 +193,7 @@ If an unrecoverable error occurs while processing the upload, the upload contain
 indicating an error has occurred.
 
 If an error is encountered that cannot be fixed by retrying, the upload status will change to _Failed_. The error can be
-returned using the _[GET submission/{submission_id}/upload](#GET-submission-submission_id}-upload)_ endpoint with the
+returned using the _[GET collection/{collection_id}/upload](#GET-collection-collection_id}-upload)_ endpoint with the
 _dataset_id_ associated with the upload.
 
 #### Upload Table
@@ -217,7 +214,7 @@ The table will have the following columns:
 - **progress** - the current progress of the upload. While the file is actively being uploaded the progress of the upload
   will be updated. If the size of the file to be uploaded is known, the progress will indicate how much has been
   uploaded over the total file size. If the total file size is not known, the progress will not be updated. This field is
-  returned using _[GET submission/{submission_id}/upload](#GET-submission-submission_id-upload)_.
+  returned using _[GET collection/{collection_id}/upload](#GET-collection-collection_id-upload)_.
 - **owner** - the id of the user who owns this collection. This field is used to enforce if the user is authorized to view the
   remaining columns.
 - **message** - error message if the upload fails. This field is updated when an error occurs that should be visible to the
@@ -230,19 +227,6 @@ that cannot be fixed by retrying. The handler will set the upload status to fail
 upload table. The error can be returned using the _GET dataset/{dataset_id}/status_ endpoint with the  
 _dataset_id_ associated with the upload.
 
-#### Upload Bucket
-
-The upload bucket is a separate bucket. It is used to stage files
-before moving to the main bucket. Uploading files to a staging buckets makes it easier to clean up canceled, partial,
-or otherwise abandoned uploads, without accidentally deleting files actively being served by the Data Portal. Central
-Infra also provides a [bucket template](https://github.com/chanzuckerberg/cztack/tree/main/aws-s3-private-bucket) to help
-manage stale multipart uploads.
-
-S3 event can be used to trigger additional processing such as validation, once the upload has completed. The additional
-processing is outside the scope of this RFC.
-
-Files are uploaded to {collection_id}/{dataset_id}/{file_name} in the upload bucket.
-
 ### Data Portal APIs
 
 The DP Browser App will use these endpoints to interact with the Backend using these APIs. This section describes the new
@@ -251,12 +235,12 @@ endpoints and how they are used. These are the new API endpoints needed to compl
 These APIs replace the [PUT /v1/submission/{project_uuid}/file](https://docs.google.com/document/d/1d8tv2Ub5b3E7Il85adOAUcG8P05N6UBZJ3XbhJSRrFs/edit#heading=h.3hln6w2kzoyt)
 section.
 
-#### POST submissions/{submission_id}/upload/link
+#### POST collection/{collection_id}/upload/link
 
-An authenticated user can upload a file from a shared link to a dataset in their submission.
+An authenticated user can upload a file from a shared link to a dataset in their collection.
 
-If the upload is in an error state, this endpoint can be used with the _dataset_id_ to restart the submission. If a new
-link is provided, the new link will be used. If the submission is not in an error state, this endpoint will
+If the upload is in an error state, this endpoint can be used with the _dataset_id_ to restart the collection. If a new
+link is provided, the new link will be used. If the collection is not in an error state, this endpoint will
 return an error.
 
 Starting an upload causes the database to be updated with a new dataset. The dataset will set the initial state of the upload
@@ -267,7 +251,7 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 | Parameter             | Description                                                             |
 | --------------------- | ----------------------------------------------------------------------- |
 | Link                  | A shared link to the file.                                              |
-| submission_id         | Identifies the submission.                                              |
+| collection_id         | Identifies the collection.                                              |
 | _Optional_ dataset_id | Identifies the dataset being uploaded. Used to restart a failed upload. |
 
 **Response:**
@@ -284,9 +268,9 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 
 | Code | Description                                                                                  |
 | ---- | -------------------------------------------------------------------------------------------- |
-| 401  | If _dataset_id_or_submission_id_ does not exist, or if the user does not own the submission. |
+| 401  | If _dataset_id_ or _collection_id_ does not exist, or if the user does not own the collection. |
 | 400  | If the file type is invalid.                                                                 |
-| 409  | If there is an existing submission in progress with the same _dataset_id_.                   |
+| 409  | If there is an existing upload in progress with the same _dataset_id_.                   |
 | 413  | If the links refer to a file that exceeds the max size allowed.                              |
 
 #### GET datasets/{dataset_id}/status
@@ -315,7 +299,7 @@ Checks the status of an existing upload job.
 
 | Code | Description                                                                                                                 |
 | ---- | --------------------------------------------------------------------------------------------------------------------------- |
-| 401  | If _dataset_id_ does not exist, the user does not own the submission associated with the dataset, or upload is in-progress. |
+| 401  | If _dataset_id_ does not exist, the user does not own the collection associated with the dataset, or upload is in-progress. |
 | 400  | If the parameters supplied are invalid.                                                                                     |
 
 #### DELETE datasets/{dataset_id}
@@ -341,62 +325,34 @@ will return an error.
 
 | Code | Description                                                                                                                         |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 401  | If _dataset_id_ does not exist, the user does not own the submission associated with the dataset, or upload is complete and public. |
+| 401  | If _dataset_id_ does not exist, the user does not own the collection associated with the dataset, or upload is complete and public. |
 | 400  | If the parameters supplied are invalid.                                                                                             |
 
 #### Upload Status and State
 
 The API documentation returns a _status_ in response. This status informs the user of the current state of the upload.
-An upload follows this state diagram:
+The following diagram describes the possible state transitions:
 
-![Upload States](https://app.lucidchart.com/publicSegments/view/5fe0858f-eb93-4b64-9842-6f25cad371f3/image.png)
-Figure 2: Upload State Diagram
+![State Diagram](https://app.lucidchart.com/publicSegments/view/9cfbd683-215a-4bb8-b3bd-f83cd709ade9/image.png)
+Figure: State Diagram
 
 There are several different states that an upload can be in. The table below defines them.
 
-| #   | states         | Description                                                                                 |
-| --- | -------------- | ------------------------------------------------------------------------------------------- |
-| S0  | Start          | The upload is never actually in this state.                                                 |
-| S1  | Waiting        | The upload is enqueued, and waiting for the upload container.                               |
-| S2  | Uploading      | The file is actively being uploaded.                                                        |
-| S3  | Uploaded       | The upload was completed successfully.                                                      |
-| S4  | Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
-| S5  | Cancel Pending | The upload is in the process of being canceled                                              |
-| S6  | Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
+| states         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| Start          | The upload is never actually in this state.                                                 |
+| Waiting        | The upload is enqueued, and waiting for the upload container.                               |
+| Uploading      | The file is actively being uploaded.                                                        |
+| Uploaded       | The upload was completed successfully.                                                      |
+| Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
+| Cancel Pending | The upload is in the process of being canceled                                              |
+| Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
+| Verify         | The file is being verified       |
+| Download       | The file is being downloaded from DropBox |
+| Generating     | Files to store in S3 are generated |
+| Updating       | Updates the table with the new dataset and asset links | 
 
 <a name="upload-state-table">**Table:** Upload State Table </a>
-
-Once the upload is complete validation can begin.
-
-##### S0 - >S1
-
-An upload moves from S0 to S1 when an upload request has been made, and the system is waiting for resources to begin uploading.
-
-##### S1 - >S2
-
-An upload moves from S1 to S2 when the file is actively being uploaded to S3.
-
-##### S2 -> S5
-
-Once a user requests an upload to be canceled the state changes to _Cancel Pending_. The cancellation may not happen
-immediately, therefore the status of the upload is changed to _Cancel Pending_ until the upload has been canceled by the
-upload container.
-
-##### S5 -> S6
-
-Once the upload has been canceled by the upload container the state will be _Canceled_.
-
-##### S2 -> S3
-
-The upload has been completed. The state of the upload is _Uploaded_.
-
-##### S2 -> S1
-
-If the upload fails, the job sleeps for a short time before running again. The state changes to _Waiting_.
-
-#### S2 -> S4
-
-The upload job has failed to download after several retries. The state of the upload is _Failed_.
 
 ### Test plan
 
