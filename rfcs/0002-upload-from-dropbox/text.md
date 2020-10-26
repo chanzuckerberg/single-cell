@@ -272,7 +272,7 @@ _dataset_id_ associated with the upload.
 
 The upload cleanup handler is invoked by the step function when an upload exhausts its retries or fails with an error
 that cannot be fixed by retrying. The handler will set the upload status to failed and set the message field in the
-upload table. The error can be returned using the _GET dataset/{dataset_id}/status_ endpoint with the
+upload table. The error can be returned using the _GET dataset/{dataset\_id}/status_ endpoint with the
 _dataset_id_ associated with the upload.
 
 ### Data Portal APIs
@@ -316,7 +316,7 @@ to _Waiting_ once it has been accepted and is in the upload queue.
 
 | Code | Description                                                                                  |
 | ---- | -------------------------------------------------------------------------------------------- |
-| 401  | If _dataset_id_ or _collection_id_ does not exist, or if the user does not own the collection. |
+| 401  | If _dataset\_id_ or _collection\_id_ does not exist, or if the user does not own the collection. |
 | 400  | If the file type is invalid.                                                                 |
 | 409  | If there is an existing upload in progress with the same _dataset_id_.                   |
 | 413  | If the links refer to a file that exceeds the max size allowed.                              |
