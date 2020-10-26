@@ -154,7 +154,7 @@ dataset to "Waiting".
 
 #### 5. Start Step Function Task
 
-The Step Function only has a single task that runs a container that is responsible for retrieving the dataset file
+The [Step Function](#processing-step-function) has a single task that runs a container that is responsible for retrieving the dataset file
 from Dropbox, validating it, converting to different formats, and updating the database.
 
 #### 6. Download File from Dropbox
@@ -200,6 +200,11 @@ If the upload is retried and fails enough times(see Retry section) during upload
 will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
 updating the upload table with the _Failed_ status.
 
+##### Why Might the Upload Fail
+
+- The downloading server crashed.
+- Dropbox experienced an outage.
+- The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their Dropbox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
 
 #### Retry
 
@@ -230,9 +235,9 @@ performed during the initial request to upload. The validation consists of verif
 The upload table will first be updated by the DP Backend. The dataset_id and initial upload status will be set after the
 request has been validated.
 
-The final job of the backend is to start the upload step function which handles the rest of the upload process.
+The final job of the backend is to start the processing step function which handles the rest of processing of the dataset.
 
-#### Upload Step Function
+#### Processing Step Function
 
 ![Upload Step Function](https://app.lucidchart.com/publicSegments/view/f688ac04-ae05-4dbd-b4ef-b51a88520622/image.png)
 Figure: Step Function State Diagram
@@ -244,15 +249,6 @@ end if the function fails, completes, or is canceled.
 
 Step functions can be named when created. The name of the step function must include the dataset_id to make it easier to
 identify.
-
-##### Upload Job Entry
-
-These are the fields that will be in the upload job placed in the queue:
-
-- **link** - the link to file to download. Use to retrieve the file from Dropbox.
-- **collection_id** - identifies the collection. Used to determine the storage location.
-- **dataset_id** - identifies the dataset. Used to determine the storage location.
-- **file_name** - the name of the file being downloaded.
 
 #### Upload/Validation Container
 
@@ -273,30 +269,6 @@ If an error is encountered that cannot be fixed by retrying, the upload status w
 returned using the _[GET collection/{collection_id}/upload](#GET-collection-collection_id}-upload)_ endpoint with the
 _dataset_id_ associated with the upload.
 
-#### Upload Table
-
-The upload table is a database table that tracks the current status of uploads.
-
-The upload table will be updated and queried
-frequently by the browser app and the upload container. The browser app will query periodically for upload progress.
-The upload container will query the upload table for a _Cancel Pending_ status, and to update the progress and status of
-the upload. With the current database cached behind CloudFront, the upload container will constantly need to clear the
-CloudFront cache if the existing database was used.
-
-The table will have the following columns:
-
-- **dataset_id** - primary key. This field is used to identify the upload job.
-- **status** - the current state of the upload. This field is updated to inform the user of the current state of the upload.
-  The possible values are define in the [upload state table](#upload-state-table) .
-- **progress** - the current progress of the upload. While the file is actively being uploaded the progress of the upload
-  will be updated. If the size of the file to be uploaded is known, the progress will indicate how much has been
-  uploaded over the total file size. If the total file size is not known, the progress will not be updated. This field is
-  returned using _[GET collection/{collection_id}/upload](#GET-collection-collection_id-upload)_.
-- **owner** - the id of the user who owns this collection. This field is used to enforce if the user is authorized to view the
-  remaining columns.
-- **message** - error message if the upload fails. This field is updated when an error occurs that should be visible to the
-  owner.
-
 #### Upload Cleanup Handler
 
 The upload cleanup handler is invoked by the step function when an upload exhausts its retries or fails with an error
@@ -304,12 +276,6 @@ that cannot be fixed by retrying. The handler will set the upload status to fail
 upload table. The error can be returned using the _GET dataset/{dataset_id}/status_ endpoint with the  
 _dataset_id_ associated with the upload.
 
-
-##### Why Might the Upload Fail
-
-- The downloading server crashed.
-- Dropbox experienced an outage.
-- The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their Dropbox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
 
 ### Data Portal APIs
 
