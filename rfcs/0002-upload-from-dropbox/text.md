@@ -31,7 +31,7 @@ reporting for uploaded datasets.
 
 ## Product Requirements
 
-** A. Upload **
+**A. Upload**
 1. A user can upload a file to DP using a [shared link](https://www.dropbox.com/features/share/link-sharing) from their Dropbox.
 1. A user can initiate an upload from the DP Browser App.
 1. A user can abort an upload from the DP Browser App.
@@ -42,7 +42,7 @@ reporting for uploaded datasets.
 1. Users must first create a "collection" in the DP Browser which will contain the uploaded dataset before they
    can start an upload.
 
-** B. Validation and Conversion **
+**B. Validation and Conversion**
 1. Uploaded files that fail validation because they do not follow an accepted
    [schema](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md) and
    [encoding](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema_h5ad_implementation.md)
@@ -67,15 +67,17 @@ reporting for uploaded datasets.
 ### Architecture Diagram
 
 ![Cloud to Cloud](imgs/arch.png)
-<div align="center" font-size="small">Components and flow.</div>
+<p align="center" font-size="small">Components and flow.</p>
 
 ### Database Schema
 
-![Database Schema](imgs/db_schema.png)
-<div align="center" font-size="small">Dataset schema.</div>
+<p align="center">
+  <img src="imgs/db_schema.png" width="50%">
+</p>
+<p align="center" font-size="small">Database schema.</p>
 
 There are four tables that contain information about dataset. The main table is `dataset` which has the `dataset_id` as
-its primary key, associates the dataset with a collection, and contains dataset attributes like tissue and assay that
+its primary key. It associates the dataset with a collection, and contains dataset attributes like tissue and assay that
 enable richer display in the DP.
 
 The `artifacts` and `deployment_directories` track locations of downloadable files and cellxgene Explorer deployments,
@@ -86,7 +88,7 @@ messages for the upload, validation, and conversion processing steps.
 
 The status fields in the `dataset_processing_status` table are enums:
 
-** upload_status **
+**upload_status**
 | Values         | Description                                                                                 |
 | -------------- | ------------------------------------------------------------------------------------------- |
 | Waiting        | The upload is enqueued, and waiting for the upload container.                               |
@@ -96,12 +98,16 @@ The status fields in the `dataset_processing_status` table are enums:
 | Cancel Pending | The upload is in the process of being canceled.                                             |
 | Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
 
-** validation_status **
+**validation_status**
+| Values         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
 | Validating     | The validation script is running.                                                           |
 | Valid          | The uploaded file successfully passed validation.                                           | 
 | Invalid        | The uploaded file faile validation.                                                         |
 
-** conversion_status **
+**conversion_status**
+| Values         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
 | Converting     | The conversion script is running.                                                           |
 | Converted      | Conversion completed and the file was copied to the DP bucket.                              | 
 | Failed         | Conversion failed.                                                                          |
@@ -122,7 +128,7 @@ https://www.dropbox.com/s/abc123/my_dataset.h5ad?dl=1
 Per the functional requirements, the user must be authenticated, have created a collection, and agreed to DP data
 policies before being able to upload a dataset.
 Users will paste their Dropbox shared link into the DP Browser, which will then make a
-[POST request to /collections/{collection_id}/upload/link](#post-collection-collection_id-upload-link) with the Dropbox
+[POST request to /collections/{collection_id}/upload/link](#post-collectioncollection_iduploadlink) with the Dropbox
 link in the request body. The DP Browser can expect a response with a _dataset_id_ that identifies the new dataset and
 can be used to check its status. In the alternative, if the request fails the backend will return an appropriate error
 code and and error message in the response body.
