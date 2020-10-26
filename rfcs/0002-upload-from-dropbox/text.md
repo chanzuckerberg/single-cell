@@ -103,7 +103,7 @@ The status fields in the `dataset_processing_status` table are enums:
 | -------------- | ------------------------------------------------------------------------------------------- |
 | Validating     | The validation script is running.                                                           |
 | Valid          | The uploaded file successfully passed validation.                                           |
-| Invalid        | The uploaded file faile validation.                                                         |
+| Invalid        | The uploaded file failed validation.                                                         |
 
 **conversion_status**
 | Values         | Description                                                                                 |
