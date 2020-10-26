@@ -1,4 +1,4 @@
-# User Uploads From DropBox
+# User Upload and Validation From Dropbox
 
 ## For the cellxgene Data Portal
 
@@ -10,126 +10,190 @@
 
 ## TL;DR
 
-A user can upload files, up to 30GB in size, to Data Portal from a DropBox link.
+By supplying a Dropbox link, a user can initiate all the steps of dataset addition to the Data Portal (DP): upload,
+validation, conversion to different formats, and insertion into the database.
 
-## Glossary
+## Background
 
-- **Shared Link** - A link from DropBox that gives the bearer of that link access to private data.
-- **DP(Data Portal)** - The cellxgene Data Portal.
-- **Small File** - a file < 100 MB in size.
-- **Large File** - a file > 100 MB in size.
-- **Collection** - a collection of datasets uploaded and published by a user.
+One of the primary goals of the DP is to allow users to contribute their own datasets that follow the cellxgene Remix
+Schema. The first step in contributing a dataset is uploading the file in which the dataset is serialized. These files
+can vary in size from a few MB to tens of GB. Users often already keep these files in cloud storage so they can share
+them with collaborators, so a natural initial upload source is a cloud storage service like Dropbox.
 
-## Problem Statement | Background
+After upload, additional processing is required before the dataset is available in the DP. The uploaded dataset file
+must be validated against the schema, and the file needs to be converted to other common single cell analysis formats.
+Information needs to be extracted from the dataset and inserted into the DB database along with the locations of all the
+dataset files.
 
-One of the primary goals of the DP is to allow users to upload their own files. These files consist of datasets.
-These datasets can vary in size from a few MB to several GB. Users can provide a shared link from their DropBox that
-is used to upload directly to S3.
+These steps require the orchestration of compute and storage resources. And all of these steps are prone to errors,
+including some that the user can correct. So the DP needs infrastructure that handles automated processing and error
+reporting for uploaded datasets.
 
 ## Product Requirements
 
-1. A user can upload a file to DP using a shared link from their Dropbox.
+** A. Upload **
+1. A user can upload a file to DP using a [shared link](https://www.dropbox.com/features/share/link-sharing) from their Dropbox.
 1. A user can initiate an upload from the DP Browser App.
 1. A user can abort an upload from the DP Browser App.
 1. A user can check the status and progress of their upload from the DP Browser App.
 1. A user can restart a failed upload from the DP Browser App.
 1. The user must be authenticated before uploading.
 1. A user who has not yet agreed to the Portal policies must not be able to upload their file.
-1. Restrict upload file format to either AnnData, Loom, or Seurat v3 RDS. See [Reference](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations).
+1. Users must first create a "collection" in the DP Browser which will contain the uploaded dataset before they
+   can start an upload.
+
+** B. Validation and Conversion **
+1. Uploaded files that fail validation because they do not follow an accepted
+   [schema](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md) and
+   [encoding](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema_h5ad_implementation.md)
+   must not create a valid dataset in the DP.
+1. When a file fails validation, the user must receive information on why validation failed and steps that can be taken to
+   correct.
+1. The uploaded file must be converted to all the other datasets that the DP supports. Presently, these are AnnData,
+   Loom, and Seurat objects serialized as an RDS file.
+1. When validation and conversion are complete, the dataset should appear in the DP Browser in the correct collection
+   context along with metadata fields read from the dataset, for example assay and tissue.
 
 ### Nonfunctional requirements
 
-1. Cloud to Cloud uploads will retry if they fail. Retry at least 5 times with an exponential back off.
-1. A user can upload a single file up to 30GB in size.
+1. Uploads from Dropbox will retry if they fail. Retry at least 5 times with an exponential back off.
+1. A user can upload a single file up to 30GB in size. This is roughly the largest file observed so far, and we expect
+   that larger files will be rare.
 1. Shared links referring to more than one file will be rejected.
 1. The status of an upload must be tracked and queryable.
 
-## Detailed Design | Architecture | Implementation
+## Detailed Design
 
-### Cloud to Cloud Upload Flow
+### Architecture Diagram
 
-Cloud to cloud upload requires the user to provide a shareable link for a file on their DropBox from which DP can upload
-the file to the S3 bucket. Now to walk through the cloud to cloud flow, see figure below.
+![Cloud to Cloud](imgs/arch.png)
+<div align="center" font-size="small">Components and flow.</div>
 
-![Cloud to Cloud](https://app.lucidchart.com/publicSegments/view/cbfd836d-061b-4c5c-b484-9fbc6e4c810c/image.png)
-**Figure:** Architecture of a user uploading from their cloud to our cloud.
+### Database Schema
 
-#### 1. Get Share Link
+![Database Schema](imgs/db_schema.png)
+<div align="center" font-size="small">Dataset schema.</div>
 
-The user must generate a sharable link from their DropBox. Sharable links should only point to a single file, not a
-directory of files.
+There are four tables that contain information about dataset. The main table is `dataset` which has the `dataset_id` as
+its primary key, associates the dataset with a collection, and contains dataset attributes like tissue and assay that
+enable richer display in the DP.
 
-#### 2. Share Link
+The `artifacts` and `deployment_directories` track locations of downloadable files and cellxgene Explorer deployments,
+respectively.
 
-It is assumed that the user has authenticated, agreed to the Portal policy, and started creating a new collection.
-Using the browser App, make a _[POST /collections/{collection_id}/upload/link](#post-collection-collection_id-upload-link)_ request to upload the file,
-providing the sharable link in the request body. The response will contain the _dataset_id_, which can be used to
-check the status of the upload.
+The `dataset_processing_status` table tracks processing as it progresses and has fields that statuses, progress, and
+messages for the upload, validation, and conversion processing steps.
 
-#### 3. Verify
+The status fields in the `dataset_processing_status` table are enums:
 
-To prevent [server side request forgery](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery) the
-incoming shared link will be verified before queuing for download. The links generated by DropBox are often not direct
-links to the files and need to be parsed into the correct shape for downloading. The correct URL will be generated
-as part of the validation process. The backend that runs this should also be given minimal privileges to further protect from
-server-side request forgery. How to download from a shared link on [Dropbox](https://help.dropbox.com/files-folders/share/force-download).
+** upload_status **
+| Values         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| Waiting        | The upload is enqueued, and waiting for the upload container.                               |
+| Uploading      | The file is actively being uploaded.                                                        |
+| Uploaded       | The upload was completed successfully.                                                      |
+| Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
+| Cancel Pending | The upload is in the process of being canceled.                                             |
+| Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
 
-The DropBox download link can be generated by modifying the query parameter of the shared link. A shared link from
-DropBox looks like _<https://www.dropbox.com/s/{folder_id}/{file_id}url?dl=0>_. By changing the query parameter `dl=0` to
-`dl=1`, the shared file can be downloaded.
+** validation_status **
+| Validating     | The validation script is running.                                                           |
+| Valid          | The uploaded file successfully passed validation.                                           | 
+| Invalid        | The uploaded file faile validation.                                                         |
 
-The URL will be verified it matches the expected format using regex. The URL must also refer to the correct DropBox domain. The URL will be rejected if it does not match.
+** conversion_status **
+| Converting     | The conversion script is running.                                                           |
+| Converted      | Conversion completed and the file was copied to the DP bucket.                              | 
+| Failed         | Conversion failed.                                                                          |
 
-#### 4. Upload Step Function/ Update Database
+### Flow Description
 
-Once the request has been verified, the Data Portal backend will create an entry in the upload table using the
-_dataset_id_ as the key and set the status to _Waiting_. The backend will also kick off the upload step function.
-The step function will handle reties and direct responses to the correct handlers.
+#### 1. Generate Shared Link on Dropbox Site
 
-##### Why Might the Upload Fail
+The user must [generate](https://help.dropbox.com/files-folders/share/view-only-access) a shared link from their Dropbox.
+Shared links should only point to a single file, not a directory of files. Shared links from Dropbox should look like
 
-- The downloading server crashed.
-- DropBox experienced an outage.
-- The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their DropBox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
+```
+https://www.dropbox.com/s/abc123/my_dataset.h5ad?dl=1
+```
 
-#### 5. Start Container
+#### 2. Submit Shared Link Via DP Browser
 
-The upload step function will start an upload container and provide all of the parameters required to run. The container
- will change the upload status in the upload table to _Uploading_ before downloading.
+Per the functional requirements, the user must be authenticated, have created a collection, and agreed to DP data
+policies before being able to upload a dataset.
+Users will paste their Dropbox shared link into the DP Browser, which will then make a
+[POST request to /collections/{collection_id}/upload/link](#post-collection-collection_id-upload-link) with the Dropbox
+link in the request body. The DP Browser can expect a response with a _dataset_id_ that identifies the new dataset and
+can be used to check its status. In the alternative, if the request fails the backend will return an appropriate error
+code and and error message in the response body.
 
-#### 6. Stream File
+#### 3. Verify Dropbox Link
 
-The shared link is used to download the file from DropBox into the container. DropBox offers a way to validate the integrity of a download
+The POST request above is handled by an AWS Lambda that will perform some verification of the submitted Dropbox link. 
+To prevent [server side request forgery](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery) the Lambda
+will match the link against a regex that checks the expected Dropbox domain and link structure.
+
+Also, the links generated by Dropbox are sometimes not direct links to the files. The query parameter `dl=1`
+[may need to be added](https://help.dropbox.com/files-folders/share/force-download) so the link is direct.
+
+#### 4. Update Database and Start Step Function
+
+Once the link has been verified, the DP Portal backend will create a new record in the `datasets` table with a new
+_dataset_id_ primary key. It also creates a new record in the `dataset\_processing\_status` table, and sets `upload\_status`
+to Waiting. The new _dataset_id_ is included in the response to the POST request that triggered the Lambda.
+
+The backend then kicks off the processing AWS Step Function, including the Dropbox link and the new dataset_id as input
+parameters. The Step Function will handle retries and errors. Finally, the Lambda sets the `upload_status` of the new
+dataset to "Waiting".
+
+#### 5. Start Step Function Task
+
+The Step Function only has a single task that runs a container that is responsible for retrieving the dataset file
+from Dropbox, validating it, converting to different formats, and updating the database.
+
+#### 6. Download File from Dropbox
+
+Once the container starts, it sets the `upload_status` to "Uploading". Then,
+the shared link is used to download the file from Dropbox into the container. Dropbox offers a way to validate the integrity of a download
 by providing a hash of the data, for example [Dropbox Content Hash](https://www.dropbox.com/developers/reference/content-hash).
 As the data is downloaded, the hash of the file will be calculated as it arrives. For calculating the checksum while downloading, 
 [checksumming_io](https://github.com/HumanCellAtlas/checksumming_io) can be used. If the final hash does not match, 
 then the download process will be retried.
 
-While download the file, the upload container will periodically check if the job has been canceled using the upload
+While downloading the file, the container will periodically check if the job has been canceled using the upload
 table. If the upload status is _Cancel Pending_, the upload container will stop the stream, delete any data that has been downloaded,
 and set the status of the upload to cancelled.
 
-Where possible, the progress of the download will be calculated and updated in the upload table.
+Periodically, the progress of the download will be calculated and updated in the upload table.
 
-#### 7. Validation
-##### A. Validation
-##### B. Generation
+#### 7. Validation and Conversion
 
-#### 8. Upload
+If the download from Dropbox is successful, the `upload_status` is set to "Uploaded" and the `validation_status` is set
+to "Validating".
 
-Once the file have been validated, it will be uploaded to S3. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
-will be used when uploading to S3 to verify the integrity of each chunk. The AWS SDK will be useful in simplifying the
-upload to S3. 
+The container (the same container that just downloaded the file from Dropbox), then runs the `cellgene schema validate`
+command on the file. If that has non-zero exit code, `validation_status` is set to Invalid, stdout from the command is
+inserted into `validation_message`, and execution halts. Otherwise, `validation_status` is set to "Valid".
 
-#### 9. Failed Uploads
+Next, metadata values from the file are read and used to update the row in the `dataset` table.
 
-If an upload is retried and fails enough times(see Retry section) during upload or fails with an error that a retry
-will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
-updating the upload table with the _Failed_ status.
+Finally for each target conversion format, a script will be run that produces the format from the downloaded file. As
+each new file is created:
+  - The appropriate `conversion_status` field will be updated to "Converted"
+  - The file will be copied to the DP S3 bucket. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
+    will be used when copying to S3 to verify the integrity of each chunk.
 
 #### 10. Update
 
-Once the files have been upload to S3, the dataset will be updated in the database with the assets and links to the assets.
+Once all the files have been copied to S3, the `artifacts` and `deployment_directories` tables will have rows inserted
+that refer to the new files and their locations in S3. At this point, processing is complete.
+
+#### 11. Failed Processing
+
+If the upload is retried and fails enough times(see Retry section) during upload or fails with an error that a retry
+will not fix, it will be cleanup by the upload cleanup handler. Cleanup involves removing the upload from storage and
+updating the upload table with the _Failed_ status.
+
 
 #### Retry
 
@@ -137,6 +201,8 @@ If the upload fails for any reason, the upload container will mark the status of
 can be retried a retry response will be returned by the upload container. The step function will handle retrying the
 upload. The number of times an upload job is retried will be adjustable. Initially, the number of retries will
 be 5 times, with exponential back off.
+
+Failures during validation and conversion are not retryable.
 
 ### Components
 
@@ -177,7 +243,7 @@ identify.
 
 These are the fields that will be in the upload job placed in the queue:
 
-- **link** - the link to file to download. Use to retrieve the file from DropBox.
+- **link** - the link to file to download. Use to retrieve the file from Dropbox.
 - **collection_id** - identifies the collection. Used to determine the storage location.
 - **dataset_id** - identifies the dataset. Used to determine the storage location.
 - **file_name** - the name of the file being downloaded.
@@ -231,6 +297,13 @@ The upload cleanup handler is invoked by the step function when an upload exhaus
 that cannot be fixed by retrying. The handler will set the upload status to failed and set the message field in the
 upload table. The error can be returned using the _GET dataset/{dataset_id}/status_ endpoint with the  
 _dataset_id_ associated with the upload.
+
+
+##### Why Might the Upload Fail
+
+- The downloading server crashed.
+- Dropbox experienced an outage.
+- The user has reached their [daily bandwidth allowance](https://www.dropbox.com/plans?trigger=nr) from their Dropbox. [more info](https://help.dropbox.com/files-folders/share/banned-links).
 
 ### Data Portal APIs
 
@@ -353,7 +426,7 @@ There are several different states that an upload can be in. The table below def
 | Cancel Pending | The upload is in the process of being canceled                                              |
 | Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
 | Verify         | The file is being verified       |
-| Download       | The file is being downloaded from DropBox |
+| Download       | The file is being downloaded from Dropbox |
 | Generating     | Files to store in S3 are generated |
 | Updating       | Updates the table with the new dataset and asset links | 
 
@@ -370,7 +443,7 @@ There are several different states that an upload can be in. The table below def
 1. Verify only the owner can upload toa dataset to their collection.
 1. Verify partial uploads are erased from S3 if they fail or are canceled.
 1. Verify a user can start another upload if the original upload failed, or was canceled.
-1. Verify a shared folder from DropBox cannot be uploaded.
+1. Verify a shared folder from Dropbox cannot be uploaded.
 1. Verify uploaded files are removed from the upload bucket, once they moved to the primary bucket.
 1. Verify an uploaded file can be overwritten.
 1. Verify only [accepted file types](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md#implementations)
