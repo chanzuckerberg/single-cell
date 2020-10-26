@@ -2,7 +2,7 @@
 
 **Authors:** [Madison Dunitz](mailto:madison.dunitz@chanzuckerberg.com)
 
-**Approvers:** [Friendly Tech Person](mailto:arathi.mani@chanzuckerberg.com), [Friendly PM Person](mailto:schambers@chanzuckerberg.com), [Friendly Tech Person2](mailto:colin.megill@chanzuckerberg.com), [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com), [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
+**Approvers:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com), [Signe Chambers](mailto:schambers@chanzuckerberg.com), [Friendly Tech Person2](mailto:colin.megill@chanzuckerberg.com), [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com), [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
 
 ## tl;dr
 
@@ -23,7 +23,8 @@ expression level for each set of cells. When there is a particularly large diffe
 cells, that gene is identified and presented to the user. To ensure consistency and compatibility it is necessary to define a
 data format for storing references to these genes and any accompanying statistical data.
 
-Product Requirements
+
+## Product Requirements
 
 ### Users should be able to export differential expression results
 
@@ -31,12 +32,12 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 
 - [US1] A user should be able to export a gene set, if the gene set was created by differential expression, the pvalue, log fold change, and category label fields will be populated in addition to the gene name. This will be available in a csv file (see data formats below for more detail).
 
-### Users should be able to upload their own gene sets and see them in the right side bar with the option to apply them within current cellxgene functionalities, if the same gene ontology was used when generating the current dataset and the geneset uploaded by the user (ie the gene names match)
+### Users should be able to upload their own gene sets and see them in the right side bar with the option to apply them within current cellxgene functionalities, if the same gene ontology was used when generating the current dataset and the gene set uploaded by the user (ie the gene names match)
 
-- [US2] A user should be able to upload a geneset via a csv file (see data formats below for more detail) for a dataset.
-- [US3] A user should be able to upload a geneset they previously downloaded from cellxgene
-- [US4] When a user uploads a geneset, that list of genes should appear in the right side bar
-- [US5] If the user was logged in when they uploaded a geneset that genesit should persist if they logout and back in or reload the page
+- [US2] A user should be able to upload a gene set via a csv file (see data formats below for more detail) for a dataset.
+- [US3] A user should be able to upload a gene set they previously downloaded from cellxgene
+- [US4] When a user uploads a gene set, that list of genes should appear in the right side bar
+- [US5] If the user was logged in when they uploaded a gene set that gene set should persist if they logout and back in or reload the page
 - [US6] If the gene names match those used in the dataset the user should be able to use general cellxgene functionality (color by genes, calculate differential expression levels, etc.) on those genes
 
 ## Detailed Design | Architecture | Implementation
@@ -91,7 +92,7 @@ SET2, d89,,, cluster.1, cluster.2,
 
 ## Alternatives
 
-Because of the redundancy of the some pieces of data in the csv (geneset name, cellset identifiers) we considered using a json format instead,
+Because of the redundancy of the some pieces of data in the csv (gene set name, cellset identifiers) we considered using a json format instead,
 however discussions with scientists (our main users) made it clear that they felt more comfortable editing and working with a csv file.
 
 ## References
