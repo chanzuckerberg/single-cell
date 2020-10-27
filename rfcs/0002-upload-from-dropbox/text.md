@@ -49,8 +49,8 @@ reporting for uploaded datasets.
    must not create a valid dataset in the DP.
 1. When a file fails validation, the user must receive information on why validation failed and steps that can be taken to
    correct.
-1. The uploaded file must be converted to all the other datasets that the DP supports. Presently, these are AnnData,
-   Loom, and Seurat objects serialized as an RDS file.
+1. The uploaded file must be converted to all the other datasets that the DP supports. Presently, this is just AnnData.
+   In the near future, this will also include Loom and Seurat objects serialized an RDS files.
 1. When validation and conversion are complete, the dataset should appear in the DP Browser in the correct collection
    context along with metadata fields read from the dataset, for example assay and tissue.
 
@@ -111,6 +111,7 @@ The status fields in the `dataset_processing_status` table are enums:
 | Converting     | The conversion script is running.                                                           |
 | Converted      | Conversion completed and the file was copied to the DP bucket.                              |
 | Failed         | Conversion failed.                                                                          |
+| NA             | Conversion is not being run because this was the uploaded format.                           |
 
 ### Flow Description
 
@@ -164,11 +165,13 @@ As the data is downloaded, the hash of the file will be calculated as it arrives
 [checksumming_io](https://github.com/HumanCellAtlas/checksumming_io) can be used. If the final hash does not match,
 then the download process will be retried.
 
-While downloading the file, the container will periodically check if the job has been canceled using the upload
-table. If the upload status is _Cancel Pending_, the upload container will stop the stream, delete any data that has been downloaded,
+Roughly every 10 seconds, the container will check the DP database to see if the `upload_status` been changed to "Cancel
+Pending". If so, the upload container will stop the downloading, delete any data that has been downloaded,
 and set the status of the upload to cancelled.
 
-Periodically, the progress of the download will be calculated and updated in the upload table.
+At the same time, the container will check how many bytes have been written so far and update the `upload_progress`
+field.
+
 
 #### 7. Validation and Conversion
 
@@ -340,17 +343,17 @@ Checks the status of an existing upload job.
 | ---- | ---------------------- |
 | 200  | The status is returned |
 
-| Key                       | Description                                                                 |
-| ------------------------- | --------------------------------------------------------------------------- |
-| upload\_status            | Provides the current status of the upload.                                  |
-| upload\_message           | If an upload error occurred, the message shows here.                        |
-| upload\_progress          | If the upload is in progress a float in [0, 1] showing percentage complete. |
-| validation\_status        | Provides current status of validation.                                      |
-| validation\_message       | If a validation error occurred, the message shows here.                     |
-| conversion_loom_status    | Provides current status of the conversion to loom.                          |
-| conversion_rds_status     | Provides current status of the conversion to Seurat RDS.                    |
-| conversion_anndata_status | Provides current status of the conversion to AnnData.                       |
-| conversion_cxg_status     | Provides current status of the conversion to CXG.                           |
+| Key                         | Description                                                                 |
+| --------------------------- | --------------------------------------------------------------------------- |
+| upload\_status              | Provides the current status of the upload.                                  |
+| upload\_message             | If an upload error occurred, the message shows here.                        |
+| upload\_progress            | If the upload is in progress a float in [0, 1] showing percentage complete. |
+| validation\_status          | Provides current status of validation.                                      |
+| validation\_message         | If a validation error occurred, the message shows here.                     |
+| conversion\_loom\_status    | Provides current status of the conversion to loom.                          |
+| conversion\_rds\_status     | Provides current status of the conversion to Seurat RDS.                    |
+| conversion\_anndata\_status | Provides current status of the conversion to AnnData.                       |
+| conversion\_cxg\_status     | Provides current status of the conversion to CXG.                           |
 
 **Error Responses:**
 
@@ -387,29 +390,111 @@ will return an error.
 
 #### Processing Status and State
 
-The API documentation returns a _status_ in response. This status informs the user of the current state of the upload.
-The following diagram describes the possible state transitions:
+The response to the [status endpoint](#get-datasetsdataset_idstatus) returns mutliple fields that update as processing
+progresses. When processing starts, we expect just a "Waiting" upload status:
+```
+{
+  "upload_status": "Waiting",
+  "upload_message": "",
+  "upload_progress": 0,
+  "validation_status": "",
+  "validation_message": "",
+  "conversion_loom_status": "",
+  "conversion_cxg_status": "",
+  "conversion_anndata_status": "",
+  "conversion_rds_status": ""
+}
+```
 
-![State Diagram](https://app.lucidchart.com/publicSegments/view/9cfbd683-215a-4bb8-b3bd-f83cd709ade9/image.png)
-Figure: State Diagram
+As uploading progresses:
+```
+{
+  "upload_status": "Uploading",
+  "upload_message": "",
+  "upload_progress": .55,
+  "validation_status": "",
+  "validation_message": "",
+  "conversion_loom_status": "",
+  "conversion_cxg_status": "",
+  "conversion_anndata_status": "",
+  "conversion_rds_status": ""
+}
+```
 
-There are several different states that an upload can be in. The table below defines them.
+During validation:
+```
+{
+  "upload_status": "Uploaded",
+  "upload_message": "",
+  "upload_progress": 1,
+  "validation_status": "Validating",
+  "validation_message": "",
+  "conversion_loom_status": "",
+  "conversion_cxg_status": "",
+  "conversion_anndata_status": "",
+  "conversion_rds_status": ""
+}
+```
 
-| states         | Description                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------- |
-| Start          | The upload is never actually in this state.                                                 |
-| Waiting        | The upload is enqueued, and waiting for the upload container.                               |
-| Uploading      | The file is actively being uploaded.                                                        |
-| Uploaded       | The upload was completed successfully.                                                      |
-| Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
-| Cancel Pending | The upload is in the process of being canceled                                              |
-| Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
-| Verify         | The file is being verified       |
-| Download       | The file is being downloaded from Dropbox |
-| Generating     | Files to store in S3 are generated |
-| Updating       | Updates the table with the new dataset and asset links |
+And once all the conversions are finished:
+```
+{
+  "upload_status": "Uploaded",
+  "upload_message": "",
+  "upload_progress": 1,
+  "validation_status": "Valid",
+  "validation_message": "",
+  "conversion_loom_status": "Completed",
+  "conversion_cxg_status": "Completed",
+  "conversion_anndata_status": "NA",
+  "conversion_rds_status": "Completed"
+}
+```
 
-<a name="upload-state-table">**Table:** Upload State Table </a>
+If there is an error in the upload:
+```
+{
+  "upload_status": "Failed",
+  "upload_message": "File not found",
+  "upload_progress": 0,
+  "validation_status": "",
+  "validation_message": "",
+  "conversion_loom_status": "",
+  "conversion_cxg_status": "",
+  "conversion_anndata_status": "",
+  "conversion_rds_status": ""
+}
+```
+
+Or in validation:
+```
+{
+  "upload_status": "Uploaded",
+  "upload_message": "",
+  "upload_progress": 1,
+  "validation_status": "Invalid",
+  "validation_message": "Missing assay.",
+  "conversion_loom_status": "",
+  "conversion_cxg_status": "",
+  "conversion_anndata_status": "",
+  "conversion_rds_status": ""
+}
+```
+
+Or in a conversion
+```
+{
+  "upload_status": "Uploaded",
+  "upload_message": "",
+  "upload_progress": 1,
+  "validation_status": "Valid",
+  "validation_message": "",
+  "conversion_loom_status": "Completed",
+  "conversion_cxg_status": "Failed",
+  "conversion_anndata_status": "NA",
+  "conversion_rds_status": "Completed"
+}
+```
 
 ### Test plan
 
