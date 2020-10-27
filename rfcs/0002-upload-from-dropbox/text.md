@@ -392,7 +392,7 @@ will return an error.
 
 The response to the [status endpoint](#get-datasetsdataset_idstatus) returns mutliple fields that update as processing
 progresses. When processing starts, we expect just a "Waiting" upload status:
-```
+```json
 {
   "upload_status": "Waiting",
   "upload_message": "",
@@ -407,7 +407,7 @@ progresses. When processing starts, we expect just a "Waiting" upload status:
 ```
 
 As uploading progresses:
-```
+```json
 {
   "upload_status": "Uploading",
   "upload_message": "",
@@ -422,7 +422,7 @@ As uploading progresses:
 ```
 
 During validation:
-```
+```json
 {
   "upload_status": "Uploaded",
   "upload_message": "",
@@ -437,7 +437,7 @@ During validation:
 ```
 
 And once all the conversions are finished:
-```
+```json
 {
   "upload_status": "Uploaded",
   "upload_message": "",
@@ -452,7 +452,7 @@ And once all the conversions are finished:
 ```
 
 If there is an error in the upload:
-```
+```json
 {
   "upload_status": "Failed",
   "upload_message": "File not found",
@@ -467,7 +467,7 @@ If there is an error in the upload:
 ```
 
 Or in validation:
-```
+```json
 {
   "upload_status": "Uploaded",
   "upload_message": "",
@@ -482,7 +482,7 @@ Or in validation:
 ```
 
 Or in a conversion
-```
+```json
 {
   "upload_status": "Uploaded",
   "upload_message": "",
