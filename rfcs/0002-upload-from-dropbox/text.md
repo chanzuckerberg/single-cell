@@ -182,11 +182,14 @@ inserted into `validation_message`, and execution halts. Otherwise, `validation_
 Next, metadata values from the file are read and used to update the row in the `dataset` table.
 
 Finally for each target conversion format, a script will be run that produces the format from the downloaded file. As
-each new file is created:
-
-- The appropriate `conversion_status` field will be updated to "Converted"
+each script executes:
+- The appropriate `conversion_status` field will be updated to "Converting".
+- If the conversion succeeds, the appropriate `conversion_status` field will be updated to "Converted" or otherwise "Failed".
 - The file will be copied to the DP S3 bucket. The [Content-MD5 header](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax)
-  will be used when copying to S3 to verify the integrity of each chunk.
+  will be used when copying to S3 to verify the integrity of each chunk. The prefix in the S3 bucket will contain the
+  dataset_id.
+- A row will be inserted into `artifacts` (or in the case of the cxg, `deployment_directories`) table with the
+  dataset_id and the path to the new file in S3.
 
 #### 10. Update
 
@@ -265,7 +268,7 @@ If an unrecoverable error occurs while processing the upload, the upload contain
 indicating an error has occurred.
 
 If an error is encountered that cannot be fixed by retrying, the upload status will change to _Failed_. The error can be
-returned using the _[GET collection/{collection_id}/upload](#GET-collection-collection_id}-upload)_ endpoint with the
+returned using the _[GET datasets/{dataset_id}/status](#get-datasetsdataset_idstatus)_ endpoint with the
 _dataset_id_ associated with the upload.
 
 #### Upload Cleanup Handler
@@ -337,11 +340,17 @@ Checks the status of an existing upload job.
 | ---- | ---------------------- |
 | 200  | The status is returned |
 
-| Key      | Description                                   |
-| -------- | --------------------------------------------- |
-| status   | Provides the current status of the upload.    |
-| message  | If an error occurred, the message shows here. |
-| progress | The current progress of the upload.           |
+| Key                       | Description                                                                 |
+| ------------------------- | --------------------------------------------------------------------------- |
+| upload\_status            | Provides the current status of the upload.                                  |
+| upload\_message           | If an upload error occurred, the message shows here.                        |
+| upload\_progress          | If the upload is in progress a float in [0, 1] showing percentage complete. |
+| validation\_status        | Provides current status of validation.                                      |
+| validation\_message       | If a validation error occurred, the message shows here.                     |
+| conversion_loom_status    | Provides current status of the conversion to loom.                          |
+| conversion_rds_status     | Provides current status of the conversion to Seurat RDS.                    |
+| conversion_anndata_status | Provides current status of the conversion to AnnData.                       |
+| conversion_cxg_status     | Provides current status of the conversion to CXG.                           |
 
 **Error Responses:**
 
@@ -376,7 +385,7 @@ will return an error.
 | 401  | If _dataset_id_ does not exist, the user does not own the collection associated with the dataset, or upload is complete and public. |
 | 400  | If the parameters supplied are invalid.                                                                                             |
 
-#### Upload Status and State
+#### Processing Status and State
 
 The API documentation returns a _status_ in response. This status informs the user of the current state of the upload.
 The following diagram describes the possible state transitions:
