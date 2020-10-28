@@ -86,32 +86,8 @@ respectively.
 The `dataset_processing_status` table tracks processing as it progresses and has fields that statuses, progress, and
 messages for the upload, validation, and conversion processing steps.
 
-The status fields in the `dataset_processing_status` table are enums:
+The status fields in the `dataset_processing_status` table are enums, which are [defined below](#get-datasetsdataset_idstatus).
 
-**upload_status**
-| Values         | Description                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------- |
-| Waiting        | The upload is enqueued, and waiting for the upload container.                               |
-| Uploading      | The file is actively being uploaded.                                                        |
-| Uploaded       | The upload was completed successfully.                                                      |
-| Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
-| Cancel Pending | The upload is in the process of being canceled.                                             |
-| Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
-
-**validation_status**
-| Values         | Description                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------- |
-| Validating     | The validation script is running.                                                           |
-| Valid          | The uploaded file successfully passed validation.                                           |
-| Invalid        | The uploaded file failed validation.                                                         |
-
-**conversion_status**
-| Values         | Description                                                                                 |
-| -------------- | ------------------------------------------------------------------------------------------- |
-| Converting     | The conversion script is running.                                                           |
-| Converted      | Conversion completed and the file was copied to the DP bucket.                              |
-| Failed         | Conversion failed.                                                                          |
-| NA             | Conversion is not being run because this was the uploaded format.                           |
 
 ### Flow Description
 
@@ -362,36 +338,39 @@ Checks the status of an existing upload job.
 | 401  | If _dataset_id_ does not exist, the user does not own the collection associated with the dataset, or upload is in-progress. |
 | 400  | If the parameters supplied are invalid.                                                                                     |
 
-#### DELETE datasets/{dataset_id}
+##### Status Enumerations
+The statuses in the 200 response are enums defined in the [database](#database-schema):
 
-Cancels an existing upload job. Any data that has started to upload is removed, and the upload status is changed to
-_Cancel Pending_ until the job has been cleared up. If the dataset has already started validation, this endpoint will
-cancel the validation and delete the upload from s3. If the dataset is already part of a public collection, this endpoint
-will return an error.
+**upload_status**
+| Values         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| Waiting        | The upload is enqueued, and waiting for the upload container.                               |
+| Uploading      | The file is actively being uploaded.                                                        |
+| Uploaded       | The upload was completed successfully.                                                      |
+| Failed         | The upload has failed. A new link or file must be uploaded. Any upload progress is deleted. |
+| Cancel Pending | The upload is in the process of being canceled.                                             |
+| Canceled       | The upload has been canceled. Any upload progress is deleted.                               |
 
-**Request:**
+**validation_status**
+| Values         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| Validating     | The validation script is running.                                                           |
+| Valid          | The uploaded file successfully passed validation.                                           |
+| Invalid        | The uploaded file failed validation.                                                         |
 
-| Parameter  | Description                            |
-| ---------- | -------------------------------------- |
-| dataset_id | Identifies the dataset being canceled. |
+**conversion_status**
+| Values         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| Converting     | The conversion script is running.                                                           |
+| Converted      | Conversion completed and the file was copied to the DP bucket.                              |
+| Failed         | Conversion failed.                                                                          |
+| NA             | Conversion is not being run because this was the uploaded format.                           |
 
-**Response:**
+##### Processing Status and State
 
-| Code | Description                                                                |
-| ---- | -------------------------------------------------------------------------- |
-| 202  | The cancel request is accepted. The upload status is now _Cancel Pending_. |
-
-**Error Responses:**
-
-| Code | Description                                                                                                                         |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 401  | If _dataset_id_ does not exist, the user does not own the collection associated with the dataset, or upload is complete and public. |
-| 400  | If the parameters supplied are invalid.                                                                                             |
-
-#### Processing Status and State
-
-The response to the [status endpoint](#get-datasetsdataset_idstatus) returns mutliple fields that update as processing
+The multiple fields returned in the [status endpoint](#get-datasetsdataset_idstatus) response will update as processing
 progresses. When processing starts, we expect just a "Waiting" upload status:
+
 ```json
 {
   "upload_status": "Waiting",
@@ -495,6 +474,32 @@ Or in a conversion
   "conversion_rds_status": "Completed"
 }
 ```
+#### DELETE datasets/{dataset_id}
+
+Cancels an existing upload job. Any data that has started to upload is removed, and the upload status is changed to
+_Cancel Pending_ until the job has been cleared up. If the dataset has already started validation, this endpoint will
+cancel the validation and delete the upload from s3. If the dataset is already part of a public collection, this endpoint
+will return an error.
+
+**Request:**
+
+| Parameter  | Description                            |
+| ---------- | -------------------------------------- |
+| dataset_id | Identifies the dataset being canceled. |
+
+**Response:**
+
+| Code | Description                                                                |
+| ---- | -------------------------------------------------------------------------- |
+| 202  | The cancel request is accepted. The upload status is now _Cancel Pending_. |
+
+**Error Responses:**
+
+| Code | Description                                                                                                                         |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 401  | If _dataset_id_ does not exist, the user does not own the collection associated with the dataset, or upload is complete and public. |
+| 400  | If the parameters supplied are invalid.                                                                                             |
+
 
 ### Test plan
 
