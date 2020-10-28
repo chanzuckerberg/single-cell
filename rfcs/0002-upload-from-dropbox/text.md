@@ -390,7 +390,7 @@ As uploading progresses:
 {
   "upload_status": "Uploading",
   "upload_message": "",
-  "upload_progress": .55,
+  "upload_progress": 0.55,
   "validation_status": "",
   "validation_message": "",
   "conversion_loom_status": "",
