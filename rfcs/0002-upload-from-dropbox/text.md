@@ -142,7 +142,7 @@ As the data is downloaded, the hash of the file will be calculated as it arrives
 then the download process will be retried.
 
 Roughly every 10 seconds, the container will check the DP database to see if the `upload_status` been changed to "Cancel
-Pending". If so, the upload container will stop the downloading, delete any data that has been downloaded,
+Pending". If so, the upload container will stop the download, delete any data that has been downloaded,
 and set the status of the upload to cancelled.
 
 At the same time, the container will check how many bytes have been written so far and update the `upload_progress`
@@ -155,10 +155,11 @@ If the download from Dropbox is successful, the `upload_status` is set to "Uploa
 to "Validating".
 
 The container (the same container that just downloaded the file from Dropbox), then runs the `cellgene schema validate`
-command on the file. If that has non-zero exit code, `validation_status` is set to Invalid, stdout from the command is
-inserted into `validation_message`, and execution halts. Otherwise, `validation_status` is set to "Valid".
+command on the file. If that has non-zero exit code, `validation_status` is set to "Invalid", stdout from the command is
+inserted into `validation_message`, and execution halts.
 
-Next, metadata values from the file are read and used to update the row in the `dataset` table.
+Otherwise metadata values from the file are read and used to update the dataset's row in the `dataset` table. Then,
+`validation_status' is set to "Valid".
 
 Finally for each target conversion format, a script will be run that produces the format from the downloaded file. As
 each script executes:
