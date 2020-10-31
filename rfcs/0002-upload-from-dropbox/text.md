@@ -171,6 +171,9 @@ each script executes:
 - A row will be inserted into `artifacts` (or in the case of the cxg, `deployment_directories`) table with the
   dataset_id and the path to the new file in S3.
 
+During the validation and conversion processing, the container will continue to check for a "Cancel Pending" status in
+`upload_status` and will halt and clean up if it that is set.
+
 #### 10. Update
 
 Once all the files have been copied to S3, the `artifacts` and `deployment_directories` tables will have rows inserted
