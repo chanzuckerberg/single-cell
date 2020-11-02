@@ -17,7 +17,7 @@ For [the first milestone of Corpora](https://docs.google.com/document/d/13KbnfQV
 1. A prospective publisher understands what metadata is required when submitting a dataset to Corpora. Manual interactions between the publisher and curator continue.
 2. The ‘find data’ portal on `corpora.cziscience.com` portal is “live” on the internet with migrated COVID-19 datasets from `cellxgene.cziscience.com`. Consumers can view the Corpora metadata for each dataset and launch cellxgene.
 
-During this first milestone, we will aim to also establish the groundwork for the high level architecture that will enable us to painlessly build for future milestones enable such interactions with the portal as the automated ability to upload a new project, the ability to update a project, the ability to delete a project, and more.
+During this first milestone, we will aim to also establish the groundwork for the high level architecture that will enable us to painlessly build for future milestones enable such interactions with the portal as the automated ability to upload a new collection, the ability to update a collection, the ability to delete a collection, and more.
 
 With both the near term goals as well as future direction in mind, the following document lays the foundation for the data portal architecture that will be the first point of interaction between Corpora and a Data Submitter and will enable the cellxgene portal to harness the collection of data for valuable downstream analysis.
 
@@ -50,9 +50,9 @@ Notably missing in this first draft is the authorization/authentication piece wh
 
 <p style="text-align: center;"><b>Figure 1</b>: High-level architecture of the data portal for the first draft (note the human manually adding new datasets as a user of the backend data portal functionality which will eventually be non-existent).</p>
 
-#### Project Processing Stages/Event Definitions
+#### Collection Processing Stages/Event Definitions
 
-The major part of the overall system is the middle layer of centralized data processing. These are the steps that occur once a submitter is ready to submit a project for either viewing privately or publicly and propagates the project and associated matrix files to the Corpora downstream services, i.e. the Data Portal and cellxgene.
+The major part of the overall system is the middle layer of centralized data processing. These are the steps that occur once a submitter is ready to submit a collection for either viewing privately or publicly and propagates the collection and associated matrix files to the Corpora downstream services, i.e. the Data Portal and cellxgene.
 
 ![alt_text](imgs/flow_diagram_of_downloadable_artifacts.png)
 
@@ -62,9 +62,9 @@ The following steps/stages are available for subscription in the batch data proc
 
 - **MatrixValidate** - initial input validation, intended to be fast (interactive speed), trivial rejection of common errors. Passing this stage without error does not guarantee that matrix publication will succeed.
 - **MatrixCreate** - create the remix data matrix, from which all other work proceeds.
-- **AssetsCreate** - transform the project and matrices into other formats and/or representations needed for deployment.
+- **AssetsCreate** - transform the collection and matrices into other formats and/or representations needed for deployment.
 - **AssetsDeploy** - deploy the matrix as necessary (e.g., put a copy into the cellxgene deployment bucket)
-- **AssetsCleanup** - cleanup/delete any deployments of the project/matrix.
+- **AssetsCleanup** - cleanup/delete any deployments of the collection/matrix.
 
 Each of these steps **<span style="text-decoration:underline;">MUST be idempotent</span>**, and MUST operate without side-effects other than those noted.
 
@@ -81,16 +81,16 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
 
 **Purpose**: The MatrixValidate step performs validation steps that take longer than interactive time but does not involve computation or transformation of the matrix itself. Any validation that occurs at interactive speed will be handled at the application layer while interacting with the UI and longer deep validation that usually is surfaced via the transformation/computation step will be surfaced via execution of the “Create” steps below. Example validations that occur at this step include rejecting a dataset due to PII and adherence of the matrix to the Corpora schema (see Validation section below).
 
-- **Trigger**: availability of submitter-provided project and matrix; API driven on-demand validation.
+- **Trigger**: availability of submitter-provided collection and matrix; API driven on-demand validation.
 - **Constraints**: Must accept [any submission dataset format](https://docs.google.com/document/d/1_I2dnYuCTvO2yABR0FnLRnI8RnMhiASC5Ny4ZwDjsCI/edit#heading=h.jdvqjtitikjv).
 - **Invocation parameters**:
 
   ```js
   {
     task_id, // unique ID of this task, suitable for logs
-    project_uuid,
+    collection_uuid,
     dataset_uuid,
-    project: {}, // inline definition of all project fields
+    collection: {}, // inline definition of all collection fields
     submission_uri, // data locator for the dataset, e.g. s3:...
     submission_type, // encoding type of the dataset, e.g. H5AD
   }
@@ -106,22 +106,22 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
   }
   ```
 
-- **Notes**: this event may occur repeatedly for a project/dataset (e.g. upon each update), and both project and dataset may be partially specified (this means that optional fields may not be present*)*. Projects containing multiple datasets will have the event dispatched at least once per (project, dataset) pair.
+- **Notes**: this event may occur repeatedly for a collection/dataset (e.g. upon each update), and both collection and dataset may be partially specified (this means that optional fields may not be present*)*. Collections containing multiple datasets will have the event dispatched at least once per (collection, dataset) pair.
 
 ##### MatrixCreate
 
 **Purpose**: create the remix matrix, e.g. populate the matrix with any mandatory fields, normalize metadata, etc. The result of this processing stage is a single dataset from which all other alternative encodings of the dataset will be generated.
 
-- **Trigger**: MatrixValidation event completes and sets a VALID state on a project; project & dataset is ready for conversion and deployment.
-- **Constraints**: must accept any submission dataset format. There must be <span style="text-decoration:underline;">one and only one</span> registered handler for this event/invocation, per (project,dataset) pair.
+- **Trigger**: MatrixValidation event completes and sets a VALID state on a collection; collection & dataset is ready for conversion and deployment.
+- **Constraints**: must accept any submission dataset format. There must be <span style="text-decoration:underline;">one and only one</span> registered handler for this event/invocation, per (collection,dataset) pair.
 - **Invocation parameters**:
 
   ```js
   {
     task_id,
-    project_uuid,
+    collection_uuid,
     dataset_uuid,
-    project: {}, // inline definition of all project fields
+    collection: {}, // inline definition of all collection fields
     submission_uri, // data locator for the submission, eg, s3:...
     submission_type, // encoding type of the submission, eg, H5AD
     result_uri, // result dataset name, eg, s3:.../foo.loom
@@ -143,7 +143,7 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
 
 ##### AssetsCreate
 
-**Purpose**: create alternative \_temporary \_assets from the project and remix matrix. For example, this might create all of the file formats required to support download, or other intermediate formats required for deployment. Will be invoked once per (project, dataset). Assets will be removed/destroyed after deployment. This step can potentially take up to hours on large datasets.
+**Purpose**: create alternative \_temporary \_assets from the collection and remix matrix. For example, this might create all of the file formats required to support download, or other intermediate formats required for deployment. Will be invoked once per (collection, dataset). Assets will be removed/destroyed after deployment. This step can potentially take up to hours on large datasets.
 
 - **Trigger**: successful completion of MatrixCreation step
 - **Constraints**: must accept whatever formats the MatrixCreation step generates.
@@ -152,9 +152,9 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
   ```js
   {
       task_id,
-      project_uuid,
+      collection_uuid,
       dataset_uuid,
-      project: {}, // inline definition of all project fields
+      collection: {}, // inline definition of all collection fields
       src_dataset_uri, // the dataset location
       src_dataset_type, // the dataset type, eg, "loom"
       dest_uri, // destination container for assets, eg, s3:...
@@ -181,18 +181,18 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
 
 ##### AssetsDeploy
 
-**Purpose**: deploy the project, with any/all assets, into application-specific containers/systems. It is expected that all individual downstream portals will have their own deployment handler. This step should be used for database loading, asset staging, etc. All temporary assets will be deleted. This step will usually take on the order of minutes to complete.
+**Purpose**: deploy the collection, with any/all assets, into application-specific containers/systems. It is expected that all individual downstream portals will have their own deployment handler. This step should be used for database loading, asset staging, etc. All temporary assets will be deleted. This step will usually take on the order of minutes to complete.
 
-- **Trigger**: system has decided that a project is ready to be visible to someone (see note).
+- **Trigger**: system has decided that a collection is ready to be visible to someone (see note).
 - **Constraints**: successful completion of MatrixValidate, MatrixCreate & AssetsCreate steps.
 - **Invocation parameters**:
 
   ```js
     {
         task_id,
-        project_uuid,
-        project: {}, // inline definition of all project fields
-        datasets: [ // list of all datasets in this project
+        collection_uuid,
+        collection: {}, // inline definition of all collection fields
+        datasets: [ // list of all datasets in this collection
             uuid,
             type,
             uri
@@ -212,11 +212,11 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
   }
   ```
 
-- **Notes:** deployment does not imply \_public visibility \_of the project or dataset -- that state is managed live, in the main database. It is also expected that all dataset-transformation-related error handling will have occurred prior to this step, and this step will only concern itself with deployment.
+- **Notes:** deployment does not imply \_public visibility \_of the collection or dataset -- that state is managed live, in the main database. It is also expected that all dataset-transformation-related error handling will have occurred prior to this step, and this step will only concern itself with deployment.
 
 ##### AssetsCleanup
 
-**Purpose**: delete a project and all included datasets, OR a set of datasets from a deployment.
+**Purpose**: delete a collection and all included datasets, OR a set of datasets from a deployment.
 
 - **Trigger**: user or system need to delete
 - **Constraints:** none - could occur even if other steps have not occured, e.g. as a conservative error handling step.
@@ -225,13 +225,13 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
   ```js
       {
           task_id,
-          project_uuid,
+          collection_uuid,
           dataset_uuid: [], // list of datasets
-          delete_entire_project: true/false [default=False],
+          delete_entire_collection: true/false [default=False],
       }
   ```
 
-- **Side effects/results**: any dataset listed will be undeployed/deleted. If "delete_entire_project" is true, all other project-related data must be deleted.
+- **Side effects/results**: any dataset listed will be undeployed/deleted. If "delete_entire_collection" is true, all other collection-related data must be deleted.
 
 ```js
   {
@@ -240,17 +240,17 @@ We considered merging the AssetsCreate and AssetsDeploy steps together; there we
    }
 ```
 
-- **Notes**: if `delete_entire_project` is `false`, only the subset of datasets specified need be deleted. Other project information and datasets should be left as-is.
+- **Notes**: if `delete_entire_collection` is `false`, only the subset of datasets specified need be deleted. Other collection information and datasets should be left as-is.
 
 ### Other Services
 
 Besides the data processing pipeline, there are a number of other services that will need to be implemented:
 
 - Pipeline monitoring [NOT PART OF MVP]
-- This service should allow the UI to display what stage of processing the project has undergone.
+- This service should allow the UI to display what stage of processing the collection has undergone.
 - Authentication service [Milestone 2]
 - Trent to design
-- Corpora will also maintain a cellxgene URL “directory.” Corpora backend will be responsible for generating unique URLs that map to a deployment of cellxgene for a dataset and also maintain aliases that will be available for user consumption based on the visibility of the project (i.e. private, shared, or public).
+- Corpora will also maintain a cellxgene URL “directory.” Corpora backend will be responsible for generating unique URLs that map to a deployment of cellxgene for a dataset and also maintain aliases that will be available for user consumption based on the visibility of the collection (i.e. private, shared, or public).
 
 ![alt_text](imgs/high_level_aws_architecture.png)
 
@@ -258,63 +258,63 @@ Besides the data processing pipeline, there are a number of other services that 
 
 ### Technologies [BRAINSTORM]
 
-- A PostgreSQL instance of Amazon RDS will host all the metadata and meta-metadata about projects, submissions, datasets, and more. More details are below in the Data Model section of this document.
+- A PostgreSQL instance of Amazon RDS will host all the metadata and meta-metadata about collections, submissions, datasets, and more. More details are below in the Data Model section of this document.
 - Postgres allows simplification of access control by using row level access controls that are built-in.
-- S3 will host all of the data associated with a project including matrix files, completed Terms and Conditions forms, and any other associated files when necessary.
+- S3 will host all of the data associated with a collection including matrix files, completed Terms and Conditions forms, and any other associated files when necessary.
 - APIs will be published on Amazon API Gateway and run on Amazon Lambda, making use of Chalice. The APIs will be defined using OpenAPI v3.0.
 - Deployment through Elastic Beanstalk to match cxg?
 
 ### Data Flow
 
-#### Inputting a New Project
+#### Inputting a New Collection
 
 Following the Corpora Contributor User/System flow outlined [here](https://drive.google.com/drive/folders/1tjCt-lXAceuRMUZRzCcMeCO2NjVfI6ac), the following actions will take place in the software system.
 
-1. Missing - Authentication for a user to be allowed to submit a new project.
-2. User chooses to add new project
-3. API call **`POST /v1/submissions`** with a `needs_attestation` parameter `True/False` is called and a `project_uuid` is a generated project UUID. This action will create a new row in the Submission and Project tables that are empty and will create a new folder in the S3 bucket with the given `project_uuid`. If `needs_attestation` is specified as `true`, this will flip the `needs_attestation` field in the newly created rows to be true so that the project cannot be submitted without the appropriate legal files uploaded as well.
-4. User uploads datasets that are part of the project and optionally chooses to fill out a form with required (and optional) metadata. If the form is not filled out, the project-level metadata will be inferred from the first uploaded dataset.
+1. Missing - Authentication for a user to be allowed to submit a new collection.
+2. User chooses to add new collection
+3. API call **`POST /v1/submissions`** with a `needs_attestation` parameter `True/False` is called and a `collection_uuid` is a generated collection UUID. This action will create a new row in the Submission and Collection tables that are empty and will create a new folder in the S3 bucket with the given `collection_uuid`. If `needs_attestation` is specified as `true`, this will flip the `needs_attestation` field in the newly created rows to be true so that the collection cannot be submitted without the appropriate legal files uploaded as well.
+4. User uploads datasets that are part of the collection and optionally chooses to fill out a form with required (and optional) metadata. If the form is not filled out, the collection-level metadata will be inferred from the first uploaded dataset.
 5. Uploading matrix files
-   1. API call **`PUT /v1/submissions/{project_uuid}/{filename}/{data_type}/data`** uploads each of the files into the S3 bucket with the folder with the given project UUID. This will be called once per dataset. See the API Design below for more details.
+   1. API call **`PUT /v1/submissions/{collection_uuid}/{filename}/{data_type}/data`** uploads each of the files into the S3 bucket with the folder with the given collection UUID. This will be called once per dataset. See the API Design below for more details.
 6. Uploading Terms and Conditions file
-   2. API call **`PUT /v1/submissions/{project_uuid}/{filename}/{data_type}/legal`** uploads the file into the S3 bucket with the folder with the given project UUID and updates the record of the submission with the S3 URI in the database. See the API Design below for more details.
-7. No action is taken on the project’s metadata until the submit button is clicked.
+   2. API call **`PUT /v1/submissions/{collection_uuid}/{filename}/{data_type}/legal`** uploads the file into the S3 bucket with the folder with the given collection UUID and updates the record of the submission with the S3 URI in the database. See the API Design below for more details.
+7. No action is taken on the collection’s metadata until the submit button is clicked.
 
-#### Saving a New Project
+#### Saving a New Collection
 
-Saving a new project represents one of three actions that can take place after “Inputting a New Project” is completed. Saving a project does not run any pipeline processing and simply saves any inputted project-level metadata in the Submission tables. A simple propagation step will be run if necessary in order to extract project-level metadata from the dataset(s) and enter it into the RDS. No deep validation is run (a small sanity check will be run) and the project remains private.
+Saving a new collection represents one of three actions that can take place after “Inputting a New Collection” is completed. Saving a collection does not run any pipeline processing and simply saves any inputted collection-level metadata in the Submission tables. A simple propagation step will be run if necessary in order to extract collection-level metadata from the dataset(s) and enter it into the RDS. No deep validation is run (a small sanity check will be run) and the collection remains private.
 
 1. User clicks “Save.”
-1. API call **`POST /v1/submissions/{project_uuid}/save`**.
+1. API call **`POST /v1/submissions/{collection_uuid}/save`**.
 
-#### Publishing a Project Privately
+#### Publishing a Collection Privately
 
-Publishing a project privately runs the full data processing pipeline on the given project details and datasets and delivers a URL where the submitted may view their generated project page as well as their dataset(s) in cellxgene. This URL, under the hood, will point to a permanent URL but will be unindexed and obfuscated (though sharable). Publishing private is the second of three possible steps that can take place after “Inputting a New Project.” This step is also repeatable even in the MVP to allow incremental edits.
+Publishing a collection privately runs the full data processing pipeline on the given collection details and datasets and delivers a URL where the submitted may view their generated collection page as well as their dataset(s) in cellxgene. This URL, under the hood, will point to a permanent URL but will be unindexed and obfuscated (though sharable). Publishing private is the second of three possible steps that can take place after “Inputting a New Collection.” This step is also repeatable even in the MVP to allow incremental edits.
 
 1. User clicks a button
-1. API call **`POST /v1/submissions/{project_uuid}/publish/private`**
-1. Project information is pulled from the form and entered into the database (same execution as the save API call).
+1. API call **`POST /v1/submissions/{collection_uuid}/publish/private`**
+1. Collection information is pulled from the form and entered into the database (same execution as the save API call).
 1. At this point, the Data Processing Pipeline will be launched with parameters set such that the resulting assets/deployments are only viewable by people who own the secret. The secret will be stored in the database as well.
 
-#### Publishing a Project Publicly
+#### Publishing a Collection Publicly
 
-Publishing a project publicly runs the full data processing pipeline (in a future iteration, we will check for deltas against a cache so that the processing pipeline as an optimization), and then stores public facing links that are indexed in the data portal for public consumption. Under the hood, we will maintain a directory of private URLs and public URLs where the public facing URLs are the only ones that are indexed by the data portal for larger visibility (i.e. cellxgene deployments will be launchable from the data portal).
+Publishing a collection publicly runs the full data processing pipeline (in a future iteration, we will check for deltas against a cache so that the processing pipeline as an optimization), and then stores public facing links that are indexed in the data portal for public consumption. Under the hood, we will maintain a directory of private URLs and public URLs where the public facing URLs are the only ones that are indexed by the data portal for larger visibility (i.e. cellxgene deployments will be launchable from the data portal).
 
 1. User clicks a button
-1. API call **`POST /v1/submissions/{project_uuid}/publish/public`**
-1. Project information is pulled from the form and entered into the database (same execution as the save API call).
+1. API call **`POST /v1/submissions/{collection_uuid}/publish/public`**
+1. Collection information is pulled from the form and entered into the database (same execution as the save API call).
 1. At this point, the Data Processing Pipeline will be launched with parameters set such that the resulting assets/deployments are fully public.
-1. Once completed, if there is an existing row in the Project database with the same project UUID as the one that is being published, in a single transaction, the existing row will be deleted and the new row's `status` attribute will be set to `Live`.
+1. Once completed, if there is an existing row in the Collection database with the same collection UUID as the one that is being published, in a single transaction, the existing row will be deleted and the new row's `status` attribute will be set to `Live`.
 
-#### Deleting a Project
+#### Deleting a Collection
 
-For now, let's limit the deletion of projects to be an engineer/admin-only procedure. Can be done by calling **`DELETE /v1/submissions/{project_uuid}/{filename}`**. Individual datasets can be deleted using the same command.
+For now, let's limit the deletion of collections to be an engineer/admin-only procedure. Can be done by calling **`DELETE /v1/submissions/{collection_uuid}/{filename}`**. Individual datasets can be deleted using the same command.
 
 #### Microservice Deployment Replay
 
-Deployment replays may occur if one of the downstream portals needs to make a sweeping change that requires re-deployment of existing projects and will likely occur more often, earlier in the Corpora project. In this scenario, there will be no API-driven “publish” event that occurs because the user has already submitted. Instead a downstream service can use one of the two API calls with filters to “replay” a publish to re-deploy projects.
+Deployment replays may occur if one of the downstream portals needs to make a sweeping change that requires re-deployment of existing collections and will likely occur more often, earlier in the Corpora collection. In this scenario, there will be no API-driven “publish” event that occurs because the user has already submitted. Instead a downstream service can use one of the two API calls with filters to “replay” a publish to re-deploy collections.
 
-1. Use **`GET /v1/projects/list`** and/or **`GET /v1/projects/{project_uuid}`**
+1. Use **`GET /v1/collections/list`** and/or **`GET /v1/collections/{collection_uuid}`**
 
 ### Data Model
 
@@ -337,14 +337,14 @@ Based on the ER diagram about and ensuring that the database design is in Boyce-
 
 <p style="text-align: center;"><b>Figure 6</b>: Core Corpora database object relational diagram. The original Lucidchart that will be edited and kept up is <a href=https://app.lucidchart.com/invitations/accept/039b8ec2-81a2-4916-906f-e5a71851369a>here</a>.</p>
 
-#### Submission vs. Project Entities
+#### Submission vs. Collection Entities
 
-One of the more confusing parts of the above data model is distinguishing between the concept of a submission and a project. Using the Github metaphor is helpful:
+One of the more confusing parts of the above data model is distinguishing between the concept of a submission and a collection. Using the Github metaphor is helpful:
 
-- A **project** is the master branch of a Github repository.
-- A **submission** is a pull request on a particular repository (or **project**).
+- A **collection** is the master branch of a Github repository.
+- A **submission** is a pull request on a particular repository (or **collection**).
 
-For simplicity, we can say that for now, there can only be one open submission on a project at any given time (boom, merge conflicts resolved!). There are a few characteristics that fall out quite nicely with this metaphor. A project entity can be seen as the public facing immutable entity that has public facing cellxgene URL links and is searchable in the data portal. A submission allows a user to edit a project, _even previously published ones_, and fiddle with their live changes until satisfaction at which point the publication _replaces_ the existing project (under the hood, it might not be a full delete->recreate, but we’re talking conceptually here) thus enforcing immutability.
+For simplicity, we can say that for now, there can only be one open submission on a collection at any given time (boom, merge conflicts resolved!). There are a few characteristics that fall out quite nicely with this metaphor. A collection entity can be seen as the public facing immutable entity that has public facing cellxgene URL links and is searchable in the data portal. A submission allows a user to edit a collection, _even previously published ones_, and fiddle with their live changes until satisfaction at which point the publication _replaces_ the existing collection (under the hood, it might not be a full delete->recreate, but we’re talking conceptually here) thus enforcing immutability.
 
 ### API Design
 
@@ -358,16 +358,16 @@ For simplicity, we can say that for now, there can only be one open submission o
 
 **Responses:**
 
-1. 200 OK: `{request_id, project_uuid, name, processing_state, validation_state, user_id}`
+1. 200 OK: `{request_id, collection_uuid, name, processing_state, validation_state, user_id}`
 2. 400 Invalid parameter
 
-`GET /v1/submission/{project_uuid}`
+`GET /v1/submission/{collection_uuid}`
 
-**Description**: Returns all available metadata information about a project submission, including URIs of datasets that are attached to the project.
+**Description**: Returns all available metadata information about a collection submission, including URIs of datasets that are attached to the collection.
 
 **Parameters**:
 
-1. Project UUID [REQUIRED]: the UUID of the project on which information is being requested.
+1. Collection UUID [REQUIRED]: the UUID of the collection on which information is being requested.
 
 **Responses:**
 
@@ -376,13 +376,13 @@ For simplicity, we can say that for now, there can only be one open submission o
 1. 401 Unauthorized user
 1. 404 Submission not found
 
-`PUT /v1/submission/{project_uuid}/file`
+`PUT /v1/submission/{collection_uuid}/file`
 
-**Description**: Adds a dataset file or a legal file to the project’s S3 bucket. If a legal file is uploaded (verified by a standard name), then the requirement for attestation for the project will be satisfied and accordingly noted in the submission entity. A quick validation will be performed to ensure that if the file is a data file, then the extension is one of the accepted types (i.e. `.loom`, `.h5ad,` or `.rds`). If a file already exists with the same name, it will replace it and increment the revision value of the dataset.
+**Description**: Adds a dataset file or a legal file to the collection’s S3 bucket. If a legal file is uploaded (verified by a standard name), then the requirement for attestation for the collection will be satisfied and accordingly noted in the submission entity. A quick validation will be performed to ensure that if the file is a data file, then the extension is one of the accepted types (i.e. `.loom`, `.h5ad,` or `.rds`). If a file already exists with the same name, it will replace it and increment the revision value of the dataset.
 
 **Parameters:**
 
-1. Project UUID [REQUIRED]: the UUID of the project to which the file needs to be added.
+1. Collection UUID [REQUIRED]: the UUID of the collection to which the file needs to be added.
 2. Filename [REQUIRED]: Request body parameter. The name of the file that is being uploaded. A duplicate filename, will result in the overwrite of the existing file.
 3. Filetype [REQUIRED]: Request body parameter. the filetype will be one of `{legal or data}` which provides information on how to handle the file. If legal, then an update is made to the Submission entity signifying that the T&C form has been submitted.
 4. Body {REQUIRED]: Request body parameter. The contents of the file to be added to the submission.
@@ -394,27 +394,27 @@ For simplicity, we can say that for now, there can only be one open submission o
 3. 401 Unauthorized: `{status, message}`
 4. 404 Submission not found: `{status, message}`
 
-`DELETE /v1/submission/{project_uuid}`
+`DELETE /v1/submission/{collection_uuid}`
 
-**Description**: Deletes the submission associated with the given project UUID. This does not delete the project if the project associated with the submission has been previously publicly published.
+**Description**: Deletes the submission associated with the given collection UUID. This does not delete the collection if the collection associated with the submission has been previously publicly published.
 
 **Parameters**:
 
-1. Project UUID [REQUIRED]: the UUID of the project to be deleted.
+1. Collection UUID [REQUIRED]: the UUID of the collection to be deleted.
 
 **Responses:**
 
 1. 202 Accepted
 2. 401 Unauthorized user
-3. 404 Project not found
+3. 404 Collection not found
 
-`DELETE /v1/submission/{project_uuid}/dataset`
+`DELETE /v1/submission/{collection_uuid}/dataset`
 
-**Description**: Deletes a file from the project’s S3 bucket if the file exists. If no such file exists, then a warning will be outputted.
+**Description**: Deletes a file from the collection’s S3 bucket if the file exists. If no such file exists, then a warning will be outputted.
 
 **Parameters**:
 
-1. Project UUID [REQUIRED]: the UUID of the project from which the file will be removed.
+1. Collection UUID [REQUIRED]: the UUID of the collection from which the file will be removed.
 2. Dataset UUID [REQUIRED]: Request body parameter. The UUID of the dataset that is being removed.
 
 **Responses:**
@@ -425,21 +425,21 @@ For simplicity, we can say that for now, there can only be one open submission o
 
 `POST /v1/submission`
 
-**Description**: Opens a new submission with a unique UUID if a submission is not already open for a project. If a project UUID is not provided, then a project UUID will be generated. Otherwise, the project details based on the given project UUID will be used to pre-populate the newly created submission entity. If no project UUID is given, then this call will also create a new folder with the generated project UUID in the data portal S3 bucket. On success, a message will be returned with the project’s UUID.
+**Description**: Opens a new submission with a unique UUID if a submission is not already open for a collection. If a collection UUID is not provided, then a collection UUID will be generated. Otherwise, the collection details based on the given collection UUID will be used to pre-populate the newly created submission entity. If no collection UUID is given, then this call will also create a new folder with the generated collection UUID in the data portal S3 bucket. On success, a message will be returned with the collection’s UUID.
 
 **Parameters**:
 
-1. Needs Attestation [REQUIRED]: determines whether this project requires attestation in which case this project cannot be submitted without a Terms and Conditions file also uploaded.
-2. Project UUID [OPTIONAL]: If the submissions is created in order to update an existing publicly published project, then a Project UUID must be provided in order to backfill the fresh submission entity with the existing project details for modification.
+1. Needs Attestation [REQUIRED]: determines whether this collection requires attestation in which case this collection cannot be submitted without a Terms and Conditions file also uploaded.
+2. Collection UUID [OPTIONAL]: If the submissions is created in order to update an existing publicly published collection, then a Collection UUID must be provided in order to backfill the fresh submission entity with the existing collection details for modification.
 
 **Responses:**
 
-1. 201 Created: `{project_uuid}`
+1. 201 Created: `{collection_uuid}`
 2. 401 Unauthorized user
 
-`POST /v1/submission/{project_uuid}/validate`
+`POST /v1/submission/{collection_uuid}/validate`
 
-**Description**: Validates the project according to the guidelines below in the Validation section and outputs the result, specifying all errors. The result of the validation is also stored in the backend database.
+**Description**: Validates the collection according to the guidelines below in the Validation section and outputs the result, specifying all errors. The result of the validation is also stored in the backend database.
 
 **Parameters**:
 
@@ -447,86 +447,86 @@ For simplicity, we can say that for now, there can only be one open submission o
 
 **Responses:**
 
-1. 200 OK: `{project_uuid, result, message}`
+1. 200 OK: `{collection_uuid, result, message}`
 2. 401 Unauthorized user
 3. 404 Submission not found
 
-`POST /v1/submission/{project_uuid}/save`
+`POST /v1/submission/{collection_uuid}/save`
 
-**Description**: if needed, extracts the project-level metadata from the datasets or uses the given project-level metadata imputed via the body parameter and saves it to the database. The new project metadata state will be returned in the response on success.
+**Description**: if needed, extracts the collection-level metadata from the datasets or uses the given collection-level metadata imputed via the body parameter and saves it to the database. The new collection metadata state will be returned in the response on success.
 
 **Parameters**:
 
-1. Body [OPTIONAL]: `{name, description, raw_data_link, protocol_link, other_information_link}` a schema that has fields for all available project-level metadata.
+1. Body [OPTIONAL]: `{name, description, raw_data_link, protocol_link, other_information_link}` a schema that has fields for all available collection-level metadata.
 
 **Responses:**
 
-1. 200 OK: `{project_uuid}`
+1. 200 OK: `{collection_uuid}`
 2. 400 Unsupported user-supplied schema fields
 3. 401 Unauthorized user
 4. 404 Submission not found
 
-`POST /v1/submission/{project_uuid}/publish`
+`POST /v1/submission/{collection_uuid}/publish`
 
 **Description**:
 
 **Parameters**:
 
-1. Body [REQUIRED]: a schema that contains a field dictating the visibility of the deployments that will either make the project visible on the public sites or only viewable through [obfuscated URLs](https://www.w3.org/TR/capability-urls/). If the visibility is set to public, the successful execution of this operation will move the Submission to a CLOSED state.
+1. Body [REQUIRED]: a schema that contains a field dictating the visibility of the deployments that will either make the collection visible on the public sites or only viewable through [obfuscated URLs](https://www.w3.org/TR/capability-urls/). If the visibility is set to public, the successful execution of this operation will move the Submission to a CLOSED state.
 
 **Responses:**
 
-1. 202 OK: `{project_uuid, visibility}`
+1. 202 OK: `{collection_uuid, visibility}`
 2. 400 Invalid visibility value
 3. 401 Unauthorized user
 4. 404 Submission not found
 
 ---
 
-`GET /v1/project`
+`GET /v1/collection`
 
-**Description**: this lists all projects and their UUIDs that currently exist in the data portal. If a parameter is specified as a filter, then only projects that meet the status criteria will be outputted.
+**Description**: this lists all collections and their UUIDs that currently exist in the data portal. If a parameter is specified as a filter, then only collections that meet the status criteria will be outputted.
 
 **Parameters**:
 
-1. User UUID [OPTIONAL]: the UUID of the user who submitted/created the project.
-2. From date [OPTIONAL]: the date after which projects should have been created.
-3. To date [OPTIONAL]: the date before which projects should have been created.
+1. User UUID [OPTIONAL]: the UUID of the user who submitted/created the collection.
+2. From date [OPTIONAL]: the date after which collections should have been created.
+3. To date [OPTIONAL]: the date before which collections should have been created.
 
 **Responses:**
 
 1. 200 OK
-1. Response payload will be a schema with fields `request_id`,`project_uuid`, `user_id`,`from_date`, and `to_date`.
+1. Response payload will be a schema with fields `request_id`,`collection_uuid`, `user_id`,`from_date`, and `to_date`.
 1. 400 Invalid query parameter
 
-`GET /v1/project/{project_uuid}`
+`GET /v1/collection/{collection_uuid}`
 
-**Description**: this will return all datasets attributes and associated attributes of a project with the given UUID.
+**Description**: this will return all datasets attributes and associated attributes of a collection with the given UUID.
 
 **Parameters**:
 
-1. Project UUID [REQUIRED]: the UUID of the project.
+1. Collection UUID [REQUIRED]: the UUID of the collection.
 
 **Responses:**
 
 1. 200 OK
-1. Response payload will be a schema with all available metadata about the project.
+1. Response payload will be a schema with all available metadata about the collection.
 1. 401 Unauthorized user
-1. 404 Project not found
+1. 404 Collection not found
 
-`DELETE /v1/project/{project_uuid}`
+`DELETE /v1/collection/{collection_uuid}`
 
-**Description**: Deletes an entire project from Corpora, including any generated artifacts/assets and deployments. If no such project exists, then a warning will be outputted.
+**Description**: Deletes an entire collection from Corpora, including any generated artifacts/assets and deployments. If no such collection exists, then a warning will be outputted.
 
 **Parameters**:
 
-1. Project UUID [REQUIRED]: the UUID of the project to be deleted.
+1. Collection UUID [REQUIRED]: the UUID of the collection to be deleted.
 
 **Responses:**
 
 1. 200 OK
 2. 401 Unauthorized user
-3. 404 Project not found
+3. 404 Collection not found
 
 ---
 
@@ -559,7 +559,7 @@ Do checksumming; SHA-256? Could do the 4 checksums as done in Upload Service.
 Quick validation is done in interactive time so that the submitter can quickly catch easy mistakes. Successfully sanity checking does not update any database records to show successful validation. That can only be completed after the long-form validation.
 
 - Matrix files is one of the accepted types: `{.loom or .h5ad or Seurat object}`
-- If the project needs attestation, make sure an attestation file has been submitted.
+- If the collection needs attestation, make sure an attestation file has been submitted.
 
 #### Lambda Validation
 
@@ -570,10 +570,10 @@ Quick validation is done in interactive time so that the submitter can quickly c
 
 ## Future Topics/Open Questions
 
-There are a number of topics that are briefly mentioned in this document which are not delved into more deeply as they aren’t necessarily required for the bare minimum scaffolding to get the Corpora project going (which was the intent of this document). The list of topics, to be discussed later, is listed below:
+There are a number of topics that are briefly mentioned in this document which are not delved into more deeply as they aren’t necessarily required for the bare minimum scaffolding to get the Corpora collection going (which was the intent of this document). The list of topics, to be discussed later, is listed below:
 
 - Pipeline monitoring
-- This service should allow the UI to display what stage of processing the project has undergone and also provide a notification to the user when the pipeline has completed processing so that they can check on their results.
+- This service should allow the UI to display what stage of processing the collection has undergone and also provide a notification to the user when the pipeline has completed processing so that they can check on their results.
 - Authentication service [Milestone 2]
 - Under the assumption that Auth is a shared service across all Corpora portals, we need to determine what profile data needs to be stored (big red box in the Data Model UML diagram) as well as generally how AuthN/AuthZ will be shared.
 
@@ -653,10 +653,10 @@ Stakeholders, please write LGTM + the date in the box next to your name after re
 
 The Data Model has significantly changed since the original approval of this design. The following changes have been made:
 
-- [MAJOR] The relationship between the Project entity and the Dataset entity has been changed to 1::N (from N::M). This decision was made to make Authentication/Authorization mechanisms easier. If datasets belonged to more than one project and the project states/visibilities were different, then it would raise complicated questions on what the state or visibility of the dataset should be. Also, if the relationship had been N::M it would have been difficult to enforce consistency between datasets that appear in multiple projects -- we would have had to create some sort of diff tool to recognize when the dataset might have changed and kept track of that/informed the submitter that the same UUID could no longer be used, etc. tl;dr: too complicated.
-- This change removes the ProjectDatasets table altogether and adds a foreign key in the Dataset table to the Project table.
+- [MAJOR] The relationship between the Collection entity and the Dataset entity has been changed to 1::N (from N::M). This decision was made to make Authentication/Authorization mechanisms easier. If datasets belonged to more than one collection and the collection states/visibilities were different, then it would raise complicated questions on what the state or visibility of the dataset should be. Also, if the relationship had been N::M it would have been difficult to enforce consistency between datasets that appear in multiple collections -- we would have had to create some sort of diff tool to recognize when the dataset might have changed and kept track of that/informed the submitter that the same UUID could no longer be used, etc. tl;dr: too complicated.
+- This change removes the CollectionDatasets table altogether and adds a foreign key in the Dataset table to the Collection table.
 - [MINOR] Addition of `development_stage` and `development_stage_ontology` to the Dataset table to match the addition of the metadata in the Corpora Schema.
-- [MINOR] Addition of `link_name` to the ProjectLinks table. This is needed in order to display on the frontend some user-friendly name that represents where the link will take you instead of displaying the raw link itself.
+- [MINOR] Addition of `link_name` to the CollectionLinks table. This is needed in order to display on the frontend some user-friendly name that represents where the link will take you instead of displaying the raw link itself.
 - [PATCH] Updating the cardinality of the relationship for the DatasetContributor table. This was simply a mistake. One dataset can appear in the table multiple times and one contributor can appear in the table multiple times. The cardinality made it seem like they could only appear once a piece.
 
 ![alt_text](imgs/updated_relational_diagram.png)
@@ -687,7 +687,7 @@ Stakeholders, please write LGTM + the date in the box next to your name after re
  </td>
  <td>Bruce Martin
  </td>
- <td>I have concerns about the project:dataset relationship, but those were discussed ephemerally in Slack.  The rest looks fine to me - 2020-07-15
+ <td>I have concerns about the collection:dataset relationship, but those were discussed ephemerally in Slack.  The rest looks fine to me - 2020-07-15
  </td>
 </tr>
 </table>
