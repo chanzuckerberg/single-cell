@@ -23,7 +23,6 @@ expression level for each set of cells. When there is a particularly large diffe
 cells, that gene is identified and presented to the user. To ensure consistency and compatibility it is necessary to define a
 data format for storing references to these genes and any accompanying statistical data.
 
-
 ## Product Requirements
 
 ### Users should be able to export differential expression results
@@ -36,7 +35,7 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 
 - [US2] A user should be able to upload a gene set via a csv file (see data formats below for more detail) for a dataset.
 - [US3] A user should be able to upload a gene set they previously downloaded from cellxgene
-- [US4] When a user uploads a gene set, that list of genes should appear in the right side bar
+- [US4] When a user uploads a gene set, that list of genes should appear in the right side bar [Note the scope of this RFC does not include how the upload process will work]
 - [US5] If the user was logged in when they uploaded a gene set that gene set should persist if they logout and back in or reload the page
 - [US6] If the gene names match those used in the dataset the user should be able to use general cellxgene functionality (color by genes, calculate differential expression levels, etc.) on those genes
 
@@ -69,9 +68,11 @@ To support gene sets three tables will be added to the cellxgene relational data
 ![Cellxgene Data Schema](imgs/Cellxgene_rds_schema.png)
 **Figure 1** Cellxgene data schema, tables to be added (as described above) are in red
 
-#### Imported CSV
+#### CSV Format
 
-GeneSet CSV
+Gene Set CSV
+
+- This CSV can contain multiple gene sets.
 
 - A file containing a header listing the fields (`GENESET,GENE,PVALUE,LOGFOLD,CELLSET1_CATEGORY.LABEL,CELLSET2_CATEGORY.LABEL,COMMENTS`)
   and a comma separated list of the gene set name, genes, pvalue, logfold value,
