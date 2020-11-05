@@ -483,7 +483,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 
 ---
 
-`GET /v1/collection`
+`GET /v1/collections`
 
 **Description**: this lists all collections and their UUIDs that currently exist in the data portal. If a parameter is specified as a filter, then only collections that meet the status criteria will be outputted.
 
@@ -499,7 +499,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 1. Response payload will be a schema with fields `request_id`,`collection_uuid`, `user_id`,`from_date`, and `to_date`.
 1. 400 Invalid query parameter
 
-`GET /v1/collection/{collection_uuid}`
+`GET /v1/collections/{collection_uuid}`
 
 **Description**: this will return all datasets attributes and associated attributes of a collection with the given UUID.
 
@@ -514,7 +514,7 @@ For simplicity, we can say that for now, there can only be one open submission o
 1. 401 Unauthorized user
 1. 404 Collection not found
 
-`DELETE /v1/collection/{collection_uuid}`
+`DELETE /v1/collections/{collection_uuid}`
 
 **Description**: Deletes an entire collection from Corpora, including any generated artifacts/assets and deployments. If no such collection exists, then a warning will be outputted.
 
