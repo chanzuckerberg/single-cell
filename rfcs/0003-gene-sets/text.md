@@ -37,7 +37,9 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 - [US3] A user should be able to upload a gene set they previously downloaded from cellxgene
 - [US4] When a user uploads a gene set, that list of genes should appear in the right side bar [Note the scope of this RFC does not include how the upload process will work]
 - [US5] If the user was logged in when they uploaded a gene set that gene set should persist if they logout and back in or reload the page
-- [US6] If the gene names match those used in the dataset the user should be able to use general cellxgene functionality (color by genes, calculate differential expression levels, etc.) on those genes
+- [US6] If the gene names match those used in the dataset the user should be able to use general cellxgene functionality
+  (color by genes, calculate differential expression levels, etc.) on those genes.
+- [US7] If a gene in the user uploaded gene set does not exist in the dataset the user will see an error message specifying the gene that wasnt in the dataset, but the remaining genes will be displayed.
 
 ## Detailed Design | Architecture | Implementation
 
@@ -47,23 +49,24 @@ Fully supporting persistence of differential expression results is out of the sc
 
 ### Relational Database
 
-To support gene sets three tables will be added to the cellxgene relational database
+To support gene sets two tables will be added to the cellxgene relational database
 
 - Gene
   - UUID (generated)
   - GeneName
-  - OntologyId?
-- GeneGeneSetLink
-  - UUID
-  - Gene UUID
-  - GeneSet UUID
-  - Comments (optional)
+  - Comments
+  - GeneSet
+  - created_at
+  - updated_at
 - GeneSet
   - UUID (generated)
   - GeneSet Name (required)
   - Gene Count (generated)
   - User UUID
   - Dataset UUID
+  - comments
+  - created_at
+  - updated_at
 
 ![Cellxgene Data Schema](imgs/Cellxgene_rds_schema.png)
 **Figure 1** Cellxgene data schema, tables to be added (as described above) are in red
@@ -74,26 +77,29 @@ Gene Set CSV
 
 - This CSV can contain multiple gene sets.
 
-- A file containing a header listing the fields (`GENESET,GENE,PVALUE,LOGFOLD,CELLSET1_CATEGORY.LABEL,CELLSET2_CATEGORY.LABEL,COMMENTS`)
-  and a comma separated list of the gene set name, genes, pvalue, logfold value,
-  identifiers for the cell sets that were compared to produce those values and details about why they were included.
-  Each gene should be on a new line. Only gene set (name) and gene are required fields. The name of the file will be based on the
-  user name and a timestamp rounded to the nearest second. If cells from two different datasets are being compared the datasest name
-  should be appended to the cellset label (eg dataset1.categoryA.label1)
+- A file containing a header listing the fields (`GENESET,GENE,COMMENTS,PVALUE,LOGFOLD`)
+  and a comma separated list of the gene set name, genes, comments, pvalue, and logfold value,
+  identifiers for the cell sets that were compared to produce those values and details about why a particular gene was chosen will
+  be included in the comments value (eg tissue.lung vs. tissue.heart or I chose this gene because ...). Each gene should
+  be on a new line. Only gene set (name) and gene are required fields. The name of the file will be based on the user
+  name and a timestamp rounded to the nearest second. If cells from two different datasets are being compared the
+  datasest name should be appended to the cellset label in the comments section
+  (eg dataset1.categoryA.label1 vs dataset2.categoryA.label2).
 
 ```CSV
-GENESET,GENE,PVALUE,LOGFOLD,CELLSET1_CATEGORY.LABEL,CELLSET2_CATEGORY.LABEL,COMMENTS
-SET1, a23, .05, 2, tissue.lung, tissue.heart, I picked this gene because I think it causes cancer
-SET1, b46, .01, 4, tissue.lung, tissue.heart, I picked this gene because I think it prevents cancer
-SET1, c19, .35, 2, tissue.lung, tissue.heart, I picked this gene because it has a funny name
-SET2, d57,,, cluster.1, cluster.2,
-SET2, d48,,, cluster.1, cluster.2,
-SET2, d89,,, cluster.1, cluster.2,
+GENESET,GENE,COMMENTS,PVALUE,LOGFOLD
+SET1, a23, I picked this gene because I think it causes cancer,,
+SET1, b46, I picked this gene because I think it prevents cancer,,
+SET1, c19, I picked this gene because it has a funny name,,
+SET2, d57, tissue.lung vs. tissue.heart, .05, 2
+SET2, d48, tissue.lung vs. tissue.heart, .01, 4
+SET2, d89, tissue.lung vs. tissue.heart, .35, 2
 ```
 
 ## Alternatives
 
-Because of the redundancy of the some pieces of data in the csv (gene set name, cellset identifiers) we considered using a json format instead,
-however discussions with scientists (our main users) made it clear that they felt more comfortable editing and working with a csv file.
+Because of the redundancy of some pieces of data in the csv (gene set name, cellset identifiers in the comments) we
+considered using a json format instead, however discussions with scientists (our main users) made it clear that they
+felt more comfortable editing and working with a csv file.
 
 ## References
