@@ -2,9 +2,9 @@
 
 ## API Format
 
-**Authors:** [Nice Person](mailto:madison.dunitz@chanzuckerberg.com)
+**Authors:** [Madison Dunitz](mailto:madison.dunitz@chanzuckerberg.com)
 
-**Approvers:** [Friendly Tech Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly PM Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly Tech Person2](mailto:some.nice.person@chanzuckerberg.com), [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com), [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
+**Approvers:** [Arathi Mani](mailto:arathi.mani@chanzuckerberg.com), [Signe Chambers](mailto:schambers@chanzuckerberg.com), [Friendly Tech Person2](mailto:colin.megill@chanzuckerberg.com), [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com), [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
 
 ## tl;dr
 
@@ -31,13 +31,13 @@ is stored to allow it to persist between sessions) is consistent and clear.
 
 Currently cellxgene users can choose two sets of cells and compute/display the log fold and adjusted p-value of the top ten differentially expressed genes. Additionally we display a histogram of the gene expression levels of the selected cells for each gene in the right side bar.
 
-- [US1] A user should be able to export a gene set, if the gene set was created by differential expression, the pvalue, log fold change, and category label fields will be populated in addition to the gene name. This will be available in a csv file (see data formats below for more detail).
+- [US1] A user should be able to export a gene set, if the gene set was created by differential expression, the pvalue, log fold change, and category label fields will be populated in addition to the gene name. This will be available in a csv file (see data formats for more detail).
 
 ### Users should be able to upload their own gene sets and see them in the right side bar with the option to apply them within current cellxgene functionalities, if the same gene ontology was used when generating the current dataset and the gene set uploaded by the user (ie the gene names match)
 
-- [US2] A user should be able to upload a gene set via a csv file (see data formats below for more detail) for a dataset.
+- [US2] A user should be able to upload a gene set via a csv file (see data formats for more detail) for a dataset.
 - [US3] A user should be able to upload a gene set they previously downloaded from cellxgene
-- [US4] When a user uploads a gene set, that list of genes should appear in the right side bar [Note the scope of this RFC does not include how the upload process will work]
+- [US4] When a user uploads a gene set, that list of genes should appear in the right side bar.
 - [US5] If the user was logged in when they uploaded a gene set that gene set should persist if they logout and back in or reload the page
 - [US6] If the gene names match those used in the dataset the user should be able to use general cellxgene functionality
   (color by genes, calculate differential expression levels, etc.) on those genes.
@@ -46,8 +46,6 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 ### If there is a standard format for differential expression output, we should follow that. If not, the format should be as straightforward as possible while serving these above cases
 
 ### [Optional] Nonfunctional requirements
-
-Nonfunctional requirements are not directly related to the user story but may instead reflect some technical aspect of the implementation, such as latency. [Here's](https://en.wikipedia.org/wiki/Non-functional_requirement) a more comprehensive list of nonfunctional requirements.
 
 - Users should be able to export precomputed differential expression results in real time
 - Users should be able to upload gene sets and have them immediately appear in the right side bar
@@ -76,13 +74,13 @@ The client will validate the format of the csv
 - if the format is invalid the client will raise a descriptive error message to the user
 - if the file is valid, the client will display the genes in the right side bar
 
-If the user is logged in the frontend will send a post request to the /gene_set/ (see API description below) with the geneset csv as the body of the request.
+If the user is logged in the frontend will send a POST request to /gene_set/ (see API description below) with the gene set csv as the body of the request.
 
-The backend will parse the csv and create a geneset (or sets), linking it to the user via the User id field.
-Genes listed in the geneset will be created in the gene table and linked to the geneset via the GeneSet field. A new row will be created in the
+The backend will parse the csv and create a gene set (or sets), linking it to the user via the UserId field.
+Genes listed in the gene set will be created in the gene table and linked to the geneset via the GeneSet field. A new row will be created in the
 gene table each time the gene is included in a geneset. Comments included in the csv will be stored as comments on the Gene.
 
-- If the geneset is successfully stored by the backend will respond with a 200.
+- If the gene set is successfully stored by the backend will respond with a 200.
 - If it is not successfully saved the backend will respond with a 400.
 
 No action will be taken by the client if the geneset is successfully saved
