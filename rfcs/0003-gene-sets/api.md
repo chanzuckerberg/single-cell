@@ -100,6 +100,7 @@ Once two sets of cells have been selected the button to the right of 2:0 cells (
 When the user selects the diffexp button, the client calculates the difference in expression levels for all of genes between the two sets of cells. It then display the 10 most differentially expressed genes in the right side bar along with a histogram of their expression levels.
 
 This information does not currently persist between sessions.
+
 ![Cellxgene Data Schema](imgs/diff_expression_button_pre.png)
 
 **Figure 2** Cellxgene Diff Expression button pre cell selection
@@ -136,10 +137,9 @@ An authenticated user can upload a csv containing a set of genes.
 
 **Request:**
 
-| Parameter | Description                                                                  |
-| --------- | ---------------------------------------------------------------------------- |
-| filename  | Specifies the user creating teh genesets and the time the sets were created. |
-| body      | Contains the csv gene set with any accompanying descriptions                 |
+| Parameter | Description                                                  |
+| --------- | ------------------------------------------------------------ |
+| body      | Contains the csv gene set with any accompanying descriptions |
 
 **Response:**
 
