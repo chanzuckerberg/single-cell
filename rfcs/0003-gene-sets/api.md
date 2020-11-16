@@ -25,7 +25,7 @@ expression level for each set of cells. Here I will define the structure of the 
 client (where the user is working directly with the data or uploading their own gene sets) and the backend (where data
 is stored to allow it to persist between sessions) is consistent and clear.
 
-## [Optional] Product Requirements
+## Product Requirements
 
 ### Users should be able to export differential expression results
 
