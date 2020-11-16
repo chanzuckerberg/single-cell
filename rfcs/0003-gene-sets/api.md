@@ -45,7 +45,7 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 
 ### If there is a standard format for differential expression output, we should follow that. If not, the format should be as straightforward as possible while serving these above cases
 
-### [Optional] Nonfunctional requirements
+### Nonfunctional requirements
 
 - Users should be able to export precomputed differential expression results in real time
 - Users should be able to upload gene sets and have them immediately appear in the right side bar
@@ -64,9 +64,9 @@ With a cap of 500 genes per set and 100 gene sets per file, this file should nev
 
 #### 2. User uploads file to hosted cellxgene client
 
-The user will typically upload a file from their local machine but we should consider supporting allowing uploads from s3 in future iterations.
+The user will typically upload a file from their local machine but we should consider supporting uploads from s3 in future iterations.
 
-The user does not need to be logged in to upload a geneset, but they will need to be logged in if they want that geneset to persist to future sessions.
+The user does not need to be logged in to upload a gene set, but they will need to be logged in if they want that gene set to persist to future sessions.
 
 Users will upload the file by passing its path to the client.
 The client will validate the format of the csv
@@ -78,14 +78,14 @@ If the user is logged in the frontend will send a POST request to /gene_set/ (se
 
 The backend will parse the csv and create a gene set (or sets), linking it to the user via the UserId field.
 Genes listed in the gene set will be created in the gene table and linked to the geneset via the GeneSet field. A new row will be created in the
-gene table each time the gene is included in a geneset. Comments included in the csv will be stored as comments on the Gene.
+gene table each time the gene is included in a geneset. Comments included in the csv will be stored as comments on the gene unless they are identical for all genes in the set.
 
-- If the gene set is successfully stored by the backend will respond with a 200.
+- If the gene set is successfully stored the backend will respond with a 200.
 - If it is not successfully saved the backend will respond with a 400.
 
-No action will be taken by the client if the geneset is successfully saved
+No action will be taken by the client if the gene set is successfully saved
 
-If the backend returns a 400 the client will alert the user that their geneset has not been saved.
+If the backend returns a 400 the client will alert the user that their gene set has not been saved.
 
 ### Export Differential Expression Output
 
@@ -131,15 +131,16 @@ cellxgene database (via the /gene_set POST route), linking the dataset, gene set
 
 All APIs assume user identification is available with the request.
 
-#### POST geneset/upload
+#### POST geneset/{dataset_uuid}/upload
 
 An authenticated user can upload a csv containing a set of genes.
 
 **Request:**
 
-| Parameter | Description                                                  |
-| --------- | ------------------------------------------------------------ |
-| body      | Contains the csv gene set with any accompanying descriptions |
+| Parameter    | Description                                                  |
+| ------------ | ------------------------------------------------------------ |
+| dataset_uuid | Identifies the dataset the gene sets are linked to.          |
+| body         | Contains the csv gene set with any accompanying descriptions |
 
 **Response:**
 
