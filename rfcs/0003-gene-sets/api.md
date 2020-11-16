@@ -1,14 +1,14 @@
-# Gene Set Data Format
+# Gene Sets
 
-## [Optional] Subtitle of my design
+## API Format
 
-**Authors:** [Nice Person](mailto:some.nice.person@chanzuckerberg.com)
+**Authors:** [Nice Person](mailto:madison.dunitz@chanzuckerberg.com)
 
 **Approvers:** [Friendly Tech Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly PM Person](mailto:some.nice.person@chanzuckerberg.com), [Friendly Tech Person2](mailto:some.nice.person@chanzuckerberg.com), [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com), [Sara Gerber](mailto:sara.gerber@chanzuckerberg.com)
 
 ## tl;dr
 
-This RFC contains the details about the data format for the gene set feature. It will support the export of differential
+This RFC contains the details about the API for the gene set feature. It will support the export of differential
 expression results and allow a user to upload their own gene sets for analysis.
 
 ## Glossery
@@ -21,9 +21,9 @@ expression results and allow a user to upload their own gene sets for analysis.
 
 Gene sets are the expected output of differential expression analysis in cellxgene. Two (non-overlaping) sets of cells
 are selected and the difference in the expression level for each gene is computed by comparing the average
-expression level for each set of cells. When there is a particularly large difference in expression between the two sets of
-cells, that gene is identified and presented to the user. To ensure consistency and compatibility it is necessary to define a
-data format for storing references to these genes and any accompanying statistical data.
+expression level for each set of cells. Here I will define the structure of the API to ensure communication between the
+client (where the user is working directly with the data or uploading their own gene sets) and the backend (where data
+is stored to allow it to persist between sessions) is consistent and clear.
 
 ## [Optional] Product Requirements
 
@@ -31,15 +31,17 @@ data format for storing references to these genes and any accompanying statistic
 
 Currently cellxgene users can choose two sets of cells and compute/display the log fold and adjusted p-value of the top ten differentially expressed genes. Additionally we display a histogram of the gene expression levels of the selected cells for each gene in the right side bar.
 
-- [US1] A user should be able to export the list of 10 genes along with their logfold and adjusted p-values in a csv file (see data formats below for more detail) by clicking a button
+- [US1] A user should be able to export a gene set, if the gene set was created by differential expression, the pvalue, log fold change, and category label fields will be populated in addition to the gene name. This will be available in a csv file (see data formats below for more detail).
 
-### Users should be able to upload their own gene sets and see them in the right side bar with the option to apply them within current cellxgene functionalities, if the same gene ontology was used when generating the current dataset and the geneset uploaded by the user (ie the gene names match)
+### Users should be able to upload their own gene sets and see them in the right side bar with the option to apply them within current cellxgene functionalities, if the same gene ontology was used when generating the current dataset and the gene set uploaded by the user (ie the gene names match)
 
-- [US2] A user should be able to upload a geneset via a csv file (see data formats below for more detail) for a dataset
-- [UC3] When a user uploads a geneset, that list of genes should appear in the right side bar
-- [US4] If the user was logged in when they uploaded a geneset that genesit should persist if they logout and back in or reload the page
-- [US5] If the gene names match those used in the dataset the user should be able to use general cellxgene functionality (color by genes, calculate differential expression levels, etc.) on those genes
-- [US6] Genesets uploaded for one dataset should be available in other datasets?
+- [US2] A user should be able to upload a gene set via a csv file (see data formats below for more detail) for a dataset.
+- [US3] A user should be able to upload a gene set they previously downloaded from cellxgene
+- [US4] When a user uploads a gene set, that list of genes should appear in the right side bar [Note the scope of this RFC does not include how the upload process will work]
+- [US5] If the user was logged in when they uploaded a gene set that gene set should persist if they logout and back in or reload the page
+- [US6] If the gene names match those used in the dataset the user should be able to use general cellxgene functionality
+  (color by genes, calculate differential expression levels, etc.) on those genes.
+- [US7] If a gene in the user uploaded gene set does not exist in the dataset the user will see an error message specifying the gene that wasnt in the dataset, but the remaining genes will be displayed.
 
 ### If there is a standard format for differential expression output, we should follow that. If not, the format should be as straightforward as possible while serving these above cases
 
@@ -52,19 +54,19 @@ Nonfunctional requirements are not directly related to the user story but may in
 
 ## Detailed Design | Architecture | Implementation
 
-Because genesets are closely tied to differential expression, some aspects of the differential expression design plans will also be detailed below.
+Because gene sets are closely tied to differential expression, some aspects of the differential expression design plans will also be detailed below.
 
 ### User uploaded gene sets
 
 #### 1. User creates csv containing a list of genes (and optional comments about why each gene was included)
 
-CSV must follow format described below in the Data Model section
+CSV must follow format described in the Data Model section
 
-With a cap of 500 genes per set this file should never be larger than 50kb
+With a cap of 500 genes per set and 100 gene sets per file, this file should never be larger than 500kb
 
 #### 2. User uploads file to hosted cellxgene client
 
-This will typically be from their local machine but we should consider supporting allowing uploads from s3 in future iterations.
+The user will typically upload a file from their local machine but we should consider supporting allowing uploads from s3 in future iterations.
 
 The user does not need to be logged in to upload a geneset, but they will need to be logged in if they want that geneset to persist to future sessions.
 
@@ -74,10 +76,11 @@ The client will validate the format of the csv
 - if the format is invalid the client will raise a descriptive error message to the user
 - if the file is valid, the client will display the genes in the right side bar
 
-If the user is logged in the frontend will send a post request to the /gene_set/upload (see API description below) with the geneset csv as the body of the request and the file name as the name of the geneset
+If the user is logged in the frontend will send a post request to the /gene_set/ (see API description below) with the geneset csv as the body of the request.
 
-The backend will parse the csv and create a geneset, linking it to the user via the GeneSetUserLink.
-Genes listed in the geneset will be created (if they dont exist) in the gene table and linked to the geneset via the GeneGeneSetLink, comments included in the csv will be stored as comments on in the GeneGeneSetLink
+The backend will parse the csv and create a geneset (or sets), linking it to the user via the User id field.
+Genes listed in the geneset will be created in the gene table and linked to the geneset via the GeneSet field. A new row will be created in the
+gene table each time the gene is included in a geneset. Comments included in the csv will be stored as comments on the Gene.
 
 - If the geneset is successfully stored by the backend will respond with a 200.
 - If it is not successfully saved the backend will respond with a 400.
@@ -98,6 +101,7 @@ Once two sets of cells have been selected the button to the right of 2:0 cells (
 
 When the user selects the diffexp button, the client calculates the difference in expression levels for all of genes between the two sets of cells. It then display the 10 most differentially expressed genes in the right side bar along with a histogram of their expression levels.
 
+This information does not currently persist between sessions.
 ![Cellxgene Data Schema](imgs/diff_expression_button_pre.png)
 
 **Figure 2** Cellxgene Diff Expression button pre cell selection
@@ -108,13 +112,25 @@ When the user selects the diffexp button, the client calculates the difference i
 
 #### Additional Functionality
 
-In the future we will limit the user's ability to create anonymous groups of cells. They will need to use the annotation feature to create a category and label the cell group in order to select it for differential expression analysis.
+The gene sets created by a user will persist between sessions. When an authenticated user navigates to a particular dataset
+the client will send a GET request to /gene_set/{dataset_id} retrieving all of the user's gene sets for that dataset.
 
-The user will be able to export a CSV file containing the 10 most differentially expressed genes along with their logfold and p-values.
+In the future we will limit the user's ability to create anonymous groups of cells. They will need to use the annotation
+feature to create a category and label the cell group in order to select it for differential expression analysis.
 
-The csv file will be named by the category, label of the two sets of cells being compared and be stored under that dataset identifier. See below in data structures for more detail.
+The user will be able to export a CSV file containing one or all of the genesets they created by selecting cell sets and
+calculating the 10 most differentially expressed genes along with their logfold and p-values between those sets.
+
+The comments section of the csv file will specify the two sets of cells being compared to create that gene set.
+
+The name of the exported file will be based on the user name and a timestamp rounded to the nearest second.
+
+If the user was signed in when they created the gene sets, data contained in the exported csv will also be persisted in the
+cellxgene database (via the /gene_set POST route), linking the dataset, gene set and user.
 
 ### APIs
+
+All APIs assume user identification is available with the request.
 
 #### POST geneset/upload
 
@@ -122,9 +138,40 @@ An authenticated user can upload a csv containing a set of genes.
 
 **Request:**
 
+| Parameter | Description                                                                  |
+| --------- | ---------------------------------------------------------------------------- |
+| filename  | Specifies the user creating teh genesets and the time the sets were created. |
+| body      | Contains the csv gene set with any accompanying descriptions                 |
+
+**Response:**
+
+| Code | Description                         |
+| ---- | ----------------------------------- |
+| 200  | The gene set was successfully saved |
+
+| Key     | Description                                   |
+| ------- | --------------------------------------------- |
+| message | If an error occurred, the message shows here. |
+
+**Error Responses:**
+
+| Code | Description                             |
+| ---- | --------------------------------------- |
+| 400  | If the parameters supplied are invalid. |
+
+| Code | Description                                                  |
+| ---- | ------------------------------------------------------------ |
+| 403  | User id invalid, or user does not have access to the dataset |
+
+#### GET geneset/{dataset_uuid}
+
+An authenticated user can retrieve gene sets they uploaded or calculated in a previous session for a given dataset.
+
+**Request:**
+
 | Parameter    | Description                                                 |
 | ------------ | ----------------------------------------------------------- |
-| geneset_name | Identifies the geneset to be created.                       |
+| dataset_uuid | Identifies the dataset the genesets are linked to.          |
 | body         | Contains the csv geneset with any accompanying descriptions |
 
 **Response:**
@@ -133,10 +180,9 @@ An authenticated user can upload a csv containing a set of genes.
 | ---- | ---------------------------------- |
 | 200  | The geneset was successfully saved |
 
-| Key         | Description                                   |
-| ----------- | --------------------------------------------- |
-| status_code | Provides the current status of the upload.    |
-| message     | If an error occurred, the message shows here. |
+| Key  | Description                                                              |
+| ---- | ------------------------------------------------------------------------ |
+| body | Contains a json containing all of the user's gene sets for that dataset. |
 
 **Error Responses:**
 
@@ -144,62 +190,10 @@ An authenticated user can upload a csv containing a set of genes.
 | ---- | --------------------------------------- |
 | 400  | If the parameters supplied are invalid. |
 
-### [Optional] Data model
+## Alternatives
 
-Fully supporting persistence of differential expression results is out of the scope of this RFC. But the data model described below has been designed to allow for differential expression persistence in the future.
-
-To support genesets four tables will be added to the cellxgene relational database
-
-- Gene
-  - UUID (generated)
-  - GeneName
-  - OntologyId?
-- GeneGeneSetLink
-  - UUID
-  - Gene UUID
-  - GeneSet UUID
-  - Comments (optional)
-- GeneSet
-  - UUID (generated)
-  - GeneSet Name (required)
-  - Gene Count (generated)
-  - Comments (optional, only available when the geneset is generated by cellxgene)
-- GeneSetUserLink
-  - User UUID
-  - GeneSet UUID
-  - Comments (optional)
-  - Dataset UUID (?)
-
-![Cellxgene Data Schema](imgs/Cellxgene_rds_schema.png)
-**Figure 1** Cellxgene data schema, tables to be added (as described above) are in red
-
-GeneSet CSV
-
-- A file containing a comma separated list of genes and (optionally) details about why they were included. Each gene should be on a new line The name of the file will be used as the name of the geneset (see dataset_id.csv for example)
-
-Exported File
-
-- A file containing a comma separated list of genes, logfold values and p-values. The name of the directory storing the file will reference the dataset and the name of the file will contain names of the cell sets being compared, see datasetID/categoryA.label1-categoryB.label2.csv for an examole
-  In the future, if cells from two different datasets are being compared the dataset id will be appended as a prefix to the category names in the filename (?will this make the filename too long?)
-
-### [Optional] Test plan
-
-This section details the sorts of tests that will be written to give confidence that the implementation matches the design. Enumerating the test cases is a good way to find holes in the design and helps the reviewers understand, in more detail, how the feature works. It also helps get into the mindset of test driven development.
-
-## Test that an exported list of genes can be reimported
-
-### [Optional] Monitoring and error reporting
-
-This section contains information on the monitoring and error reporting features that will be built in order for the system to respond and alert users on failures of the feature being designed. This helps ensure that failure modes are thought about and the users' experiences with facing errors is consistent and helpful, rather than frustrating.
-
-## [Optional] Alternatives
-
-Especially for larger designs, you probably considered more than one design so it’s worthwhile to briefly list the others and a short note on why you decided against it.
+Because of the redundancy of some pieces of data in the csv (gene set name, cellset identifiers in the comments) we
+considered using a json format instead, however discussions with scientists (our main users) made it clear that they
+felt more comfortable editing and working with a csv file.
 
 ## References
-
-Any relevant documents or prior art should be clearly listed here. Any citation of figures or papers should also be clearly listed here. Of course, they can also be linked throughout the document when directly referenced.
-
-[0][image of random system architecture](https://www.visual-paradigm.com/features/aws-architecture-diagram-tool/).
-
-[1][google developer documentation style guide](https://developers.google.com/style/highlights#introduction_1)
