@@ -318,24 +318,13 @@ Deployment replays may occur if one of the downstream portals needs to make a sw
 
 ### Data Model
 
-#### ER Diagram
-
-The below ER (entity relation) diagram represents the core entities that will be kept track of by the data portal backend and specifically is considerate of the necessary data in order to populate the frontend web browser and corresponding functionality. There are a few specific things to note here:
-
-1. This data model does not denormalize the matrix that is associated with a data and associated metadata that is available there or in the finer-grained “Observation” and “Feature” entities. The requirements for populating the metadata are not engineering-driven, as in the metadata within the matrix itself is not used to populate the database backend.
-2. Data model does not currently exhibit necessary information related to Authentication/Authorization. This will be filled in at a later point in time with the AuthN/AuthZ design.
-
-![alt_text](imgs/er_diagram.png)
-
-<p style="text-align: center;"><b>Figure 5:</b> ER diagram modeling the core entities of the Data Portal as well as the relationships between the entities. The original Lucidchart that should be edited is <a href=https://app.lucidchart.com/invitations/accept/3672a8a1-ebfb-4411-94c1-d8f3f7d9bd85>here</a>. The blue attributes are ones that are provided by the data contributor. The rest are either system related or calculated.</p>
-
 #### UML of Database
 
 Based on the ER diagram about and ensuring that the database design is in Boyce-Codd normal form, the following UML describes the RDS.
 
-![alt_text](imgs/original_relational_diagram.png)
+![alt_text](imgs/data_portal_database_uml.png)
 
-<p style="text-align: center;"><b>Figure 6</b>: Core Corpora database object relational diagram. The original Lucidchart that will be edited and kept up is <a href=https://app.lucidchart.com/invitations/accept/039b8ec2-81a2-4916-906f-e5a71851369a>here</a>.</p>
+<p style="text-align: center;"><b>Figure 5</b>: Core Corpora database object relational diagram. The original Lucidchart that will be edited and kept up is <a href=https://app.lucidchart.com/invitations/accept/039b8ec2-81a2-4916-906f-e5a71851369a>here</a>.</p>
 
 #### Submission vs. Collection Entities
 
@@ -661,7 +650,7 @@ The Data Model has significantly changed since the original approval of this des
 
 ![alt_text](imgs/updated_relational_diagram.png)
 
-<p style="text-align: center;"><b>Figure 7</b>: Updated UML of database after applying the above mentioned changes. Live Lucidchart link is <a href=https://app.lucidchart.com/documents/edit/b88328c0-4706-4021-ac6a-74cae82704d3/0_0?shared=true>here</a>.</p>
+<p style="text-align: center;"><b>Figure 6</b>: Updated UML of database after applying the above mentioned changes. Live Lucidchart link is <a href=https://app.lucidchart.com/documents/edit/b88328c0-4706-4021-ac6a-74cae82704d3/0_0?shared=true>here</a>.</p>
 
 #### 2020-07-15 Approvers
 
