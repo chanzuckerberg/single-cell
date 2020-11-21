@@ -129,7 +129,12 @@ cellxgene database (via the /gene_set POST route), linking the dataset, gene set
 
 ### APIs
 
-All APIs assume user identification is available with the request.
+All APIs assume user identification is available with the request and the dataset being worked on is specified in the url
+POST - geneset
+PUT - geneset (change geneset or add/remove genes to geneset)
+DELETE - geneset
+GET
+LIST
 
 #### POST geneset/{dataset_uuid}/upload
 
