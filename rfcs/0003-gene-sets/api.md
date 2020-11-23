@@ -127,6 +127,8 @@ The name of the exported file will be based on the user name and a timestamp rou
 If the user was signed in when they created the gene sets, data contained in the exported csv will also be persisted in the
 cellxgene database (via the /gene_set POST route), linking the dataset, gene set and user.
 
+### Keeping consensus
+
 ### APIs
 
 All APIs assume user identification is available with the request and the dataset being worked on is specified in the url
