@@ -67,10 +67,13 @@ The user will typically upload a file from their local machine but we should con
 The user must be logged in to upload a gene set.
 
 Users will upload the file by passing its path to the client.
-The client will validate the format of the csv
+The client will validate the format of the csv and check that the genes listed in the csv exist in the dataset
 
 - if the format is invalid the client will raise a descriptive error message to the user
 - if the file is valid, the client will display the genes in the right side bar
+- if the file is valid, but it references genes that are not in the dataset, the client will display the genes that do
+  exist in the right side bar and alert the user that their gene set contained genes that are not a part of the dataset/have
+  been removed from the gene set.
 
 If the user is logged in the frontend will send a POST request to {dataset_name}/api/v0.01/gene_sets/ (see API
 description below) with a json object containing the gene sets and genes as the body of the request (see API
@@ -99,7 +102,9 @@ The user selects a set of cells via the lasso and then clicks the 2:0 cells butt
 
 Once two sets of cells have been selected the button to the right of 2:0 cells (diffexp button) becomes available as shown in Figure 3. Figure 3 also shows that the cell selection button is updated to show the number of cells currently selected.
 
-When the user selects the diffexp button, the client calculates the difference in expression levels for all of genes between the two sets of cells. It then display the 10 most differentially expressed genes in the right side bar along with a histogram of their expression levels.
+When the user selects the diffexp button, the client sends a request to the server which calculates the difference in
+expression levels for all of genes between the two sets of cells. It then returns the 10 most differentially expressed
+genes to the client which displays that information in the right side bar along with a histogram of their expression levels.
 
 This information does not currently persist between sessions.
 
@@ -120,14 +125,14 @@ that dataset.
 In the future we will limit the user's ability to create anonymous groups of cells. They will need to use the annotation
 feature to create a category and label the cell group in order to select it for differential expression analysis.
 
-The user will be able to export a CSV file containing one or all of the genesets they created by selecting cell sets and
+The user will be able to export a CSV file containing one or all of the gene sets they created by selecting cell sets and
 calculating the 10 most differentially expressed genes along with their logfold and p-values between those sets.
 
 The comments section of the csv file will specify the two sets of cells being compared to create that gene set.
 
 The name of the exported file will be based on the user name and a timestamp rounded to the nearest second.
 
-### Keeping consensus
+### Keeping Consensus
 
 This feature will require processing multiple updates to the same gene set, due to our hosting architecture this creates
 the potential for race conditions and concerns about keeping the data in sync between the database, server and client.  
@@ -155,23 +160,27 @@ stored in the database for that gene set.
   Because recreating the gene set assigns it a new UUID, any pending or high latency PUT requests sent prior to the update
   be ignored because they reference a UUID that no longer exists.
 
+In the desktop version of the application the gene sets (and genes) will be stored locally as a csv under the name of
+the dataset and the user session. On updates the application will create and store a new csv, maintaining the last
+10 updates (this will match the current functionality for annotations in the desktop environment)
+
 ### APIs
 
 All APIs assume user identification is available with the request and the dataset being worked on is specified in the url
-Future API endpoints being considered
+Future API endpoints for consideration
 
-- LIST dataset_name/api/v0.1/gene_sets/ - all genesets for a dataset (just names)
+- LIST dataset_name/api/v0.1/gene_sets/ - list all gene sets for a dataset (just names)
 - GET dataset_name/api/v0.1/gene_sets/{gene_set_uuid} - get all information for one particular gene set
 
-#### Get dataset_name/api/v0.1/genesets/
+#### Get dataset_name/api/v0.1/gene_sets/
 
-Return all of the gene sets (and accompanying genes) associated with a given user/dataset
+Return all of the gene sets (and accompanying genes) associated with a given user/dataset.
 
 **Request:**
 | Parameter | Description |
 | ------------ | --------------------------------------------------------------------------------------------- |
 | dataset_name | Identifies the dataset the gene sets are linked to. |
-| user_id | Identifies the user creating the gene set |
+| user_id | Identifies the user linked to the gene set. |
 
 **Response:**
 
@@ -179,22 +188,22 @@ Return all of the gene sets (and accompanying genes) associated with a given use
 | ---- | ---------------------------------------- |
 | 200  | The gene sets were successfully returned |
 
-| Key           | Description                                                                         |
-| ------------- | ----------------------------------------------------------------------------------- |
-| response_body | List of gene set dicts containing their identifying information and a list of genes |
-|               | {"gene_sets":                                                                       |
-|               | [{                                                                                  |
-|               | "gene_set_name":"gene set name",                                                    |
-|               | "gene_set_uuid": "uuid".                                                            |
-|               | "consensus_counter": "0001"                                                         |
-|               | "comments": "[OPTIONAL]Comments describing gene set",                               |
-|               | "genes":                                                                            |
-|               | [{                                                                                  |
-|               | "gene name": "[Required] name of gene",                                             |
-|               | "comments": "[OPTIONAL] comments on why a gene was included in this gene set"       |
-|               | }]                                                                                  |
-|               | }]                                                                                  |
-|               | }                                                                                   |
+| Key  | Description                                                                         |
+| ---- | ----------------------------------------------------------------------------------- |
+| data | List of gene set dicts containing their identifying information and a list of genes |
+|      | ```{"gene_sets":                                                                    |
+|      | [{                                                                                  |
+|      | "gene_set_name":"gene set name",                                                    |
+|      | "gene_set_uuid": "uuid".                                                            |
+|      | "consensus_counter": "0001"                                                         |
+|      | "comments": "Comments describing gene set",                                         |
+|      | "genes":                                                                            |
+|      | [{                                                                                  |
+|      | "gene name": "name of gene",                                                        |
+|      | "comments": "comments on why a gene was included in this gene set"                  |
+|      | }]                                                                                  |
+|      | }]                                                                                  |
+|      | }```                                                                                |
 
 **Error Responses:**
 
@@ -208,7 +217,7 @@ Return all of the gene sets (and accompanying genes) associated with a given use
 
 #### POST dataset_name/api/v0.1/gene_sets/
 
-Any gene sets created or uploaded (via the csv format described above) will be sent via json to the backend for longterm
+Any gene sets created or uploaded (via the csv format described above) will be sent via json to the backend for long term
 storage/persistence.
 Gene sets and gene names must be unique for a user/dataset - if an already used gene set name is submitted, the backend
 will assume it is due to a consensus issue and delete the currently stored gene set (and any attached genes) and
@@ -216,11 +225,11 @@ recreate it based on the information in the request
 
 **Request:**
 | Parameter | Description |
-| ------------ | --------------------------------------------------------------------------------------------- |
+| -------------- | --------------------------------------------------------------------------------------------- |
 | dataset_name | Identifies the dataset the gene sets are linked to. |
 | user_id | Identifies the user creating the gene set |  
-| body | JSON formatted dict containing a list of gensets (and accompanying genes) to be created |
-| | {"gene_sets": |
+| body | JSON formatted dict containing a list of gene sets (and accompanying genes) to be created |
+| | ```{"gene_sets": |
 | | [{ |
 | | "gene_set_name":"[Required] gene set name", |
 | | "comments": "[OPTIONAL]Comments describing gene set", |
@@ -230,12 +239,12 @@ recreate it based on the information in the request
 | | "comments": "[OPTIONAL] comments on why a gene was included in this gene set" |
 | | }] |
 | | }] |
-| | }  
-**Response:**
+| | }``` |
 
-| Code | Description                         |
-| ---- | ----------------------------------- |
-| 201  | The gene set was successfully saved |
+**Response:**
+| Code | Description |
+| ---- | --------------------------------------- |
+| 201 | The gene set(s) were successfully saved |
 
 | Key       | Description                                                                               |
 | --------- | ----------------------------------------------------------------------------------------- |
@@ -267,9 +276,9 @@ Updates to comments will overwrite the currently stored comments
 | user_id       | Identifies the user creating the gene set                                                        |
 | gene_set_uuid | UUID of gene set to be updated                                                                   |
 | body          | JSON formatted dict containing a gene set (and accompanying genes) to be updated                 |
-|               | {                                                                                                |
+|               | ```{                                                                                             |
 |               | "consensus_counter": "[Required] 0001",                                                          |
-|               | "comments": "[OPTIONAL]Update to comments describing gene set, if null no changes will be made", |  |
+|               | "comments": "[OPTIONAL]Update to comments describing gene set, if null no changes will be made", |
 |               | "genes_to_add":                                                                                  |
 |               | [{                                                                                               |
 |               | "gene name": "[Required] name of gene",                                                          |
@@ -281,7 +290,7 @@ Updates to comments will overwrite the currently stored comments
 |               | "gene name": "[Required] name of gene",                                                          |
 |               | "comments": "updated comment"                                                                    |
 |               | }],                                                                                              |
-|               | }                                                                                                |
+|               | }```                                                                                             |
 
 **Response:**
 | Code | Description |
