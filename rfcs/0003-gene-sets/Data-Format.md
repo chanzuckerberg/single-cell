@@ -60,6 +60,7 @@ To support gene sets two tables will be added to the cellxgene relational databa
   - updated_at
 - GeneSet
   - UUID (generated)
+  - ConsensusCounter (generated)
   - GeneSet Name (required)
   - Gene Count (generated)
   - User UUID
