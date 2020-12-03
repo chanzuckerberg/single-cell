@@ -255,12 +255,17 @@ recreate it based on the information in the request
 | ---- | --------------------------------------- |
 | 201 | The gene set(s) were successfully saved |
 
-| Key       | Description                                                                               |
-| --------- | ----------------------------------------------------------------------------------------- |
-| gene_sets | Dict mapping the gene set name to its assigned uuid and its consensus counter             |
-|           | {"name_of_gene_set": {"uuid": "gene_set_uuid", "consensus_counter": "0001"}}              |
-| errors    | In the case where some gene sets were successfully stored and others will not, a message  |
-|           | specifying the error and the gene set(s) it was linked to is returned to the client here. |
+| Key      | Description                                                                               |
+| -------- | ----------------------------------------------------------------------------------------- |
+| gene_set | Dict mapping the gene set name to its assigned uuid and its consensus counter             |
+| errors   | In the case where some gene sets were successfully stored and others will not, a message  |
+|          | specifying the error and the gene set(s) it was linked to is returned to the client here. |
+
+gene_set
+
+```json
+{ "name_of_gene_set": { "uuid": "gene_set_uuid", "consensus_counter": "0001" } }
+```
 
 **Error Responses:**
 
