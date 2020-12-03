@@ -191,19 +191,22 @@ Return all of the gene sets (and accompanying genes) associated with a given use
 | Key  | Description                                                                         |
 | ---- | ----------------------------------------------------------------------------------- |
 | data | List of gene set dicts containing their identifying information and a list of genes |
-|      | {"gene_sets":                                                                       |
-|      | [{                                                                                  |
-|      | "gene_set_name":"gene set name",                                                    |
-|      | "gene_set_uuid": "uuid".                                                            |
-|      | "consensus_counter": "0001"                                                         |
-|      | "comments": "Comments describing gene set",                                         |
-|      | "genes":                                                                            |
-|      | [{                                                                                  |
-|      | "gene name": "name of gene",                                                        |
-|      | "comments": "comments on why a gene was included in this gene set"                  |
-|      | }]                                                                                  |
-|      | }]                                                                                  |
-|      | }                                                                                   |
+
+```json
+{"gene_sets":
+  [{
+    "gene_set_name":"gene set name",
+    "gene_set_uuid": "uuid".
+    "consensus_counter": "0001"
+    "comments": "Comments describing gene set",
+    "genes":
+        [{
+          "gene name": "name of gene",
+          "comments": "comments on why a gene was included in this gene set"
+        }]
+  }]
+}
+```
 
 **Error Responses:**
 
@@ -229,17 +232,23 @@ recreate it based on the information in the request
 | dataset_name | Identifies the dataset the gene sets are linked to. |
 | user_id | Identifies the user creating the gene set |  
 | body | JSON formatted dict containing a list of gene sets (and accompanying genes) to be created |
-| | {"gene_sets": |
-| | [{ |
-| | "gene_set_name":"[Required] gene set name", |
-| | "comments": "[OPTIONAL]Comments describing gene set", |
-| | "genes": |
-| | [{ |
-| | "gene name": "[Required] name of gene", |
-| | "comments": "[OPTIONAL] comments on why a gene was included in this gene set" |
-| | }] |
-| | }] |
-| | } |
+
+```json
+{
+  "gene_sets": [
+    {
+      "gene_set_name": "[Required] gene set name",
+      "comments": "[OPTIONAL]Comments describing gene set",
+      "genes": [
+        {
+          "gene name": "[Required] name of gene",
+          "comments": "[OPTIONAL] comments on why a gene was included in this gene set"
+        }
+      ]
+    }
+  ]
+}
+```
 
 **Response:**
 | Code | Description |
@@ -277,21 +286,23 @@ Updates to comments will overwrite the currently stored comments
 | gene_set_uuid | UUID of gene set to be updated                                                               |
 | body          | JSON formatted dict containing a gene set (and accompanying genes) to be updated-- see below |
 
-```JSON
-body = {
-   "consensus_counter": "[Required] 0001",
-   "comments": "[OPTIONAL]Update to comments describing gene set, if null no changes will be made",
-   "genes_to_add":
-       [{
-          "gene name": "[Required] name of gene",
-          "comments": "[OPTIONAL] comments on why a gene was included in this gene set"
-       }],
-   "genes_to_delete": ["gene_names"],
-   "genes_to_change":
-      [{
-        "gene name": "[Required] name of gene",
-        "comments": "updated comment"
-      }],
+```json
+{
+  "consensus_counter": "[Required] 0001",
+  "comments": "[OPTIONAL]Update to comments describing gene set, if null no changes will be made",
+  "genes_to_add": [
+    {
+      "gene name": "[Required] name of gene",
+      "comments": "[OPTIONAL] comments on why a gene was included in this gene set"
+    }
+  ],
+  "genes_to_delete": ["gene_names"],
+  "genes_to_change": [
+    {
+      "gene name": "[Required] name of gene",
+      "comments": "updated comment"
+    }
+  ]
 }
 ```
 
