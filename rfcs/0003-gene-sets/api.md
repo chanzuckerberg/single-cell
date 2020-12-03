@@ -164,6 +164,30 @@ In the desktop version of the application the gene sets (and genes) will be stor
 the dataset and the user session. On updates the application will create and store a new csv, maintaining the last
 10 updates (this will match the current functionality for annotations in the desktop environment)
 
+### Data Lifecycle
+
+#### Creation
+
+Gene sets are created via a POST request to `/dataset_name/api/v0.1/gene_sets/`. This request is sent
+
+- after a user uploads a csv continaing one (or more) gene sets.
+- based on the results of comparing differential expression of two groups of cells.
+- after the user creates a new gene set via the application GUI
+  Genes are created as a part of the gene set creation step. They can also be added to an existing gene set via a PUT
+  requst to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`
+
+#### Updates
+
+Gene sets are updated via a PUT request to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`. Genes can also be
+updated via this mechanism
+
+#### Deletion
+
+Gene sets are deleted via a DELETE request to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`. All genes attached to
+the gene set will be deleted as well.
+Genes can be removed from a gene set by including their name in the `genes_to_delete` list that is part of the
+request body for PUT requests to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`
+
 ### APIs
 
 All APIs assume user identification is available with the request and the dataset being worked on is specified in the url
@@ -193,18 +217,21 @@ Return all of the gene sets (and accompanying genes) associated with a given use
 | data | List of gene set dicts containing their identifying information and a list of genes |
 
 ```json
-{"gene_sets":
-  [{
-    "gene_set_name":"gene set name",
-    "gene_set_uuid": "uuid".
-    "consensus_counter": "0001"
-    "comments": "Comments describing gene set",
-    "genes":
-        [{
+{
+  "gene_sets": [
+    {
+      "gene_set_name": "gene set name",
+      "gene_set_uuid": "uuid",
+      "consensus_counter": "0001",
+      "comments": "Comments describing gene set",
+      "genes": [
+        {
           "gene name": "name of gene",
           "comments": "comments on why a gene was included in this gene set"
-        }]
-  }]
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -260,8 +287,6 @@ recreate it based on the information in the request
 | gene_set | Dict mapping the gene set name to its assigned uuid and its consensus counter             |
 | errors   | In the case where some gene sets were successfully stored and others will not, a message  |
 |          | specifying the error and the gene set(s) it was linked to is returned to the client here. |
-
-gene_set
 
 ```json
 { "name_of_gene_set": { "uuid": "gene_set_uuid", "consensus_counter": "0001" } }
