@@ -277,21 +277,24 @@ Updates to comments will overwrite the currently stored comments
 | gene_set_uuid | UUID of gene set to be updated                                                               |
 | body          | JSON formatted dict containing a gene set (and accompanying genes) to be updated-- see below |
 
+```JSON
 body = {
-"consensus_counter": "[Required] 0001",  
- "comments": "[OPTIONAL]Update to comments describing gene set, if null no changes will be made",
-"genes_to_add":  
- [{  
- "gene name": "[Required] name of gene",  
- "comments": "[OPTIONAL] comments on why a gene was included in this gene set"  
- }],  
- "genes_to_delete": ["gene_names"],  
- "genes_to_change":  
- [{  
- "gene name": "[Required] name of gene",  
- "comments": "updated comment"  
- }],  
- }
+   "consensus_counter": "[Required] 0001",
+   "comments": "[OPTIONAL]Update to comments describing gene set, if null no changes will be made",
+   "genes_to_add":
+       [{
+          "gene name": "[Required] name of gene",
+          "comments": "[OPTIONAL] comments on why a gene was included in this gene set"
+       }],
+   "genes_to_delete": ["gene_names"],
+   "genes_to_change":
+      [{
+        "gene name": "[Required] name of gene",
+        "comments": "updated comment"
+      }],
+}
+```
+
 **Response:**
 | Code | Description |
 | ---- | --------------------------------------- |
