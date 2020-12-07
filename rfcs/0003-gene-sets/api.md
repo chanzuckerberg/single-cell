@@ -1,4 +1,4 @@
-# Gene Sets
+# Explorer User-Generated Gene Sets
 
 ## API Format
 
@@ -13,7 +13,7 @@ expression results and allow a user to upload their own gene sets for analysis.
 
 ## Glossery
 
-- Geneset - List of genes
+- Geneset - List of genes, also referred to as var_sets throughout this document
 - Differential expression - A statistic (typically logfold and p-value) describing the difference in gene expression between two sets of cells. It may refer to stats specific to one gene (differential expression value) or many (differential expression analysis). When referring to many genes it is typically capped (eg top 10 most differentially expressed genes)
 - LogFold - A ratio of the difference in expression levels. Typically calculated by taking the log2 of the gene expression value for each cell and then finding the mean of that value for each set of cells. Because the data is already log2 transformed you can then take the difference between the two means as the logfold value
 
@@ -33,7 +33,7 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 
 - [US1] A user should be able to export a gene set, if the gene set was created by differential expression, the pvalue, log fold change, and category label fields will be populated in addition to the gene name. This will be available in a csv file (see data formats for more detail).
 
-### Users should be able to upload their own gene sets and see them in the right side bar with the option to apply them within current cellxgene functionalities, if the same gene ontology was used when generating the current dataset and the gene set uploaded by the user (ie the gene names match)
+### Users can upload their own gene sets and see them in the right side bar with the full range of current cellxgene functionalities
 
 - [US2] A user should be able to upload a gene set via a csv file (see data formats for more detail) for a dataset.
 - [US3] A user should be able to upload a gene set they previously downloaded from cellxgene
@@ -48,7 +48,6 @@ Currently cellxgene users can choose two sets of cells and compute/display the l
 ### Nonfunctional requirements
 
 - Users should be able to export precomputed differential expression results in real time
-- Users should be able to upload gene sets and have them immediately appear in the right side bar
 
 ## Detailed Design | Architecture | Implementation
 
@@ -72,25 +71,25 @@ The client will validate the format of the csv and check that the genes listed i
 - if the format is invalid the client will raise a descriptive error message to the user
 - if the file is valid, the client will display the genes in the right side bar
 - if the file is valid, but it references genes that are not in the dataset, the client will display the genes that do
-  exist in the right side bar and alert the user that their gene set contained genes that are not a part of the dataset/have
-  been removed from the gene set.
+  exist in the right side bar and alert the user that their var set contained genes that are not a part of the dataset and they have
+  been removed from the var set that will be stored/displayed.
 
-If the user is logged in the frontend will send a POST request to {dataset_name}/api/v0.01/gene_sets/ (see API
-description below) with a json object containing the gene sets and genes as the body of the request (see API
+If the user is logged in the frontend will send a POST request to {dataset_name}/api/v0.01/var_sets/ (see API
+description below) with a json object containing the var sets and genes as the body of the request (see API
 description below for more detail about the request body).
 
-The backend will parse the json and create a gene set (or sets), linking it to the user via the UserId field.
-Genes listed in the gene set will be created in the gene table and linked to the gene set via the GeneSet field. A new
-row will be created in the gene table for each gene included in a gene set.
+The backend will parse the json and create a var set (or sets), linking it to the user via the UserId field.
+Genes listed in the var set will be created in the gene table and linked to the gene set via the VarSet field. A new
+row will be created in the gene table for each gene included in a var set.
 
 - If the gene set is successfully stored the backend will respond with a 201 and the uuid and consensus counter for that
   gene set (see keeping consensus below).
 
-- If it is not successfully saved the backend will respond with a 400 and the names of the gene sets that were not created.
+- If it is not successfully saved the backend will respond with a 400 and the names of the var sets that were not created.
 
-No action will be taken by the client if the gene set is successfully saved
+No action will be taken by the client if the var set is successfully saved
 
-If the backend returns a 400 the client will try again and then alert the user that their gene set has not been saved.
+If the backend returns a 400 the client will try again and then alert the user that their var set has not been saved.
 
 ### Export Differential Expression Output
 
@@ -119,7 +118,7 @@ This information does not currently persist between sessions.
 #### Additional Functionality
 
 The gene sets created by a user will persist between sessions. When an authenticated user navigates to a particular dataset
-the client will send a GET request to {dataset_name}/api/v0.01/gene_sets retrieving all of the user's gene sets for
+the client will send a GET request to {dataset_name}/api/v0.01/var_sets retrieving all of the user's gene sets for
 that dataset.
 
 In the future we will limit the user's ability to create anonymous groups of cells. They will need to use the annotation
@@ -140,21 +139,27 @@ To ensure data consistency, when the user is interacting with the data, the clie
 If what is stored in the database doesnt match what the user is seeing, the data in the database will be discarded and
 recreated based on the state of the client.
 
-The server will ensure the data is kept in sync through a consensus token or counter. Everytime a gene set is created
-in the database it will have a consensus_counter field set to 0000. This will be sent back to the client along with the
-gene set name and uuid. When the client updates a gene set (via a PUT request) it will send this counter back to the
-server as part of the request body. The server will confirm that the counter sent from the client matches the counter
-stored in the database for that gene set.
+The client will ensure the data is kept in sync through a consensus token or counter. Everytime a var set is created
+in the database it will have a consensus_counter field set to 0. This will be sent back to the client along with the
+gene set name and uuid. When the client updates a gene set (via a PUT request) it will send this counter incremented by 1
+back to the server as part of the request body. The server will confirm that the counter sent from the client is one
+more than the counter stored in the database for that gene set.
 
-- If the values match, the server will update the gene set as specified in the PUT
-  request and update the counter by incrementing it by 1. The response to the client will include the updated counter value
-  to be used in future PUT requests for that gene set.
-- If the counter stored in the database does not match the counter sent by the client the server will immediately send
-  an error message to the client, specifying the name and uuid of the gene set that is out of sync. The client will
-  then send over the entire gene set including all linked genes as a POST request. Because the gene set name is already
-  taken for that user/dataset, the server will delete the currently stored gene set and any associated genes and recreate
-  it based on the information included in the POST request. This will generate a new UUID for the gene set, and reset the
-  consensus counter.
+- If the values is correct, the server will update the gene set as specified in the PUT
+  request and update the counter with the value sent by the client. The response to the client will include the updated
+  counter value to be used in future PUT requests for that gene set.
+- If the counter stored sent by the client is equal to or less than the counter in the database the request will be ignored
+  (under the assumption that it has already been processed)
+- If the counter sent by the client is too high (more than 1 more than the counter stored by the client) the server will immediately send
+  an error message to the client, specifying the name and uuid of the gene set that is out of sync as well as the value
+  of the counter currently associated the gene set in the database.
+
+  - The client can then send the missing updates (in order) followed by the failed update, OR
+  - The client can send over the entire gene set including all linked genes as a POST request. Because the gene
+    set name is already taken for that user/dataset, the server will delete the currently stored gene set and any
+    associated genes and recreate it based on the information included in the POST request. This will generate a new UUID
+    for the gene set, and reset the consensus counter.
+
   In the case that the server times out or does not respond to a PUT request from the client, the client can retry or
   just send a POST request to recreate the gene set.
   Because recreating the gene set assigns it a new UUID, any pending or high latency PUT requests sent prior to the update
@@ -168,43 +173,100 @@ the dataset and the user session. On updates the application will create and sto
 
 #### Creation
 
-Gene sets are created via a POST request to `/dataset_name/api/v0.1/gene_sets/`. This request is sent
+Gene sets are created via a POST request to `/dataset_name/api/v0.1/var_sets/`. This request is sent
 
 - after a user uploads a csv continaing one (or more) gene sets.
 - based on the results of comparing differential expression of two groups of cells.
 - after the user creates a new gene set via the application GUI
-  Genes are created as a part of the gene set creation step. They can also be added to an existing gene set via a PUT
-  requst to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`
+
+Genes are created as a part of the gene set creation step. They can also be added to an existing gene set via a PUT
+request to `/dataset_name/api/v0.1/var_sets/{var_set_uuid}`
 
 #### Updates
 
-Gene sets are updated via a PUT request to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`. Genes can also be
-updated via this mechanism
+Gene sets are updated via a PUT request to `/dataset_name/api/v0.1/var_sets/{var_set_uuid}`.
+
+Genes can also be updated via this mechanism
 
 #### Deletion
 
-Gene sets are deleted via a DELETE request to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`. All genes attached to
+Gene sets are deleted via a DELETE request to `/dataset_name/api/v0.1/var_sets/{var_set_uuid}`. All genes attached to
 the gene set will be deleted as well.
+
 Genes can be removed from a gene set by including their name in the `genes_to_delete` list that is part of the
-request body for PUT requests to `/dataset_name/api/v0.1/gene_sets/{gene_set_uuid}`
+request body for PUT requests to `/dataset_name/api/v0.1/var_sets/{var_set_uuid}`
+
+### Data model
+
+Fully supporting persistence of differential expression results is out of the scope of this RFC. But the data model described below has been designed to allow for differential expression persistence in the future.
+
+### Relational Database
+
+To support gene sets two tables will be added to the cellxgene relational database
+
+- Gene
+  - UUID (generated)
+  - GeneName
+  - Comments
+  - VarSet
+  - created_at
+  - updated_at
+- VarSet
+  - UUID (generated)
+  - ConsensusCounter
+  - VarSet Name (required)
+  - Gene Count (generated)
+  - User UUID
+  - Dataset UUID
+  - comments
+  - created_at
+  - updated_at
+
+![Cellxgene Data Schema](imgs/Cellxgene_rds_schema.png)
+**Figure 1** Cellxgene data schema, tables to be added (as described above) are in red
+
+#### CSV Format
+
+Gene Set CSV
+
+- This CSV can contain multiple gene sets.
+
+- A file containing a header listing the fields (`GENESET,GENE,COMMENTS,PVALUE,LOGFOLD`)
+  and a comma separated list of the gene set name, genes, comments, pvalue, and logfold value,
+  identifiers for the cell sets that were compared to produce those values and details about why a particular gene was chosen will
+  be included in the comments value (eg tissue.lung vs. tissue.heart or I chose this gene because ...). Each gene should
+  be on a new line. Only gene set (name) and gene are required fields. The name of the file will be based on the user
+  name and a timestamp rounded to the nearest second. If cells from two different datasets are being compared the
+  datasest name should be appended to the cellset label in the comments section
+  (eg dataset1.categoryA.label1 vs dataset2.categoryA.label2).
+
+```CSV
+GENESET,GENE,COMMENTS,PVALUE,LOGFOLD
+SET1, a23, I picked this gene because I think it causes cancer,,
+SET1, b46, I picked this gene because I think it prevents cancer,,
+SET1, c19, I picked this gene because it has a funny name,,
+SET2, d57, tissue.lung vs. tissue.heart, .05, 2
+SET2, d48, tissue.lung vs. tissue.heart, .01, 4
+SET2, d89, tissue.lung vs. tissue.heart, .35, 2
+```
 
 ### APIs
 
 All APIs assume user identification is available with the request and the dataset being worked on is specified in the url
 Future API endpoints for consideration
 
-- LIST dataset_name/api/v0.1/gene_sets/ - list all gene sets for a dataset (just names)
-- GET dataset_name/api/v0.1/gene_sets/{gene_set_uuid} - get all information for one particular gene set
+- LIST dataset_name/api/v0.1/var_sets/ - list all gene sets for a dataset (just names)
+- GET dataset_name/api/v0.1/var_sets/{var_set_uuid} - get all information for one particular gene set
 
-#### Get dataset_name/api/v0.1/gene_sets/
+#### Get dataset_name/api/v0.1/var_sets/
 
-Return all of the gene sets (and accompanying genes) associated with a given user/dataset.
+Return all of the var sets (and accompanying genes) associated with a given user/dataset.
 
 **Request:**
 | Parameter | Description |
 | ------------ | --------------------------------------------------------------------------------------------- |
-| dataset_name | Identifies the dataset the gene sets are linked to. |
-| user_id | Identifies the user linked to the gene set. |
+| dataset_name | Identifies the dataset the var sets are linked to. |
+| user_id | Identifies the user linked to the var set. |
 
 **Response:**
 
@@ -212,17 +274,17 @@ Return all of the gene sets (and accompanying genes) associated with a given use
 | ---- | ---------------------------------------- |
 | 200  | The gene sets were successfully returned |
 
-| Key  | Description                                                                         |
-| ---- | ----------------------------------------------------------------------------------- |
-| data | List of gene set dicts containing their identifying information and a list of genes |
+| Key  | Description                                                                        |
+| ---- | ---------------------------------------------------------------------------------- |
+| data | List of var set dicts containing their identifying information and a list of genes |
 
 ```json
 {
-  "gene_sets": [
+  "var_sets": [
     {
-      "gene_set_name": "gene set name",
-      "gene_set_uuid": "uuid",
-      "consensus_counter": "0001",
+      "var_set_name": "gene set name",
+      "var_set_uuid": "uuid",
+      "consensus_counter": 1,
       "comments": "Comments describing gene set",
       "genes": [
         {
@@ -245,7 +307,7 @@ Return all of the gene sets (and accompanying genes) associated with a given use
 | ---- | ------------------------------------------------------------ |
 | 403  | User id invalid, or user does not have access to the dataset |
 
-#### POST dataset_name/api/v0.1/gene_sets/
+#### POST dataset_name/api/v0.1/var_sets/
 
 Any gene sets created or uploaded (via the csv format described above) will be sent via json to the backend for long term
 storage/persistence.
@@ -262,10 +324,10 @@ recreate it based on the information in the request
 
 ```json
 {
-  "gene_sets": [
+  "var_sets": [
     {
-      "gene_set_name": "[Required] gene set name",
-      "comments": "[OPTIONAL]Comments describing gene set",
+      "var_set_name": "[Required] var set name",
+      "comments": "[OPTIONAL]Comments describing var set",
       "genes": [
         {
           "gene name": "[Required] name of gene",
@@ -280,16 +342,16 @@ recreate it based on the information in the request
 **Response:**
 | Code | Description |
 | ---- | --------------------------------------- |
-| 201 | The gene set(s) were successfully saved |
+| 201 | The var set(s) were successfully saved |
 
-| Key      | Description                                                                               |
-| -------- | ----------------------------------------------------------------------------------------- |
-| gene_set | Dict mapping the gene set name to its assigned uuid and its consensus counter             |
-| errors   | In the case where some gene sets were successfully stored and others will not, a message  |
-|          | specifying the error and the gene set(s) it was linked to is returned to the client here. |
+| Key     | Description                                                                              |
+| ------- | ---------------------------------------------------------------------------------------- |
+| var_set | Dict mapping the var set name to its assigned uuid and its consensus counter             |
+| errors  | In the case where some gene sets were successfully stored and others will not, a message |
+|         | specifying the error and the var set(s) it was linked to is returned to the client here. |
 
 ```json
-{ "name_of_gene_set": { "uuid": "gene_set_uuid", "consensus_counter": "0001" } }
+{ "name_of_var_set": { "uuid": "var_set_uuid", "consensus_counter": 0 } }
 ```
 
 **Error Responses:**
@@ -302,34 +364,34 @@ recreate it based on the information in the request
 | ---- | ------------------------------------------------------------ |
 | 403  | User id invalid, or user does not have access to the dataset |
 
-#### PUT dataset_name/api/v0.1/gene_sets/{gene_set_uuid}
+#### PUT dataset_name/api/v0.1/var_sets/{var_set_uuid}
 
 Any changes to a gene set (the gene set itself or genes within that gene set) will be sent via json to the backend.
 This includes the creation/deletion of genes within a gene set
 Updates to comments will overwrite the currently stored comments
 **Request:**
 
-| Parameter     | Description                                                                                  |
-| ------------- | -------------------------------------------------------------------------------------------- |
-| dataset_name  | Identifies the dataset the gene sets are linked to.                                          |
-| user_id       | Identifies the user creating the gene set                                                    |
-| gene_set_uuid | UUID of gene set to be updated                                                               |
-| body          | JSON formatted dict containing a gene set (and accompanying genes) to be updated-- see below |
+| Parameter    | Description                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------- |
+| dataset_name | Identifies the dataset the gene sets are linked to.                                         |
+| user_id      | Identifies the user creating the gene set                                                   |
+| var_set_uuid | UUID of var set to be updated                                                               |
+| body         | JSON formatted dict containing a var set (and accompanying genes) to be updated-- see below |
 
 ```json
 {
-  "consensus_counter": "[Required] 0001",
-  "comments": "[OPTIONAL]Update to comments describing gene set, if null no changes will be made",
+  "consensus_counter": 1,
+  "comments": "Update to comments describing var set, if null no changes will be made",
   "genes_to_add": [
     {
-      "gene name": "[Required] name of gene",
-      "comments": "[OPTIONAL] comments on why a gene was included in this gene set"
+      "gene name": "name of gene",
+      "comments": "Comments on why a gene was included in this gene set"
     }
   ],
   "genes_to_delete": ["gene_names"],
   "genes_to_change": [
     {
-      "gene name": "[Required] name of gene",
+      "gene name": "Name of gene",
       "comments": "updated comment"
     }
   ]
@@ -339,13 +401,11 @@ Updates to comments will overwrite the currently stored comments
 **Response:**
 | Code | Description |
 | ---- | --------------------------------------- |
-| 200 | The gene sets were successfully updated |
+| 200 | The var sets were successfully updated |
 
-| Key                | Description                                                                            |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| consensus_counters | {"gene_set_uuid": "updated_counter"}                                                   |
-| errors             | If an error occurred, a message specifying the error and the gene set it was linked to |
-|                    | is returned to the client here                                                         |
+| Key                | Description                                   |
+| ------------------ | --------------------------------------------- |
+| consensus_counters | {"var_set_uuid": "current_consensus_counter"} |
 
 **Error Responses:**
 
@@ -357,25 +417,25 @@ Updates to comments will overwrite the currently stored comments
 | ---- | ------------------------------------------------------------ |
 | 403  | User id invalid, or user does not have access to the dataset |
 
-| Code | Description                                                   |
-| ---- | ------------------------------------------------------------- |
-| 500  | Consensus counters do not match, the error response will      |
-|      | include the name and uuid of the gene set that is out of sync |
+| Code | Description                                                                                   |
+| ---- | --------------------------------------------------------------------------------------------- |
+| 500  | Consensus counters do not match, the error response will include value of the consensus       |
+|      | counter currently stored in the db, and the name and uuid of the gene set that is out of sync |
 
-#### DELETE dataset_name/api/v0.1/genesets/{gene_set_uuid}
+#### DELETE dataset_name/api/v0.1/var_sets/{var_set_uuid}
 
 **Request:**
 
-| Parameter     | Description                                         |
-| ------------- | --------------------------------------------------- |
-| dataset_name  | Identifies the dataset the gene sets are linked to. |
-| user_id       | Identifies the user creating the gene set           |
-| gene_set_uuid | UUID of gene set to be deleted                      |
+| Parameter    | Description                                         |
+| ------------ | --------------------------------------------------- |
+| dataset_name | Identifies the dataset the gene sets are linked to. |
+| user_id      | Identifies the user who owns the var set            |
+| var_set_uuid | UUID of var set to be deleted                       |
 
 **Response:**
 | Code | Description |
 | ---- | --------------------------------------- |
-| 204 | The gene set was successfully deleted |
+| 204 | The var set was successfully deleted |
 
 **Error Responses:**
 
@@ -397,4 +457,7 @@ Because of the redundancy of some pieces of data in the csv (gene set name, cell
 considered using a json format instead, however discussions with scientists (our main users) made it clear that they
 felt more comfortable editing and working with a csv file.
 
-## References
+## Questions
+
+- [ ] Best way to handle var sets linked to the dataset (available to all users) with no owner. `is_owned_by_dataset` field on var_set table?
+- [ ] Request/Response size limits? What does that translate to in terms of # gene sets or number of genes per gene set?
