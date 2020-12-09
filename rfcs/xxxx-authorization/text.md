@@ -1,7 +1,4 @@
-# Authorization
-
-
-## [Optional] Subtitle of my design 
+# [WIP] Authorization
 
 **Authors:** [Brian McCandless](mailto:bmccandless@chanzuckerberg.com)
 
@@ -42,20 +39,17 @@ From the 0001-data-portal-architecture, under Publishing a Collection Privately:
     page as well as their dataset(s) in cellxgene. This URL, under the hood, will point to a
     permanent URL but will be unindexed and obfuscated (though sharable)....
 
-My interpretation:  A collection that has visibility=PRIVATE, may have an obfuscated_uuid.  If
+A collection that has visibility=PRIVATE, may have an obfuscated_uuid.  If
 present then the collection can be accessed using the obfuscated_uuid in place of the normal
 collection uuid.  API's like `/dp/v1/collections/{collection_uuid}`, can be accessed through this
- URI: `/dp/v1/collections/{obfuscated_uuid}`, with the following differences:
+URI: `/dp/v1/collections/{obfuscated_uuid}`, with the following differences:
  
 If the obfuscated_uuid is used, then no checks for visibility or user id are performed.  Anyone
-with the obfuscated_uuid will have access.  However, the obfuscated uuid can expire, so there
-needs to be a way to check the expiration time, and reject if it has expired.  It appears that
-the expiration for a obfuscated_uuid is not currently a field in the database, so that will need
-to be added.
-    
-Generally, there should be a way for the author to generate a new obfuscated_uuid, and revoke a
-current obfuscated_uuid.   What are the product requirements around this?  Can there be more
-than one obfuscated_uuid for a collection?
+with the obfuscated_uuid will have access.  
+
+The obfuscated_uuid does not expire, however it can be revoked.
+
+An obfuscated_uuid applies to a collection, and not a dataset, and a collection can have only one.
 
 Links to the cellxgene explorer from the portal will need to include some information about the
 obfuscated uuid, so that those possessing the URL can also explore the data.
@@ -130,7 +124,7 @@ In this way, it is easy to separate out the two components from the path.
 
 For obfuscated datasets, the authorization portion will go through an API to check the
 obfuscated_uuid and dataset.  It will ensure that the obfuscated_uuid belongs to a collection
-that contains the dataset, and it will ensure that the obfuscated_uuid has not expired.
+that contains the dataset, and has not been revoked.
   
 `GET /v1/dataset/access_obfuscated`
 
@@ -143,8 +137,7 @@ that contains the dataset, and it will ensure that the obfuscated_uuid has not e
 
 **Response:**
 
-1. 200 OK, if the obfuscated_uuid is valid (and not expired) obfuscated_uuid for the
- collection containing the dataset
+1. 200 OK, if the obfuscated_uuid is valid for the collection containing the dataset
 2. 401 Unauthorized
 3. 404 dataset not found or obfuscated_uuid not found.
 
@@ -174,23 +167,20 @@ The `/v1/dataset/access/` and `v1/dataset/access_obfuscated` APIs will be implem
  code base, since they will need access to the portal database.
 
 To implement this efficiently, it may be useful to create two database views: One that maps
-`dataset.name` to `collection.owner` and `collection.visibility`.  And one that maps
- `obfuscated_uuid` and `dataset.name` to `collection.obfuscated_uuid_expiration`.
+`dataset.name` to `collection.owner` and `collection.visibility`.  And one that can efficiently
+determine if a given `collection.obfuscated_uuid` is associated with a collection that contains a
+ given `dataset.name`.
  
-Note, `obfuscated_uuid_expiration` is not currently part of the database.
-
-
 ### UX issues
-
-#### portal
-
-1. Can the owner create new obfuscated_uuid's, and set an expiration?
-1. The owner will need to retrieve the obfuscated URL of the collection, so it can be shared.
-1. Can there be more than one obfuscated_uuid?
-1. The owner may need to revoke a obfuscated_uuid, will that be possible?
 
 #### explorer
 
-1. What should be displayed if the user is not authorized to see a dataset? 
-
-
+1. What should be displayed if the user is not authorized to see a dataset?  
+Say a user goes to ".../e/dataset.cxg", but that dataset is private and they are not the owner; 
+Maybe they are the owner, but not logged into right now, so it is reasonable they have the URL. 
+All the explorer backend APIs would return 401 errors in this case. 
+The explorer frontend, by default, would just show "Error" in red. 
+But we may want to say something nicer like "Sorry, you don't have access to this dataset". 
+A similar situation could arise for revoked capability urls.
+Another possibility is to return a "404" error if the user does not have access to a dataset.
+ 
