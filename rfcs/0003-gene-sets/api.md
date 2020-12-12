@@ -135,39 +135,35 @@ The name of the exported file will be based on the user name and a timestamp rou
 
 This feature will require processing multiple updates to the same gene set, due to our hosting architecture this creates
 the potential for race conditions and concerns about keeping the data in sync between the database, server and client.  
-To ensure data consistency, when the user is interacting with the data, the client is always the source of truth.
-If what is stored in the database doesnt match what the user is seeing, the data in the database will be discarded and
-recreated based on the state of the client.
+To ensure data consistency, and avoid issues with multiple users or clients for one account, the server is always the
+source of truth. If what is stored in the database doesnt match what the user is seeing, in particular if the client is
+sending a incorrect counter for updates, the database will send the the gene set and any associated genes back to the
+client along with the correct counter.
 
-The client will ensure the data is kept in sync through a consensus token or counter. Everytime a var set is created
+The server will ensure the data is kept in sync through a consensus token or counter. Everytime a var set is created
 in the database it will have a consensus_counter field set to 0. This will be sent back to the client along with the
-gene set name and uuid. When the client updates a gene set (via a PUT request) it will send this counter incremented by 1
-back to the server as part of the request body. The server will confirm that the counter sent from the client is one
-more than the counter stored in the database for that gene set.
+gene set name and uuid. When the client updates a gene set (via a PUT request) it will send this counter
+back to the server as part of the request body. The server will confirm that the counter sent from the matches the
+counter stored in the database for that gene set. When adding the update from the request, the server will increment the
+counter and send the new value back to the client.
 
 - If the values is correct, the server will update the gene set as specified in the PUT
-  request and update the counter with the value sent by the client. The response to the client will include the updated
+  request and update the counter (by incrementing it by 1). The response to the client will include the updated
   counter value to be used in future PUT requests for that gene set.
-- If the counter stored sent by the client is equal to or less than the counter in the database the request will be ignored
-  (under the assumption that it has already been processed)
-- If the counter sent by the client is too high (more than 1 more than the counter stored by the client) the server will immediately send
-  an error message to the client, specifying the name and uuid of the gene set that is out of sync as well as the value
-  of the counter currently associated the gene set in the database.
+- If the counter sent by the client is incorrect, the server will immediately send
+  an error message to the client, along with the full gene set (and any associated genes) that is out of sync, as well
+  as the value of the counter currently associated the gene set in the database.
 
-  - The client can then send the missing updates (in order) followed by the failed update, OR
-  - The client can send over the entire gene set including all linked genes as a POST request. Because the gene
-    set name is already taken for that user/dataset, the server will delete the currently stored gene set and any
-    associated genes and recreate it based on the information included in the POST request. This will generate a new UUID
-    for the gene set, and reset the consensus counter.
-
-  In the case that the server times out or does not respond to a PUT request from the client, the client can retry or
-  just send a POST request to recreate the gene set.
+  In the case that the server times out or does not respond to a PUT request from the client, the client can safely
+  retry or just send a POST request to recreate the gene set.
   Because recreating the gene set assigns it a new UUID, any pending or high latency PUT requests sent prior to the update
   be ignored because they reference a UUID that no longer exists.
 
 In the desktop version of the application the gene sets (and genes) will be stored locally as a csv under the name of
 the dataset and the user session. On updates the application will create and store a new csv, maintaining the last
 10 updates (this will match the current functionality for annotations in the desktop environment)
+
+![Consensus Diagram](imgs/Genesets.png)
 
 ### Data Lifecycle
 
@@ -312,8 +308,7 @@ Return all of the var sets (and accompanying genes) associated with a given user
 Any gene sets created or uploaded (via the csv format described above) will be sent via json to the backend for long term
 storage/persistence.
 Gene sets and gene names must be unique for a user/dataset - if an already used gene set name is submitted, the backend
-will assume it is due to a consensus issue and delete the currently stored gene set (and any attached genes) and
-recreate it based on the information in the request
+will assume it is due to a consensus issue and raise an error.
 
 **Request:**
 | Parameter | Description |
