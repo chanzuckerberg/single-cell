@@ -1,5 +1,7 @@
 # Explorer User-Generated Gene Sets
 
+Note this RFC has been depracated due to a change in product direction. It is included here for historical context.
+
 ## API Format
 
 **Authors:** [Madison Dunitz](mailto:madison.dunitz@chanzuckerberg.com)
