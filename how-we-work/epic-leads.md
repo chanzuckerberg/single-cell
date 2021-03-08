@@ -54,9 +54,10 @@ As an Epic Lead, you have flexibility in the way that you accomplish the goals a
 This phase is really meant to be for you and PM to figure out exactly what should be built for that particular objective. This is an opportunity for you to talk about different build options and figure out what can be built in a _minimal_ yet _substantive_ way. You should be _partnering_ with PM and UX on this and having clarifying disucssions on product requirements and the _cost_ (both monetary and effort) of different solutions.
 
 **Recommendation of events that you should schedule/do as an Epic Lead**:
+
 - Immediately after your Objective enters the Design Phase, schedule a meeting with the PM and Designer to go through the Objective in detail and figure out what open questions remain. Figure out who will answer what questions and when to regroup to determine a decision and next steps.
 - Craft a project plan. Work with the PM to figure out an estimate to how long the Objective will be in the design phase and during what sprint implementation work will begin. Create a working document that you add to over time that you share with PM and UX (and the larger engineering team as a courtesy) to set expectations on when you all will have various parts of the design completed. For example, set a date for when you as the Epic Lead will complete a draft of the issues for the sub-Epics so that PM knows when to verify the issues. If the Objective will require multiple sprints to design, write down when sub-parts of the Objective can be implemented so that unblocked implementation work can begin. Write down dates for any design documents you are writing and when you expect it to be complete. Work with PM to figure out when any follow-up User Research is expected to complete so that you know when you are unblocked on technical design. Write down dates for when you expect to complete any prototyping work so that PM knows when to follow up. The point of this document is not to be "waterfall"-esque but rather to help manage and set expectations on when someone should be ready to go on their next step.
-- Write a design document. If the Objective is substantial and will involve modification to the system architecture, you should write a design document and get it approved by the engineering team. The details on how to do that are in the [RFC document](../design-documents/0000-rfc-process/text.md). 
+- Write a design document. If the Objective is substantial and will involve modification to the system architecture, you should write a design document and get it approved by the engineering team. The details on how to do that are in the [RFC document](../design-documents/0000-rfc-process/text.md).
 - Create a temporary Slack channel with the PM and Designer (and anyone else who might be involved). Use this channel to resolve questions quickly, keep everyone up to date on progress and coordinate any events/situations that may arise.
 - Make use of the Tuesday Refinement meetings (when there are no issues to point) to continue refining the Epic until the design and implementation details are sorted out. You will likely need more than the initial meeting to refine the epic so use the Tuesday 10am PST hour as needed.
 
@@ -70,6 +71,7 @@ Hooray! Now that you, PM, and UX have worked tirelessly to bring clarity to the 
 ### Refinement Meeting -- the Tuesday prior to the start of the sprint
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 This is the most important refinement session for an Epic Lead. This is the Refinement session that happens prior to pulling in the Epic into the sprint. This is when the tickets you have created will get estimated by the team.
 
 **Before** this refinement, there are the following expectations:
@@ -79,10 +81,17 @@ This is the most important refinement session for an Epic Lead.  This is the Ref
 
 **Before** this refinement, there are the following expectations:
 >>>>>>> First draft of Epic Leads process.
+=======
+This is the most important refinement session for an Epic Lead.  This is the Refinement session that happens prior to pulling in the Epic into the sprint. This is when the tickets you have created will get estimated by the team.
+
+**Before** this refinement, there are the following expectations:
+
+>>>>>>> Fix linting issues.
 - Tickets have been created that reflect the designed work.
 - Tickets have a complete definition of done. Any comments in the Github tickets have been consolidated/summarized in the top level comment. In short, tickets should be able to be estimated by the team without scrolling through a giant set of comments.
 - You have an idea of how to execute the work (i.e. where are the dependencies, what can be done in parallel, what will be demonstrated in the sprint demo). This is essentially the engineering plan to deliver the work. (PM will help model the plan in the Zenhub tickets prior to this meeting).
 - You have verified that the issues that you created represent the full scope of work with PM.
+<<<<<<< HEAD
 <<<<<<< HEAD
 - You have reached out to your manager the Monday before so that they can put up the issues on PokerBot for asynchronous estimation.
 
@@ -94,13 +103,20 @@ This could involve:
 
 =======
 - You have reached out to the Scrum Master the Monday before so that they can put up the issues on PokerBot for asynchronous estimation. 
+=======
+- You have reached out to the Scrum Master the Monday before so that they can put up the issues on PokerBot for asynchronous estimation.
+>>>>>>> Fix linting issues.
 
 ### During the Sprint
 
-Your primary job is to ensure that the delivery continues to be unblocked. 
+Your primary job is to ensure that the delivery continues to be unblocked.
 
 This could involve:
+<<<<<<< HEAD
 >>>>>>> First draft of Epic Leads process.
+=======
+
+>>>>>>> Fix linting issues.
 - Scheduling meetings with required folks (including PM) to resolve any unexpected product requirement questions.
 - Creating temporary Slack channels to resolve open questions.
 - Being the point of contact for any questions related to the work.
@@ -123,7 +139,11 @@ Schedule a quick meeting with PM and UX to go through how you'd like to demo the
 ### Bugs
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 It is your responsibility to ensure that the feature lands to spec during the Implementation Phase. However, if there any bugs, please coordinate with PM to figure out when to address any gaps and resolve as quickly as possible. Coordinate during subsequent Drafting the Sprint Backlog meetings to ensure that high priority bugs get pulled into the following sprint.
 =======
 It is your responsibility to ensure that the feature lands to spec during the Implementation Phase. However, if there any bugs, please coordinate with PM to figure out when to address any gaps and resolve as quickly as possible. Coordinate during subsequent Drafting the Sprint Backlog meetings to ensure that high priority bugs get pulled into the following sprint.
 >>>>>>> First draft of Epic Leads process.
+=======
+It is your responsibility to ensure that the feature lands to spec during the Implementation Phase. However, if there any bugs, please coordinate with PM to figure out when to address any gaps and resolve as quickly as possible. Coordinate during subsequent Drafting the Sprint Backlog meetings to ensure that high priority bugs get pulled into the following sprint.
+>>>>>>> Fix linting issues.
