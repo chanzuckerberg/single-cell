@@ -17,11 +17,11 @@ Once an Objective/Epic is ready to be worked on, the Epic enters the "Design Pha
 - Each Epic is populated with a set of issues that represent the work needed to be done to complete the epic. These issues will be estimated by the full engineering team so please make sure that they contain enough detail that anyone could implement it _and_ please make sure that you have verified with the Product Manager that the issues represent the full set of work to be completed and nothing has been left out.
 - Any dependencies between issues have been marked in Zenhub so that we understand which issues need to be worked on first.
 
-### What should I do during the design phase?
+### What should I do during the design phase
 
-As an Epic Lead, you have flexibility in the way that you accomplish the goals above, but below are some helpful guidelines. The nucleus of a successful design phase is maintaining a close working relationship between yourself, the Product Manager who is responsibile for the product requirements for the Objective, and the UX Designer who is responsible for the visual design (if necessary). As long as you maintain a frequent and open line of communication with those two people (sometimes fewer, sometimes more people will be involved depending on the scope of the Objective), you are on the path to success :)
+As an Epic Lead, you have flexibility in the way that you accomplish the goals above, but below are some helpful guidelines. The nucleus of a successful design phase is maintaining a close working relationship between yourself, the Product Manager who is responsible for the product requirements for the Objective, and the UX Designer who is responsible for the visual design (if necessary). As long as you maintain a frequent and open line of communication with those two people (sometimes fewer, sometimes more people will be involved depending on the scope of the Objective), you are on the path to success :)
 
-This phase is really meant to be for you and PM to figure out exactly what will be built for that particular objective. This is an opportunity for you to talk about different build options and figure out what can be built in a _minimal_ yet _substantive_ way. You should be _partnering_ with PM and UX on this and having clarifying disucssions on product requirements and the _cost_ (both monetary and effort) of different solutions.
+This phase is really meant to be for you and PM to figure out exactly what will be built for that particular objective. This is an opportunity for you to talk about different build options and figure out what can be built in a _minimal_ yet _substantive_ way. You should be _partnering_ with PM and UX on this and having clarifying discussions on product requirements and the _cost_ (both monetary and effort) of different solutions.
 
 **Recommendation of events that you should schedule/do as an Epic Lead**:
 
@@ -47,7 +47,7 @@ Hooray! Now that you, PM, and UX have worked tirelessly to bring clarity to the 
 
 ### Refinement Meeting -- the Tuesday prior to the start of the sprint
 
-This is the most important refinement session for an Epic Lead.  This is the Refinement session that happens prior to pulling in the Epic into the sprint. This is when the tickets you have created will get estimated by the team.
+This is the most important refinement session for an Epic Lead. This is the Refinement session that happens prior to pulling in the Epic into the sprint. This is when the tickets you have created will get estimated by the team.
 
 **Before** this refinement, there are the following expectations:
 
