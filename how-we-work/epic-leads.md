@@ -55,7 +55,7 @@ This is the most important refinement session for an Epic Lead. This is the Refi
 - Tickets have a complete definition of done. Any comments in the Github tickets have been consolidated/summarized in the top level comment. In short, tickets should be able to be estimated by the team without scrolling through a giant set of comments.
 - You have an idea of how to execute the work (i.e. where are the dependencies, what can be done in parallel, what will be demonstrated in the sprint demo). This is essentially the engineering plan to deliver the work. (PM will help model the plan in the Zenhub tickets prior to this meeting).
 - You have verified that the issues that you created represent the full scope of work with PM.
-- You have reached out to the Scrum Master the Monday before so that they can put up the issues on PokerBot for asynchronous estimation.
+- You have reached out to your manager the Monday before so that they can put up the issues on PokerBot for asynchronous estimation.
 
 ### During the Sprint
 
