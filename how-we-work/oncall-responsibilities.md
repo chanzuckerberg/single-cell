@@ -12,8 +12,7 @@ An on-call rotation begins on Monday at 9am PST. Each week, there is a primary a
 
 ### Pre-Requisites
 
-- Please make sure you have access to Sentry and Datadog so that you can check out our error reporting. You can check if you have Sentry access by logging into https://czi-duo.okta.com/ and check if you have Datadog access by checking your [Okta App Homepage](https://czi.okta.com/app/UserHome). If you do not have access to either, ask in the [#help-infra](https://chanzuckerbergteam.slack.com/archives/C94RQ5SBV) Slack channel or reach out to your manager.
-
+- Please make sure you have access to Sentry and Datadog so that you can check out our error reporting. You can check if you have Sentry access by logging [here](https://czi-duo.okta.com/) and seeing if you have the app assigned. You can check if you have Datadog access by checking your [Okta App Homepage](https://czi.okta.com/app/UserHome) -- you'll want to make sure even if you have the app assigned that you can login and access `hosted-cellxgene-prod`. If you do not have access to either, ask in the [#help-infra](https://chanzuckerbergteam.slack.com/archives/C94RQ5SBV) Slack channel or reach out to your manager.
 
 ### Primary Responsibilities
 
@@ -25,13 +24,13 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 
 **On Wednesday**:
 
-- Send a note to the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) Slack channel to see if there are any PRs that you should wait on before the `main` to `staging` push. 
+- Send a note to the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) Slack channel to see if there are any PRs that you should wait on before the `main` to `staging` push.
 - Once the deployment is in progress, let the team know in the same channel and also notify when the deployment is complete. Please write a quick note on the key new features/bug fixes for the engineering team to help test on staging. If the deployment fails, coordinate the fix.
 - Please manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
 
 **On Thursday**: 
 
-- Send a note to the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) Slack channel checking to make sure that engineers have had a chance to test the staging deployment. If you get a quorum of LGTMs, promote staging to prod. 
+- Send a note to the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) Slack channel checking to make sure that engineers have had a chance to test the staging deployment. If you get a quorum of LGTMs, promote staging to prod.
 - Let the channel know when the deployment is in progress and when it is complete. You are also responsible for rolling back to a working version and coordinating any fixes if the deployment fails.
 
 #### Other responsibilities
