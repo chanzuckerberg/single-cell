@@ -28,7 +28,7 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 - Once the deployment is in progress, let the team know in the same channel and also notify when the deployment is complete. Please write a quick note on the key new features/bug fixes for the engineering team to help test on staging. If the deployment fails, coordinate the fix.
 - Please manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
 
-**On Thursday**: 
+**On Thursday**:
 
 - Send a note to the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) Slack channel checking to make sure that engineers have had a chance to test the staging deployment. If you get a quorum of LGTMs, promote staging to prod.
 - Let the channel know when the deployment is in progress and when it is complete. You are also responsible for rolling back to a working version and coordinating any fixes if the deployment fails.
