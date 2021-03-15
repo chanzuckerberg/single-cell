@@ -12,26 +12,11 @@ The subsequent sections of this document describe what happens once it is your t
 
 Once an Objective/Epic is ready to be worked on, the Epic enters the "Design Phase." During this phase the end goals are as follows:
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 - The Objective is broken down into smaller chunks, each of which is a "Key Result" for that epic. These Key Results are written down in the OKR spreadsheet (reach out to your manager to figure out where this spreadsheet is if you don't know). The Product Manager will create child Epics in Zenhub accordingly.
-=======
-- The Objective is broken down into smaller chunks, each of which is a "Key Result" for that epic. These Key Results are written down in the OKR spreadsheet (reach out to your manager to figure out where this spreadsheet is if you don't know).
-- Each of the above smaller chunks has an Epic in Zenhub associated with it. The Product Manager will help you craft these issues.
->>>>>>> First draft of Epic Leads process.
-=======
-- The Objective is broken down into smaller chunks, each of which is a "Key Result" for that epic. These Key Results are written down in the OKR spreadsheet (reach out to your manager to figure out where this spreadsheet is if you don't know). The Product Manager will create child Epics in Zenhub accordingly.
->>>>>>> Addressing Brian's comments.
-=======
-- The Objective is broken down into smaller chunks, each of which is a "Key Result" for that epic. These Key Results are written down in the OKR spreadsheet (reach out to your manager to figure out where this spreadsheet is if you don't know). The Product Manager will create child Epics in Zenhub accordingly.
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
 - The top level Epic issue in Zenhub (the one that is associated with the Objective) has links to Figmas (from UX) as well as any Technical Design Document(s) that were created in order to figure out what to build.
 - Each Epic is populated with a set of issues that represent the work needed to be done to complete the epic. These issues will be estimated by the full engineering team so please make sure that they contain enough detail that anyone could implement it _and_ please make sure that you have verified with the Product Manager that the issues represent the full set of work to be completed and nothing has been left out.
 - Any dependencies between issues have been marked in Zenhub so that we understand which issues need to be worked on first.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 ### What should I do during the design phase
 
 As an Epic Lead, you have flexibility in the way that you accomplish the goals above, but below are some helpful guidelines. The nucleus of a successful design phase is maintaining a close working relationship between yourself, the Product Manager who is responsible for the product requirements for the Objective, and the UX Designer who is responsible for the visual design (if necessary). As long as you maintain a frequent and open line of communication with those two people (sometimes fewer, sometimes more people will be involved depending on the scope of the Objective), you are on the path to success :)
@@ -55,41 +40,6 @@ After the product requirements are set, the second part of the design phase is f
 - Schedule a meeting with PM+UX to verify that the child issues that you have created for an Epic or child Epic actually implement the agreed upon product requirements (this should happen before the issues get placed into PokerBot for estimation).
 
 The Design Phase of an Epic is squishy and uncertain and so the path to the goals described above can be different each time. If you are struggling on how to find clarity or need any recommendations on next steps, reach out to your peers, ask PM/UX, or check in with your manager.
-=======
-=======
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
-### What should I do during the design phase?
-
-As an Epic Lead, you have flexibility in the way that you accomplish the goals above, but below are some helpful guidelines. The nucleus of a successful design phase is maintaining a close working relationship between yourself, the Product Manager who is responsibile for the product requirements for the Objective, and the UX Designer who is responsible for the visual design (if necessary). As long as you maintain a frequent and open line of communication with those two people (sometimes fewer, sometimes more people will be involved depending on the scope of the Objective), you are on the path to success :)
-
-This phase is really meant to be for you and PM to figure out exactly what will be built for that particular objective. This is an opportunity for you to talk about different build options and figure out what can be built in a _minimal_ yet _substantive_ way. You should be _partnering_ with PM and UX on this and having clarifying disucssions on product requirements and the _cost_ (both monetary and effort) of different solutions.
-
-**Recommendation of events that you should schedule/do as an Epic Lead**:
-
-The Design Phase is roughly broken into two parts. The first phase's goal is to **refine the product requirements for the Epic.** During this phase, the following events will likely happen:
-
-- PM will reach out to schedule a meeting to go over the current product requirements along with UX. This is your opportunity to ask clarifying question, offer initial ideas, figure out what open questions remain and along figure out whether there is anything to prototype so that you can get rough cost estimates on different solutions. Think of this as a "negotiation" phase.
-- You will likely have follow up meetings after the initial meeting to go back and revisit the open questions/share findings from any research done.
-- [Optional but helpful] Create a temporary Slack channel with the PM and Designer (and anyone else who might be involved). Use this channel to resolve questions quickly, keep everyone up to date on progress and coordinate any events/situations that may arise.
-
-One may make use of the Tuesday Refinement meetings (when there are no issues to point) to continue refining the Epic until the design and implementation details are sorted out.
-
-After the product requirements are set, the second part of the design phase is focused on **refining the technical implementation.** During this phase, you may:
-
-- Write a design document. If the Objective is substantial and will involve modification to the system architecture, you should write a design document and get it approved by the engineering team. The details on how to do that are in the [RFC document](../design-documents/0000-rfc-process/text.md).
-- Craft a project plan. If the Epic is substantial and there are many moving parts, you may want to create a short document on how you intend to stage the implementation of the child Epics (i.e. when and in what order). This is a way to help manage expectations so that PM might know when to review issues created for a child Epic, when something is planning on being pulled into a sprint, when a technical design doc will land, or even before the technical design phase, when you plan on completing some prototyping work.
-- Schedule a meeting with PM+UX to verify that the child issues that you have created for an Epic or child Epic actually implement the agreed upon product requirements (this should happen before the issues get placed into PokerBot for estimation).
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-This phase of an Epic is squishy and uncertain and so the path to the goals described above can be different each time. If you are struggling on how to find clarity or need any recommendations on next steps, reach out to your peers, ask PM/UX on what you can do to help bring clarity or check in with your manager.
->>>>>>> First draft of Epic Leads process.
-=======
-The Design Phase of an Epic is squishy and uncertain and so the path to the goals described above can be different each time. If you are struggling on how to find clarity or need any recommendations on next steps, reach out to your peers, ask PM/UX, or check in with your manager.
->>>>>>> Addressing Brian's comments.
-=======
-The Design Phase of an Epic is squishy and uncertain and so the path to the goals described above can be different each time. If you are struggling on how to find clarity or need any recommendations on next steps, reach out to your peers, ask PM/UX, or check in with your manager.
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
 
 ## Implementation Phase
 
@@ -97,36 +47,14 @@ Hooray! Now that you, PM, and UX have worked tirelessly to bring clarity to the 
 
 ### Refinement Meeting -- the Tuesday prior to the start of the sprint
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 This is the most important refinement session for an Epic Lead. This is the Refinement session that happens prior to pulling in the Epic into the sprint. This is when the tickets you have created will get estimated by the team.
 
 **Before** this refinement, there are the following expectations:
 
-=======
-This is the most important refinement session for an Epic Lead.  This is the Refinement session that happens prior to pulling in the Epic into the sprint. This is when the tickets you have created will get estimated by the team. 
-
-**Before** this refinement, there are the following expectations:
->>>>>>> First draft of Epic Leads process.
-=======
-=======
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
-This is the most important refinement session for an Epic Lead.  This is the Refinement session that happens prior to pulling in the Epic into the sprint. This is when the tickets you have created will get estimated by the team.
-
-**Before** this refinement, there are the following expectations:
-
-<<<<<<< HEAD
->>>>>>> Fix linting issues.
-=======
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
 - Tickets have been created that reflect the designed work.
 - Tickets have a complete definition of done. Any comments in the Github tickets have been consolidated/summarized in the top level comment. In short, tickets should be able to be estimated by the team without scrolling through a giant set of comments.
 - You have an idea of how to execute the work (i.e. where are the dependencies, what can be done in parallel, what will be demonstrated in the sprint demo). This is essentially the engineering plan to deliver the work. (PM will help model the plan in the Zenhub tickets prior to this meeting).
 - You have verified that the issues that you created represent the full scope of work with PM.
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 - You have reached out to your manager the Monday before so that they can put up the issues on PokerBot for asynchronous estimation.
 
 ### During the Sprint
@@ -135,29 +63,6 @@ Your primary job is to ensure that the delivery continues to be unblocked.
 
 This could involve:
 
-=======
-- You have reached out to the Scrum Master the Monday before so that they can put up the issues on PokerBot for asynchronous estimation. 
-=======
-- You have reached out to the Scrum Master the Monday before so that they can put up the issues on PokerBot for asynchronous estimation.
->>>>>>> Fix linting issues.
-=======
-- You have reached out to the Scrum Master the Monday before so that they can put up the issues on PokerBot for asynchronous estimation.
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
-
-### During the Sprint
-
-Your primary job is to ensure that the delivery continues to be unblocked.
-
-This could involve:
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> First draft of Epic Leads process.
-=======
-
->>>>>>> Fix linting issues.
-=======
-
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
 - Scheduling meetings with required folks (including PM) to resolve any unexpected product requirement questions.
 - Creating temporary Slack channels to resolve open questions.
 - Being the point of contact for any questions related to the work.
@@ -179,16 +84,4 @@ Schedule a quick meeting with PM and UX to go through how you'd like to demo the
 
 ### Bugs
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 It is your responsibility to ensure that the feature lands to spec during the Implementation Phase. However, if there any bugs, please coordinate with PM to figure out when to address any gaps and resolve as quickly as possible. Coordinate during subsequent Drafting the Sprint Backlog meetings to ensure that high priority bugs get pulled into the following sprint.
-=======
-It is your responsibility to ensure that the feature lands to spec during the Implementation Phase. However, if there any bugs, please coordinate with PM to figure out when to address any gaps and resolve as quickly as possible. Coordinate during subsequent Drafting the Sprint Backlog meetings to ensure that high priority bugs get pulled into the following sprint.
->>>>>>> First draft of Epic Leads process.
-=======
-It is your responsibility to ensure that the feature lands to spec during the Implementation Phase. However, if there any bugs, please coordinate with PM to figure out when to address any gaps and resolve as quickly as possible. Coordinate during subsequent Drafting the Sprint Backlog meetings to ensure that high priority bugs get pulled into the following sprint.
->>>>>>> Fix linting issues.
-=======
-It is your responsibility to ensure that the feature lands to spec during the Implementation Phase. However, if there any bugs, please coordinate with PM to figure out when to address any gaps and resolve as quickly as possible. Coordinate during subsequent Drafting the Sprint Backlog meetings to ensure that high priority bugs get pulled into the following sprint.
->>>>>>> f23f116c1d0327a6132117633e48c70723aeb8f1
