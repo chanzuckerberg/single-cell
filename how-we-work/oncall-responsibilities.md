@@ -12,7 +12,7 @@ An on-call rotation begins on Monday at 9am PST. Each week, there is a primary a
 
 ### Pre-Requisites
 
-- Please make sure you have access to Sentry so that you can check out our error reporting. You can check if you have access by logging into https://czi-duo.okta.com/. If you do not have access, ask in the [#help-infra](https://chanzuckerbergteam.slack.com/archives/C94RQ5SBV) Slack channel.
+- Please make sure you have access to Sentry and Datadog so that you can check out our error reporting. You can check if you have Sentry access by logging into https://czi-duo.okta.com/ and check if you have Datadog access by checking your [Okta App Homepage](https://czi.okta.com/app/UserHome). If you do not have access to either, ask in the [#help-infra](https://chanzuckerbergteam.slack.com/archives/C94RQ5SBV) Slack channel or reach out to your manager.
 
 
 ### Primary Responsibilities
