@@ -1,6 +1,8 @@
+# Consciously Uncoupling cellxgene's Backends
+
 We want to allow the desktop and hosted cellxgene products to evolve independently.  They address pretty different use cases, so we can move faster by not requiring them to provide the same features or having overlapping implementations.
 
-The main difference between the two products is requirements around the backends. We have one backend that runs locally and one that runs on AWS. These are the differences in requirements between the two:
+The main difference between the two products is requirements around the backends. We have one backend that runs locally and one that runs on CZI's AWS infrastructure. These are the differences in requirements between the two:
 
 | Behavior | localhost | AWS | 
 | ------ | ------ | --- |
@@ -49,7 +51,5 @@ def config_get(app_config, data_adaptor):
     return make_response(jsonify(config), HTTPStatus.OK)
 ```
 
-The response is driven by values in `app_config`, which is different for localhost and AWS. So we can reorganize the backend code to cleanly separate the implementations, say a `cellxgene/local_server` and `cellxgene/hosted_backend`.
-
-
+The response is driven by values in `app_config`, which is different for localhost and AWS. So we can reorganize the backend code to cleanly separate the implementations, say a `cellxgene/backend/server`, which contains all the implementation code for the original desktop deployment, and `cellxgene/backend/czi-hosted`, which contains all the implementation code for the CZI-hosted SAAS deployment. Finally to extract out the few paths above that appear for both deployment models, we will create a separate directory `cellxgene/backend/common` that can be used by both server implementations.
 
