@@ -39,16 +39,16 @@ Original [GitHub issues](https://github.com/chanzuckerberg/single-cell/issues/36
 2. The revision MUST be _populated_ with all the datasets and gene sets from the published collection.
 3. The revision MUST be assigned a new capability URL for sharing with publishers for review.
     1. A collection being revised MUST be labeled with both `Public` and `Revising` labels in My Collections.
-    2. Only one pending private revision MUST be allowed for each collection published by the curator.
+    1. Only one pending private revision MUST be allowed for each collection published by the curator.
 4. A curator MAY share the link to the revised collection and each related CXG with reviewers.
 5. A curator MUST easily understand the differences between the revision and the published collection. See [Figma](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A122)
 6. A curator MAY update collection information in the revision.
 7. A curator MAY add new datasets to the revision.
 8. A curator MAY delete new datasets in the revision.
 9. A curator MAY delete original datasets in the revision.
-    3. Datasets that have been deleted in a revision and previously published must return "`Dataset Name` withdrawn by the contact." when accessed by a user.
-    4. If the revision is published, then the original dataset and its CXG MUST be deleted, but the permanent link for the CXG MUST display a message to data consumers "`Dataset Name` withdrawn by the contact."
-    5. If all datasets in the revised collection are deleted, the revision MUST NOT be published.
+    1. Datasets that have been deleted in a revision and previously published must return "`Dataset Name` withdrawn by the contact." when accessed by a user.
+    1. If the revision is published, then the original dataset and its CXG MUST be deleted, but the permanent link for the CXG MUST display a message to data consumers "`Dataset Name` withdrawn by the contact."
+    1. If all datasets in the revised collection are deleted, the revision MUST NOT be published.
 10. A curator MAY add new gene sets to the revision.
 11. A curator MAY delete new gene sets in the revision.
 12. A curator MAY delete original gene sets in the revision.
@@ -78,11 +78,7 @@ The dataset id is used to name the artifacts uploaded to S3. The way they are na
 
 ![database schema](./imgs/database_schema.png)
 
-The PK of dataset is changed to an integer counter. The old PK is moved to UUID which is unique in the table. This allows the UUID of the dataset to be modified without creating a new row.
-
-All child tables connected to a dataset will use the new PK to link to the dataset.
-
-An additional column called _original_uuid_ will be added to the dataset table. This column will be used when a revision is created to track the original row. 
+An additional column called _original_uuid_ will be added to the dataset table. This column will be used when a revision is created to track the original row.
 
 The additional column _published_ will determine if a dataset was ever published. Datasets that have previously been published will show up in the public view of the collection even if the data set has been deleted.
  
@@ -96,7 +92,7 @@ Will be updated to return a boolean name _modified_ when the collection is a rev
 
 ##### Determine Modified
 
-The modified flag returned in the response indicates that a change has occurred between the original collection and the revision. Using the time difference between _update_at_ and _created_at_ columns we can determine if any changes have been made in all tables related to the collection. They will not be equal if a change has been made. 
+The modified flag returned in the response indicates that a change has occurred between the original collection and the revision. Using the time difference between _update_at_ and _created_at_ columns we can determine if any changes have been made in all tables related to the collection. They will not be equal if a change has been made.
 
 
 #### POST /dp/v1/collections/{collection_uuid}
@@ -210,20 +206,23 @@ From the collections revision page, the user can select the “Publish Revision�
 ![Image 6](./imgs/figma_6.png)
 [Image 6](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
 
-The_ POST /dp/v1/collections/{collection_uuid}/publish_ will be used to publish a revision. Some swapping must occur in the database to replace a published collection with a revision. Here are the steps:
-
-
+The_ POST /dp/v1/collections/{collection_uuid}/publish_ will be used to publish a revision. Some swapping must occur in the database to replace a published collection with a revision. Here is a rough outline of the steps:
 
 1. Retrieve the published collection and the revision.
-2. Delete all of the geneset rows on the published collection. They will be replaced by the revision genesets.
-3. Retrieve lists of _original_uuids_ in a revision for datasets.
-4. For each dataset with a _original_uuid_, if it’s a refreshed dataset or a tombstone, then delete the currently published dataset and its S3 artifacts.
-5. Remove the _original_uuid_ from the refreshed dataset or tombstone and set it as the UUID. Set the _published_ flag to
-6. For the deployment directories in the refreshed dataset, replace the original cxg file with the revision in the host-cellxgene bucket. Update the deployment directory fields in the dataset revision to match.  
-7. Delete the currently published collection  row from the database
-8. Clone the collection but set the collection visibility to the public.
-9. Link all of the geneset and dataset to the collection by changing collection_visibility to public.
-10. Delete the collection revision row.
+1. Update the collection table
+    1. Replace all links on the published collections with the link of the revision.
+    1. Copy information from the revision collection to the published collection.
+1. Copy over all new datasets from the revision to the published dataset and Set the published flag to True.
+1. Copy over refreshed dataset and tombstones.
+    1. Retrieve lists of _original_uuids_ in a revision for datasets.
+    1. Update the datasets with the revision informations. For each dataset with an _original_uuid_, copy all of the columns except _original_uuid_ to the published datasets refered to by the _original_uuid_, and delete all of the published_artifacts and upload_status on the published dataset. Finally, set the _published_ flag to True.
+    1. For a refreshed dataset, the deployed directory URL must match the URL in the published version. In the host-cellxgene bucket replace the original cxg file refered to by the published dataset deployed directory url with the revision file. Also update the revision deployed directory to match the new bucket location.
+    1. Delete the old deployed directory Link the revised deployed directory to the published dataset.
+1. Update genesets
+    1. Delete all of the geneset rows on the published collection.
+    1. Link the revision genesets to the published collection.
+    1. If the dataset is a refreshed dataset, then you must link the geneset to the _original_uuid_.
+1. Delete the collection revision row and all linked resources.
 
 
 #### Sharing
