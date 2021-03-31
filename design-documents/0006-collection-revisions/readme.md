@@ -195,15 +195,11 @@ The *POST /dp/v1/collections/{collection_uuid}/publish* will be used to publish 
     1. If the dataset is a refreshed dataset, then you must link the geneset to the *original_uuid*.
 1. Delete the collection revision row and all linked resources.
 
-
 #### Sharing
 
-Sharing a revision is the same as sharing a private collection. The _GET /dp/v1/collections/{collection_uuid}?visibility=PRIVATE_ can be used by an unauthenticated user to read the collection revision. 
-
+Sharing a revision is the same as sharing a private collection. The _GET /dp/v1/collections/{collection_uuid}?visibility=PRIVATE_ can be used by an unauthenticated user to read the collection revision.
 
 ### Test plan
-
-
 
 1. Create a revision.
 2. Delete a revision.
@@ -214,15 +210,12 @@ Sharing a revision is the same as sharing a private collection. The _GET /dp/v1/
 7. Publishing a collection maintains the dataset UUIDs
 8. Deleting a dataset revision does not remove the published revision until the revision is published.
 
-
 ## **Alternatives**
-
 
 ### Collection References
 
 ![collection_ref](./imgs/collection_ref.png)
 Using Collection reference we can remove Visibility from the table. The CollectionReferences ID will be the UUID the user sees. This should make it easier to have an immutable ID for a collection. This will also help if the shape of the database changes.
-
 
 ### Join Tables
 
@@ -231,41 +224,33 @@ The goal of this solution was to put the complexity in the database schema to ke
 
 This is a simplified version of the Data Portal Schema that highlights the relevant schema changes required to support revisions. Significant changes will need to be made to the backend code to handle CRUD operations for this schema.
 
-
-#### Adding many-to-many relationships between dataset & collections, and genesets & collections.
+#### Adding many-to-many relationships between dataset & collections, and genesets & collections
 
 A many-to-many relationship is created between datasets & collections, and gene sets & collections. This allows a published dataset and geneset to be linked to a published collection and a revision.
 
 `collection_id` and `collect_visibility` will be removed from the Dataset and Geneset table. Those columns will be moved to the join table.
 
-
-#### Geneset and Datasets will have a UUID field which is the UUID seen by the user.
+#### Geneset and Datasets will have a UUID field which is the UUID seen by the user
 
 UUID is added to geneset and dataset, this will be the same value as the current `id` for each respectively. The `id` will become a simple incrementing counter. This allows us to store a revision and published version of the resource. They will have a different `id` and the same UUID.
 
-
-##### Create
+##### Create_
 
 To create a revision, make a copy of the published collection and the collection links. The new collection’s visibility will be private. All of the datasets and geneset links to the public collections will be linked to the private collection and the published collection using the join tables.
 
 New Datasets and genesets can be added normally as if adding to a private collection. The new resources will be connected to the revision. This prevents new resources from showing up in the published collection.
 
-
-##### Read
+##### Read_
 
 Reading a revision will query the database for a private collection and retrieve all linked resources. If there are duplicate UUIDs for a dataset or a geneset, then the revision is returned. The revision can be identified by its later creation date.
 
-
-##### Update
+##### Update_
 
 The private collection table and collection links table are updated as normal for a revision. It is the same process as updating a private collection. The columns can be changed and links can be added and removed without making any changes to the Data Portal code.
 
 Updating a dataset and geneset is more complicated. If we are updating a dataset that is part of a published dataset then a new dataset is created and linked to the private collection with the same UUID as the published dataset. The published dataset is unlinked from the collection revision. Genesets links will need to be duplicated to the new dataset.
 
-
-##### Delete
-
-
+##### Delete_
 
 * The private collections fields and links are deleted as normal.
 * Deleting a collection revision is accomplished by deleting the collection row and all orphaned resources.
@@ -274,40 +259,32 @@ Updating a dataset and geneset is more complicated. If we are updating a dataset
 * Deleting a published dataset in a revision creates a new dataset that is a clone of the published dataset, except the artifacts are not deleted until published, and the tombstone is set.
 * Deleting an update to a published dataset results in the creation of a tombstone for the published dataset. The artifact will not be deleted until the revision is published.
 
-
 ##### Publish
 
 To publish the revision, the current published collection will be deleted and all orphaned genesets, datasets, and project links will be deleted. Orphaned datasets will need to have their S3 artifacts cleaned up before tombstoning them. The private collection will be changed to the public, the changes will need to propagate through the join tables. If the revision is tombstoned.
 
-
-#### API Changes
-
-
+#### API Changes_
 
 * As the owner, return the revision and the published collection when listing the user’s collections.
 * The frontend will need to display correctly when it finds two collections with the same UUID but different visibilities.
 
-
-##### POST /dp/v1/collections/{collection_uuid}
+##### POST /dp/v1/collections/{collection_uuid}_
 
  Will be used to start a collection revision.
 
-
-##### DELETE /dp/v1/collections/{collection_uuid} 
+##### DELETE /dp/v1/collections/{collection_uuid}_
 
 Will delete the revision or tombstone a private collection. We can determine it's a revision if there is a public version of the collection.
 
-
-##### DELETE /dp/v1/datasets/{dataset_uuid} 
+##### DELETE /dp/v1/datasets/{dataset_uuid}_
 
 Datasets that have always been private will be tombstoned and artifacts deleted. If it was published then a tombstone is created and the artifacts are not removed until the revision is published.
-
 
 ##### DELETE /dp/v1/genesets/{geneset_uuid}
 
 Datasets that have always been private can be deleted from the database. If it was published then it is unlinked from the collection and datasets????
 
-#### Backend Changes
+#### Backend Changes_
 
 Care will need to be taken when returning a response from SQLAlchemy. The many-to-many relationships added to the database schema will result in more information being returned than needed. This can be easily fixed by adjusting how we use relationships in the database ORM. However since the ORM object are used throughout the code, this could be expensive in refactoring dependent code and tests.
 
@@ -324,10 +301,9 @@ Create an additional table that will record revision history.
 * When a user wants to view the revision, we would need to replay all of the changes onto the publish collection to get to the current revision state.
 * It could get complicated migrating a database with revision in progress.
 
-
 ## **References**
 
-[0] [lucid diagrams](https://lucid.app/lucidchart/b88328c0-4706-4021-ac6a-74cae82704d3/edit?page=0_0#) 
+[0] [lucid diagrams](https://lucid.app/lucidchart/b88328c0-4706-4021-ac6a-74cae82704d3/edit?page=0_0#)
 
 [1] [figmas](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A122)
 
