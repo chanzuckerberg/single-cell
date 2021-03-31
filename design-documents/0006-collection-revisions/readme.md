@@ -7,11 +7,9 @@
 
 **Reviewers**: [Seve Badajoz](mailto:sbadajoz@chanzuckerberg.com), [Brian Raymor](mailto:braymor@chanzuckerberg.com), [Harley Thoma](mailto:hthomas@chanzuckerberg.com)s, [Girish Patangay](mailto:girish.patangay@chanzuckerberg.com)
 
-
 ## **TL;DR**
 
 This RFC contains the details on changes required to support revisions of a public collection privately on the Cellxgene Data Portal.
-
 
 ## **Background**
 
@@ -21,7 +19,6 @@ Example: There are multiple cases where a publisher has requested that a curator
 
 Original [GitHub issues](https://github.com/chanzuckerberg/single-cell/issues/36)
 
-
 ## **Terminology**
 
 **Revision** - A copy of a published collection that is private and can be modified.
@@ -30,10 +27,7 @@ Original [GitHub issues](https://github.com/chanzuckerberg/single-cell/issues/36
 
 **Refreshed** - in the context of a dataset means a previously published dataset was re-uploaded in a revision and will replace the published dataset if published.
 
-
 ## **Product Requirements**
-
-
 
 1. A curator MAY privately revise a published collection from _My Collections_.
 2. The revision MUST be _populated_ with all the datasets and gene sets from the published collection.
@@ -57,16 +51,13 @@ Original [GitHub issues](https://github.com/chanzuckerberg/single-cell/issues/36
 15. The curator MAY cancel the revision from the _A Collection_ view.
 16. A published revision cannot be undone.
 
-
 ### UX Design
 
 [Figma](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
 
-
 ## **Detailed Design | Architecture | Implementation**
 
 This plan requires making minor database changes. The most complexity occurs during publishing which requires juggling some resources around. Deciding when to delete resources from S3 is another area where things can get confusing.
-
 
 ### Artifact Collisions Prevention
 
@@ -78,102 +69,84 @@ The dataset id is used to name the artifacts uploaded to S3. The way they are na
 
 ![database schema](./imgs/database_schema.png)
 
-An additional column called _original_uuid_ will be added to the dataset table. This column will be used when a revision is created to track the original row.
+An additional column called *original_uuid* will be added to the dataset table. This column will be used when a revision is created to track the original row.
 
 The additional column _published_ will determine if a dataset was ever published. Datasets that have previously been published will show up in the public view of the collection even if the data set has been deleted.
- 
-### API Changes
 
+### API Changes
 
 #### GET /dp/v1/collections/{collection_uuid}
 
 Will be updated to return a boolean name _modified_ when the collection is a revision. Modified indicates that the collection revision has been modified from the original. This flag will unlock the “Publish Collection” button.
 
-
 ##### Determine Modified
 
-The modified flag returned in the response indicates that a change has occurred between the original collection and the revision. Using the time difference between _update_at_ and _created_at_ columns we can determine if any changes have been made in all tables related to the collection. They will not be equal if a change has been made.
-
+The modified flag returned in the response indicates that a change has occurred between the original collection and the revision. Using the time difference between *update_at* and *created_at* columns we can determine if any changes have been made in all tables related to the collection. They will not be equal if a change has been made.
 
 #### POST /dp/v1/collections/{collection_uuid}
 
  Will be used to start a collection revision. The revision will be returned in the response, which is a copy of the rows related to a published collection.
 
-
 #### POST /dp/v1/collections/{collection_uuid}/upload-links
 
 Will be updated to use the _data_uuid_ field in the body, and check if the dataset has been published. If the dataset has been published before then the dataset is uploaded using the revision dataset UUID.
-
 
 #### POST /dp/v1/collections/{collection_uuid}/publish
 
 Will need to be updated to replace a published dataset with a revision. See the section on Publishing below.
 
-
 ### Frontend URL Changes
-
 
 #### /collections/{collection_uuid}/private
 
 Will be used to access a revision if one exists.
 
-
 ### Backend Changes
 
-
-
-*   Tombstoning will need to have an option to not delete the artifacts in S3.
-*   Function to clone a collection and all of its linked resources will need to be written.
-*   Need logic to determine if a collection is a revision.
-*   Need logic to determine if a dataset is a refresh dataset or a new dataset.
-*   Function for publishing a collection will need to update to support the steps outlined above.
-
+* Tombstoning will need to have an option to not delete the artifacts in S3.
+* Function to clone a collection and all of its linked resources will need to be written.
+* Need logic to determine if a collection is a revision.
+* Need logic to determine if a dataset is a refresh dataset or a new dataset.
+* Function for publishing a collection will need to update to support the steps outlined above.
 
 ### Revision Data Flow
 
-
 #### Create
 
-To perform a revision (see image 1), the owner of a collection navigates their “My Collections” page and selects “Start Revision” next to the public collection they would like to revise. 
+To perform a revision (see image 1), the owner of a collection navigates their “My Collections” page and selects “Start Revision” next to the public collection they would like to revise.
 
 ![Image 1](./imgs/figma_1.png)
 [Image 1](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
 
-This sends a request to _POST /dp/v1/collections/{collection_uuid}_. This endpoint creates a copy of the collection in the database and that is private. All of the genesets and datasets associated with the collection are also duplicated. The UUIDs of the published rows are copied into the _original_uuid_ field of the copied row.
+This sends a request to *POST /dp/v1/collections/{collection_uuid}*. This endpoint creates a copy of the collection in the database and that is private. All of the genesets and datasets associated with the collection are also duplicated. The UUIDs of the published rows are copied into the *original_uuid* field of the copied row.
 
 The duplication will be a tricky area to get right especially in linking together all of the datasets and genesets based on their _original_uuids_.
 
 New datasets are uploaded using the _POST /dp/v1/collections/{collection_uuid}/upload-link_ endpoint.
 
-
 #### Read
 
 A user can view their revision (see image 1) by navigating to their “My Collections” page and selecting continue. This sends a request to _GET /dp/v1/collections/{collection_uuid}?visibility=PRIVATE_. The frontend knows that this is a revision because there will also be a collection with the same UUID that has visibility equal to PUBLIC.
 
- 
-
 ![Image 2](./imgs/figma_2.png)
 [Image 2](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
 
-The revision page(see image 2) will display the state of the current revision. If no changes have been made then the “Publish Changes” button will be disabled. Whether a change has been made will be added in the response of a _GET /dp/v1/collections/{collection_uuid}?visibility=PRIVATE _request. 
+The revision page(see image 2) will display the state of the current revision. If no changes have been made then the “Publish Changes” button will be disabled. Whether a change has been made will be added in the response of a _GET /dp/v1/collections/{collection_uuid}?visibility=PRIVATE _request.
 
-The datasets and genesets can be accessed the same way using the new UUID generated for the duplicated row. 
+The datasets and genesets can be accessed the same way using the new UUID generated for the duplicated row.
 
-To download a dataset in a revision you would use the _POST /dp/v1/datasets/{dataset_uuid}_ endpoint using the dataset UUID in the revision. 
+To download a dataset in a revision you would use the _POST /dp/v1/datasets/{dataset_uuid}_ endpoint using the dataset UUID in the revision.
 
-Say a dataset in a revision was shadowing a published dataset, the user would read the refreshed dataset using the dataset UUID in the revision. Once the revision is published the same dataset would be accessed using the original published datasets UUID. All of this UUID swapping will be hidden in the frontend by only showing the user the _original_uuid_ for a revision.
+Say a dataset in a revision was shadowing a published dataset, the user would read the refreshed dataset using the dataset UUID in the revision. Once the revision is published the same dataset would be accessed using the original published datasets UUID. All of this UUID swapping will be hidden in the frontend by only showing the user the *original_uuid* for a revision.
 
-The current state of a dataset in a revision is shown using the tags “Deleted”, “Updated”, “New” (see image 3). 
+The current state of a dataset in a revision is shown using the tags “Deleted”, “Updated”, “New” (see image 3).
 
-
-
-*   **Deleted** indicates a published dataset that has been tombstoned. This is determined by checking if that dataset is a _tombstone_ and is _published. _
-*   **Updated** indicates that the dataset was refreshed. This is determined by checking if the dataset has _original_uuid** **_and is not _published._
-*   **New** indicated the dataset has been added during this revision. This is determined by checking if the dataset has no _original_uuid** **_and is not _published._
+* **Deleted** indicates a published dataset that has been tombstoned. This is determined by checking if that dataset is a _tombstone_ and is *published*.
+* **Updated** indicates that the dataset was refreshed. This is determined by checking if the dataset has *original_uuid* and is not *published*.
+* **New** indicated the dataset has been added during this revision. This is determined by checking if the dataset has no *original_uuid* and is not *published*.
 
 ![Image 3](./imgs/figma_3.png)
 [Image 3](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
-
 
 #### Update
 
@@ -182,13 +155,12 @@ There is no difference in the way you update fields in the collection (see image
 ![Image 4](./imgs/figma_4.png)
 [Image 4](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
 
-A dataset can be updated by selecting the ellipsis next to the dataset (see image 5) and following the upload instructions. The _POST /dp/v1/collections/{collection_uuid}/upload-links_ endpoint is used with the original _dataset_uuid _supplied in the body to start the dataset revision upload.
+A dataset can be updated by selecting the ellipsis next to the dataset (see image 5) and following the upload instructions. The *POST /dp/v1/collections/{collection_uuid}/upload-links* endpoint is used with the original *dataset_uui* supplied in the body to start the dataset revision upload.
 
 ![Image 5](./imgs/figma_5.png)
 [Image 5](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
 
-Updating the dataset results in a new dataset with the same _original_uuid_, and the _published_ flag set to false. The underlying assets which are public will not be deleted until the revision is published.
-
+Updating the dataset results in a new dataset with the same *original_uuid*, and the _published_ flag set to false. The underlying assets which are public will not be deleted until the revision is published.
 
 #### Delete
 
@@ -198,15 +170,14 @@ A dataset is deleted using DELETE /dp/v1/dataset/{dataset_uuid}. If a published 
 
 If a dataset in a revision is refreshed and then deleted, the refreshed dataset is removed and its artifact deleted. Finally, a tombstone is created to replace the published dataset. We can tell if the dataset is refreshed by checking if the _published_ flag is false.
 
+#### Publishing(Read Carefully)
 
-#### Publishing(Read Carefully) 
-
-From the collections revision page, the user can select the “Publish Revision” button. This will open up an additional dialogue to confirm the new version(see image 6. 
+From the collections revision page, the user can select the “Publish Revision” button. This will open up an additional dialogue to confirm the new version(see image 6.
 
 ![Image 6](./imgs/figma_6.png)
 [Image 6](https://www.figma.com/file/jZzZF9oO0YRMxmVRDxDHp3/Public-Revisions?node-id=441%3A151)
 
-The_ POST /dp/v1/collections/{collection_uuid}/publish_ will be used to publish a revision. Some swapping must occur in the database to replace a published collection with a revision. Here is a rough outline of the steps:
+The *POST /dp/v1/collections/{collection_uuid}/publish* will be used to publish a revision. Some swapping must occur in the database to replace a published collection with a revision. Here is a rough outline of the steps:
 
 1. Retrieve the published collection and the revision.
 1. Update the collection table
@@ -215,13 +186,13 @@ The_ POST /dp/v1/collections/{collection_uuid}/publish_ will be used to publish 
 1. Copy over all new datasets from the revision to the published dataset and Set the published flag to True.
 1. Copy over refreshed dataset and tombstones.
     1. Retrieve lists of _original_uuids_ in a revision for datasets.
-    1. Update the datasets with the revision informations. For each dataset with an _original_uuid_, copy all of the columns except _original_uuid_ to the published datasets refered to by the _original_uuid_, and delete all of the published_artifacts and upload_status on the published dataset. Finally, set the _published_ flag to True.
+    1. Update the datasets with the revision informations. For each dataset with an *original_uuid*, copy all of the columns except *original_uuid* to the published datasets refered to by the *original_uuid*, and delete all of the published_artifacts and upload_status on the published dataset. Finally, set the _published_ flag to True.
     1. For a refreshed dataset, the deployed directory URL must match the URL in the published version. In the host-cellxgene bucket replace the original cxg file refered to by the published dataset deployed directory url with the revision file. Also update the revision deployed directory to match the new bucket location.
     1. Delete the old deployed directory Link the revised deployed directory to the published dataset.
 1. Update genesets
     1. Delete all of the geneset rows on the published collection.
     1. Link the revision genesets to the published collection.
-    1. If the dataset is a refreshed dataset, then you must link the geneset to the _original_uuid_.
+    1. If the dataset is a refreshed dataset, then you must link the geneset to the *original_uuid*.
 1. Delete the collection revision row and all linked resources.
 
 
@@ -296,12 +267,12 @@ Updating a dataset and geneset is more complicated. If we are updating a dataset
 
 
 
-*   The private collections fields and links are deleted as normal.
-*   Deleting a collection revision is accomplished by deleting the collection row and all orphaned resources.
-*   Collection Revisions are not tombstoned.
-*   Deleting an unpublished dataset in a revision results in the tombstoning of that dataset and deleting its deployed resources.
-*   Deleting a published dataset in a revision creates a new dataset that is a clone of the published dataset, except the artifacts are not deleted until published, and the tombstone is set.
-*   Deleting an update to a published dataset results in the creation of a tombstone for the published dataset. The artifact will not be deleted until the revision is published.
+* The private collections fields and links are deleted as normal.
+* Deleting a collection revision is accomplished by deleting the collection row and all orphaned resources.
+* Collection Revisions are not tombstoned.
+* Deleting an unpublished dataset in a revision results in the tombstoning of that dataset and deleting its deployed resources.
+* Deleting a published dataset in a revision creates a new dataset that is a clone of the published dataset, except the artifacts are not deleted until published, and the tombstone is set.
+* Deleting an update to a published dataset results in the creation of a tombstone for the published dataset. The artifact will not be deleted until the revision is published.
 
 
 ##### Publish
@@ -313,8 +284,8 @@ To publish the revision, the current published collection will be deleted and al
 
 
 
-*   As the owner, return the revision and the published collection when listing the user’s collections.
-*   The frontend will need to display correctly when it finds two collections with the same UUID but different visibilities.
+* As the owner, return the revision and the published collection when listing the user’s collections.
+* The frontend will need to display correctly when it finds two collections with the same UUID but different visibilities.
 
 
 ##### POST /dp/v1/collections/{collection_uuid}
@@ -346,12 +317,12 @@ Create an additional table that will record revision history.
 
 [https://davenathanaeld.medium.com/database-design-revisions-c91d63400bc1](https://davenathanaeld.medium.com/database-design-revisions-c91d63400bc1)
 
-*   This would allow us to redo and undo changes.
-*   Changes would be tracked in a revision table
-*   Publishing would apply all of the changes in the revision table for the public collection.
-*   We would need to carefully plan out the column of the revision table to handle all CRUD operations.
-*   When a user wants to view the revision, we would need to replay all of the changes onto the publish collection to get to the current revision state.
-*   It could get complicated migrating a database with revision in progress.
+* This would allow us to redo and undo changes.
+* Changes would be tracked in a revision table
+* Publishing would apply all of the changes in the revision table for the public collection.
+* We would need to carefully plan out the column of the revision table to handle all CRUD operations.
+* When a user wants to view the revision, we would need to replay all of the changes onto the publish collection to get to the current revision state.
+* It could get complicated migrating a database with revision in progress.
 
 
 ## **References**
