@@ -97,7 +97,7 @@ Geneset and gene order is significant, the cellxgene UI will attempt to render i
 
 The gene set and dataset tabs of the data portal collections page do not require gene level information so that will not be included with geneset information for a collection.
 
-```json
+```text
 [
   {
      "id": "<string>",           # gene set id
