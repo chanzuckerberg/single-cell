@@ -177,13 +177,10 @@ Validation of and conversion from the [Geneset CSV](#genesets-csv) to the
 If this is the first set of gene sets uploaded for the collection the collection table will be updated with a link to the csv. 
 
 
-#### Request body
-
+**Request Body**
 The request body must be a properly formed [Geneset JSON](#genesets-json).
 
-
-#### Response
-
+**Response**
 *   200 - Success. The new genesets were saved. Returns [list of gene sets linked to collection](#abbreviated-genesets-json)
 *   403 - Forbidden.  Collection does not exist
 *   403 - Forbidden.  User not owner of collection
@@ -196,8 +193,7 @@ The request body must be a properly formed [Geneset JSON](#genesets-json).
 Returns a dict containing a link to the gene set_csv for the collection and a list of all genesets in a collection, including their gene information.
 
 
-#### Response
-
+**Response**
 *   200 - Success Returns 
 
 ```json
@@ -236,7 +232,7 @@ This will allow the explorer to use its knowledge of the dataset name/s3 uri to 
 If this is the first time gene sets have been linked to the dataset a DatasetArtifact representing the link will be created. Otherwise the updated_at field of the DatasetArtifact will be set to the current time.
 
 
-#### Request body
+**Request Body**
 
 The request body is a dictionary containing a list of gene set ids to link to the dataset and a list to unlink. \
 ```json
@@ -250,9 +246,7 @@ The request body is a dictionary containing a list of gene set ids to link to th
 ```
 
 
-#### Response
-
-
+**Response**
 
 *   200 - Success Returns [list of gene sets linked to the dataset](#abbreviated-genesets-json)
 *   403 - Forbidden.  Dataset does not exist
