@@ -178,7 +178,7 @@ Returns a dict containing a link to the gene set_csv for the collection and a li
 
 - 200 - Success Returns
 
-```json
+```text
 {
   "presigned_geneset_csv_uri": "<string>"   # url to download geneset csv
   "genesets": [
