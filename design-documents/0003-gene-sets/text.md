@@ -217,7 +217,7 @@ If this is the first time gene sets have been linked to the dataset a DatasetArt
 
 The request body is a dictionary containing a list of gene set ids to link to the dataset and a list to unlink. \
 
-```json
+```text
 {
 
     “add”: [geneset_id, . . .],
