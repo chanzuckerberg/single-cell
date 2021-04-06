@@ -69,7 +69,7 @@ If additional fields are included, when present for a gene they will be stored a
 
 The genesets default JSON data structure, used by the portal front-end to save new genesets.
 
-```json
+```text
 {
   "genesets": [
     {
