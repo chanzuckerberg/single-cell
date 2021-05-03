@@ -20,7 +20,7 @@ Run these two commands and upgrade packages to the latest available. Please also
 
 [Here](https://github.com/chanzuckerberg/cellxgene/pull/2167/files) is a sample PR that upgraded several frontend npm dependencies.
 
-### Upgrading cellxgene Explorer czi-hosted backend
+### Upgrading cellxgene Explorer CZI-hosted backend
 
 The pip package dependency files for the CZI-hosted backend for cellxgene Explorer can be found at `cellxgene/backend/czi-hosted/requirements.txt` as well as `single-cell-infra/terraform/modules/hosted-cellxgene/common/customize/requirements.txt`. These two files should be in sync except that the file in `single-cell-infra` should pin all packages to a single version and the file in `cellxgene` should use the `>=` sign for the same version numbers. This is so that when we are testing locally, we can easily find out if a new release of a package is causing compatibility issues. We do want to pin versions in the `single-cell-infra` repo because these are the versions installed during deployment and we don't want an unexpected incompatibility due to a new package release to cause a production deployment to fail.
 
