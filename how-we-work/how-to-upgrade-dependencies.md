@@ -26,7 +26,7 @@ The pip package dependency files for the CZI-hosted backend for cellxgene Explor
 
 To perform the upgrades you can make use of `pip-upgrader` to figure out which packages have recent updates:
 
-1. Install https://pypi.org/project/pip-upgrader/: `pip install pip-upgrader`.
+1. Install [pip-upgrader](https://pypi.org/project/pip-upgrader/): `pip install pip-upgrader`.
 
 2. Upgrade the packages based on the report and verify that the application still works (please fully deploy to a `dev` or `rdev` environment to double check everything).
 
@@ -40,7 +40,7 @@ The policy we have to upgrade the backend of cellxgene Explorer _desktop_ is dif
 
 To update the `pip` packages for cellxgene Explorer desktop backend, we recommend doing the following steps:
 
-1. Install https://pypi.org/project/safety/: `pip install safety`. Note: this will ONLY check for vulnerabilities against the currently installed packages.
+1. Install [safety](https://pypi.org/project/safety/): `pip install safety`. Note: this will ONLY check for vulnerabilities against the currently installed packages.
 
 2. Manually install the minimum required version of all packages in `cellxgene/backend/server/requirements.txt` and `cellxgene/backend/server/requirements-prepare.txt`.
 
