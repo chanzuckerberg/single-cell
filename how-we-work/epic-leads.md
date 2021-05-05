@@ -37,9 +37,10 @@ After the product requirements are set, the second part of the design phase is f
 
 - Write a design document. If the Objective is substantial and will involve modification to the system architecture, you should write a design document and get it approved by the engineering team. The details on how to do that are in the [RFC document](../design-documents/0000-rfc-process/text.md).
 - Craft a project plan. If the Epic is substantial and there are many moving parts, you may want to create a short document on how you intend to stage the implementation of the child Epics (i.e. when and in what order). This is a way to help manage expectations so that PM might know when to review issues created for a child Epic, when something is planning on being pulled into a sprint, when a technical design doc will land, or even before the technical design phase, when you plan on completing some prototyping work.
-- Schedule a meeting with PM+UX to verify that the child issues that you have created for an Epic or child Epic actually implement the agreed upon product requirements (this should happen before the issues get placed into PokerBot for estimation).
 
 The Design Phase of an Epic is squishy and uncertain and so the path to the goals described above can be different each time. If you are struggling on how to find clarity or need any recommendations on next steps, reach out to your peers, ask PM/UX, or check in with your manager.
+
+After you have created the child issues, but before the issues are pointed, please work with PM to schedule a meeting to verify that the child issues created actually implement the agreed upon product requirements and to remodel child Epics as necessary into logical demoable slices.
 
 ## Implementation Phase
 
