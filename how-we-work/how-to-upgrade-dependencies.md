@@ -6,6 +6,8 @@ As a general rule please do not directly import the latest version of the downst
 
 For an overview of current dependency issues we have in cellxgene Explorer and cellxgene Portal, you can check the two corresponding projects in [Snyk](https://app.snyk.io/org/cellxgene). Note that you should take the findings with a grain of salt as some findings may not have remediation and therefore may continue to exist after everything else has been upgraded. It's a good place to double check your work though.
 
+Finally, please check both repos' Dependabot Alerts to ensure that all alerts have been addressed. Please do not clear the alerts unless they are either addressed (via a fully merged PR) or they are not relevant. This means that if one of our dependency packages is unable to be updated because of no available upgrade, leave the alert open so we know to update the package later once an update is available. The Portal dependabot alerts can be found [here](https://github.com/chanzuckerberg/corpora-data-portal/security/dependabot) and the Explorer dependabot alerts can be found [here](https://github.com/chanzuckerberg/cellxgene/security/dependabot).
+
 ## Upgrading cellxgene Explorer
 
 ### Upgrading cellxgene Explorer frontend
@@ -22,33 +24,41 @@ Run these two commands and upgrade packages to the latest available. Please also
 
 ### Upgrading cellxgene Explorer CZI-hosted backend
 
-The pip package dependency files for the CZI-hosted backend for cellxgene Explorer can be found at `cellxgene/backend/czi-hosted/requirements.txt` as well as `single-cell-infra/terraform/modules/hosted-cellxgene/common/customize/requirements.txt`. These two files should be in sync except that the file in `single-cell-infra` should pin all packages to a single version and the file in `cellxgene` should use the `>=` sign for the same version numbers. This is so that when we are testing locally, we can easily find out if a new release of a package is causing compatibility issues. We do want to pin versions in the `single-cell-infra` repo because these are the versions installed during deployment and we don't want an unexpected incompatibility due to a new package release to cause a production deployment to fail.
+The pip package dependency files for the CZI-hosted backend for cellxgene Explorer can be found at `cellxgene/backend/czi-hosted/requirements.txt` as well as `single-cell-infra/terraform/modules/hosted-cellxgene/common/customize/requirements.txt`. These two files should be in sync except that the file in `single-cell-infra` should pin all packages to a single version and the file in `cellxgene` should use the `>=` sign for the same version numbers. This is so that when we are testing locally, we can easily find out if a new release of a package is causing compatibility issues. We MUST pin versions in the `single-cell-infra` repo because these are the versions installed during deployment and we don't want an unexpected incompatibility due to a new package release to cause a production deployment to fail.
 
 To perform the upgrades you can make use of `pip-upgrader` to figure out which packages have recent updates:
 
 1. Install [pip-upgrader](https://pypi.org/project/pip-upgrader/): `pip install pip-upgrader`.
 
-2. Upgrade the packages based on the report and verify that the application still works (please fully deploy to a `dev` or `rdev` environment to double check everything).
+1. Upgrade the packages based on the report and verify that the application still works (please fully deploy to a `dev` or `rdev` environment to double check everything).
 
-You can also make use of the [Snyk reports](https://app.snyk.io/org/cellxgene) to figure out which specific packages have security vulnerabilities as well as the [`safety` package](#Upgrade-cellxgene-Explorer-desktop-backend).
+You can also make use of the [Snyk reports](https://app.snyk.io/org/cellxgene) to figure out which specific packages have security vulnerabilities as well as the [`safety` package](#Upgrade-cellxgene-Explorer-desktop-backend). Please note, since the `safety` package only checks currently installed package versions, please create a fresh virtual environment and install the requirements fresh from the `requirements.txt` file before running the command.
 
 Finally, besides the `pip` installed packages, please also take a look at the Dockerfile (in the top level directory `cellxgene/Dockerfile`) to ensure that there are no security vulnerabilities there. Snyk is your friend to figure out if there are and what the remediation process is.
 
 ### Upgrading cellxgene Explorer desktop backend
 
-The policy we have to upgrade the backend of cellxgene Explorer _desktop_ is different than any of the other policies. Because many users may have different versions of the dependent `pip` packages already installed on their laptop, and because many users do not use a virtual environment, we need to be _as permissive as possible_ when defining what the allowable versions of each package are.
+The policy we have to upgrade the backend of cellxgene Explorer _desktop_ is different than any of the other policies. Because many users may have different versions of the dependent `pip` packages already installed on their laptop, and because many users do not use a virtual environment, we need to be _as permissive as possible_ when defining what the allowable versions of each package are. 
+
+This means that the allowable versions we set for each package:
+
+1. SHOULD be the minimum version that is functionally compatible and includes no medium or high security risks.
+
+1. MAY exclude specific versions that have medium or high security vulnerabilities if the specification is easier (e.g. `foo>=1.9.0,!=2.0.0`).
 
 To update the `pip` packages for cellxgene Explorer desktop backend, we recommend doing the following steps:
 
-1. Install [safety](https://pypi.org/project/safety/): `pip install safety`. Note: this will ONLY check for vulnerabilities against the currently installed packages.
+1. Create a clean new virtual environment and install based on the `cellxgene/backend/server/requirements.txt` file. This is necessary because the package in the next step ONLY checks for vulnerabilities against the currently installed packages so you need to ensure that your versions match those in the requirements file.
 
-2. Manually install the minimum required version of all packages in `cellxgene/backend/server/requirements.txt` and `cellxgene/backend/server/requirements-prepare.txt`.
+1. Install [safety](https://pypi.org/project/safety/): `pip install safety`.
 
-3. Run `safety`: `python -m safety check --full-report`
+1. Manually install the minimum required version of all packages in `cellxgene/backend/server/requirements.txt` and `cellxgene/backend/server/requirements-prepare.txt`.
 
-4. Update requirements as indicated, goto step 2 again.  Repeat until clean.
+1. Run `safety`: `python -m safety check --full-report`
 
-5. Check that cellxgene still works :)
+1. Update requirements as indicated, goto step 2 again.  Repeat until clean.
+
+1. Check that cellxgene still works :)
 
 Please also upgrade the requirements in `cellxgene/backend/server/requirements-dev.txt` though the policy on being as permissive as possible does not apply since only cellxgene Explorer developers need to install those requirements.
 
@@ -70,6 +80,7 @@ The instructions to upgrade the Portal backend are pretty much identical to the 
 - `corpora-data-portl/backend/chalice/api_server/requirements.txt`
 - `corpora-data-portal/backend/chalice/cloudfront_invalidator/requirements.txt`
 - `corpora-data-portal/backend/chalice/upload_failures/requirements.txt`
+- `corpora-data-portal/.happy/requirements.txt`
 - `corpora-data-portal/Dockerfile`
 - `corpora-data-portal/Dockerfile.processing_image`
 - `corpora-data-portal/Dockerfile.upload_failures`
