@@ -38,7 +38,7 @@ Finally, besides the `pip` installed packages, please also take a look at the Do
 
 ### Upgrading cellxgene Explorer desktop backend
 
-The policy we have to upgrade the backend of cellxgene Explorer _desktop_ is different than any of the other policies. Because many users may have different versions of the dependent `pip` packages already installed on their laptop, and because many users do not use a virtual environment, we need to be _as permissive as possible_ when defining what the allowable versions of each package are. 
+The policy we have to upgrade the backend of cellxgene Explorer _desktop_ is different than any of the other policies. Because many users may have different versions of the dependent `pip` packages already installed on their laptop, and because many users do not use a virtual environment, we need to be _as permissive as possible_ when defining what the allowable versions of each package are.
 
 This means that the allowable versions we set for each package:
 
