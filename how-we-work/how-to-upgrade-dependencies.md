@@ -18,9 +18,19 @@ There are two commands to run to figure out which npm packages to upgrade:
 
 `npm outdated` -- this command generates a report of all dependencies in `cellxgene/client/package.json` and whether there are newer versions available.
 
-Run these two commands and upgrade packages to the latest available. Please also make any necessary changes in the client code to ensure that that the frontend still works as expected and is not using outdated references. Finally, run `npm i` to install the packages and update the corresponding `package-lock.json`.
+For major upgrades: check the package's changelog, especially the breaking changes section first to see if such an upgrade is straightforward. If so, feel free to push the upgrade and make sure the affected functionalities still work. If breaking changes exist, please exercise more caution when updating the package to ensure that all affected functionality still operates as expected; feel free to recruit manual testing support from the larger team to ensure that the application doesn't break.
+
+For minor and patch upgrade: In theory there should not be any breaking changes, so just upgrading the packages should not break anything. 
+
+**Important Note**: not all packages follow semantic versioning, so please notice what packages have been upgraded in `package.json` and test their related functionality accordingly to ensure everything is fine.
+
+Run the two above commands and upgrade packages to the latest available (that do not contain a security vulnerability). Please double check that the frontend still works as expected and is not using outdated references. Finally, before committing the updates, please rebuild `package-lock.json` by first deleteing `package-lock.json` and `node_modules` and then running `npm i` to generate the new `package-lock.json`.
 
 [Here](https://github.com/chanzuckerberg/cellxgene/pull/2167/files) is a sample PR that upgraded several frontend npm dependencies.
+
+#### Other useful tools
+
+Besides `npm audit` and `npm outdated`, you may take a look at [`npm-check`](https://www.npmjs.com/package/npm-check) and [`npm-check-updates`](https://www.npmjs.com/package/npm-check-updates) as tools to help upgrade packages to the latest version.
 
 ### Upgrading cellxgene Explorer CZI-hosted backend
 
