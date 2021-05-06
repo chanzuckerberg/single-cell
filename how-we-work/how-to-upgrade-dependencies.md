@@ -20,7 +20,7 @@ There are two commands to run to figure out which npm packages to upgrade:
 
 For major upgrades: check the package's changelog, especially the breaking changes section first to see if such an upgrade is straightforward. If so, feel free to push the upgrade and make sure the affected functionalities still work. If breaking changes exist, please exercise more caution when updating the package to ensure that all affected functionality still operates as expected; feel free to recruit manual testing support from the larger team to ensure that the application doesn't break.
 
-For minor and patch upgrade: In theory there should not be any breaking changes, so just upgrading the packages should not break anything. 
+For minor and patch upgrade: In theory there should not be any breaking changes, so just upgrading the packages should not break anything.
 
 **Important Note**: not all packages follow semantic versioning, so please notice what packages have been upgraded in `package.json` and test their related functionality accordingly to ensure everything is fine.
 
