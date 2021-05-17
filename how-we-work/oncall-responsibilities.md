@@ -18,6 +18,14 @@ An on-call rotation begins on Monday at 9am PST. Each week, there is a primary a
 
 #### Deployment
 
+##### Deployment summary table
+
+|                   | dev                            | staging                                                                                  | prod                                                                                     | dev-canary                                                |
+| ----------------- | ------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| single-cell-infra | TFE auto                       | TFE auto                                                                                 | TFE manual                                                                               | TFE manual                                                |
+| data-portal       | Need to set up auto deployment | Github Action Auto Deploy                                                                | happy/script Deploy Manual                                                               | no deployment                                             |
+| explorer          | Github Action Auto Deploy      | single-cell-infra deploy script to kick off github action (also possible to run locally) | single-cell-infra deploy script to kick off github action (also possible to run locally) | Github Action Auto Deploy (does not auto rebase off main) |
+
 The principal responsibility of the primary on-call is to coordinate deployments on Wednesday (from `main` to `staging`) and Thursday (from `staging` to `prod`). Both the cellxgene Data Portal and the cellxgene Explorer needs to be deployed and require two different processes. On both days, please try to promote by 1pm PST.
 
 The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#redeploying-the-application).
