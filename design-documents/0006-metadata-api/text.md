@@ -75,10 +75,10 @@ All route names below should be prefixed by the standard API base URL, eg, "GET 
 
 ```json
 {
-“dataset_id”: “uuid”,
-“data_portal_collection_url”: “string”,
-“explorer_s3_uri”: “string”,
-“Tombstoned”: Boolean
+  "dataset_id": "uuid",
+  "data_portal_collection_url": "string",
+  "explorer_s3_uri": "string",
+  "Tombstoned": false
 }
 ```
 
