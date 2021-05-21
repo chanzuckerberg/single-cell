@@ -91,7 +91,7 @@ Update dataset table (in Portal)
 
 There are no necessary updates to the Explorer data model
 
-See below for updated database diagram
+See [below](#data-portal-relational-db) for updated database diagram
 
 ### Test plan
 
@@ -113,6 +113,6 @@ However the explorer will still need to be updated to handle deleted datasets an
 
 Another option considered is creating a separate API for this information to avoid making this endpoint available to users via the regular api. If external users are aware of and dependent on this API we will need to consider backwards compatibility when making changes to the API to support new features in cellxgene. However as long as we are not publicizing the APIs or making any promises concerning their functionality or availability, this endpoint can be added to the existing API.
 
-## References
+## Data Portal Relational DB
 
-Any relevant documents or prior art should be clearly listed here. Any citation of figures or papers should also be clearly listed here. Of course, they can also be linked throughout the document when directly referenced.
+![Data Portal Database UML](imgs/data_portal_db.png)
