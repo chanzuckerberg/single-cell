@@ -28,16 +28,20 @@ While newly created datasets are displayed in the Explorer under a url referenci
 
 ## Product Requirements
 
-[Data consumers can easily discover the portal and other collections from cellxgene explorer](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/169)
+1. [Data consumers can easily discover the portal and other collections from cellxgene explorer](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/169)
 
-[Data consumers can easily discover and review metadata for a dataset in cellxgene explorer](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/171)
+1. [Data consumers can easily discover and review metadata for a dataset in cellxgene explorer](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/171)
 
-[Curators may privately revise a published collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/36) with emphasis on [Curators may update published datasets in the private revision of a published collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/141) and [Curators may delete published datasets in a private revision for a public collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/138)
+1. [Curators may privately revise a published collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/36) with emphasis on Curators may update published datasets in the private revision of a published collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/141) and [Curators may delete published datasets in a private revision for a public collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/138)
 
 ## Detailed Design | Architecture | Implementation
 
-Summary:
-Create an alias tier between the Explorer and the Data Portal to allow for more flexibility in linkage between a url and a dataset. The explorer will use GET `datasets/meta?url={cellxgene_url}` to retrieve the collection id for the dataset as well as a link to where in S3 the dataset to display is stored. This will require changes in both the portal and the explorer code base.
+#### Summary:
+#### Deletion/Revisions (product requirement 3)
+Create an alias tier between the Explorer and the Data Portal to allow for more flexibility in linkage between a url and a dataset. The explorer will use GET `datasets/meta?url={cellxgene_url}` to retrieve a link to the s3 object containing the dataset to display. This will require changes in both the portal and the explorer code base.
+
+#### Seamless discovery (product requirements 1 & 2)
+Create an alias tier between the Explorer and the Data Portal to allow for clarity in linkage between an explorer url and a collection. The explorer will use GET `datasets/meta?url={cellxgene_url}` to retrieve the collection id for the dataset. It will then use the existing GET `collections/{collection_uuid}` endpoint to retrieve metadata about the collection, including links to other datasets in the collection.
 
 ### Portal Changes
 
@@ -76,9 +80,9 @@ All route names below should be prefixed by the standard API base URL, eg, "GET 
 ```json
 {
   "dataset_id": "uuid",
-  "data_portal_collection_url": "string",
+  "collection_id": "uuid",
   "explorer_s3_uri": "string",
-  "Tombstoned": false
+  "tombstoned": false
 }
 ```
 
@@ -108,6 +112,11 @@ Other alternatives considered include
 - Creating html templates with information regarding deleted datasets and storing them in s3 under the original dataset path
 - Passing the collection id as part of the cxg
   - Although the collection_id should be fairly static, this will make updates more difficult/time consuming, doesnt solve the larger communication problem and will involve storing data in multiple places.
+- Connecting cellxgene to the explorer database
+  - This will further complicate and obscure the boundary between the two repos and create dependencies around the shared orm as well as potential security concerns
+- Add a table hardcoding the mapping between dataset name and dataset id for the datasets use names rather than uuids in the cellxgene url path.
+   - This would add complexity to the code, particularly since the mapping would differ between environments
+   - This would not solve the deletion/replacement issue.
 
 However the explorer will still need to be updated to handle deleted datasets and support breadcrumbs linking back to the data portal which create the same issue concerning self hosting.
 
