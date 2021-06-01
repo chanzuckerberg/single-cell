@@ -22,9 +22,10 @@ When updating a public dataset (a dataset that belongs to a public collection, w
 
 This also complicates the process of deleting a dataset that has been published, while still communicating any relevant information to the end user. If the dataset is simply deleted from S3, the explorer will have no knowledge of it, and when someone attempts to navigate to the Explorer page for the deleted dataset, it can only display a 404, after looking for the cxg in the s3 bucket and finding nothing there.
 
-Additionally cxg's are more or less read-only. But the Portal needs to communicate new information about the dataset after it writes the cxg. For example, perhaps there should be an update to the title of the dataset. There is no way to do this (and communicate the change to the Explorer) without rewriting the entire cxg.
-
 While newly created datasets are displayed in the Explorer under a url referencing their dataset uuid, historically created (but still supported) urls identify the datasets via the dataset names, further complicating references to specific datasets.
+
+## Out of Scope
+Updating information soted in the cxg (such as the dataset name) will require further discussion to determine if we will update the cxg or update the schema for the cxg (and address questions around backwards compatibility that would come with a schema update). Those questions and the accompanying work is out of the scope of this RFC. This RFC is specifically focused on unblocking the revision of collection level metadata that is not stored within the cxg/h5ad/loom files.
 
 ## Product Requirements
 
