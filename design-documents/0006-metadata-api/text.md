@@ -53,6 +53,7 @@ Create an alias tier between the Explorer and the Data Portal to allow for clari
 - Add an endpoint to the portal to look up the given url in the explorer_url field for datasets linked to both private and public collections and return
 
   - collection_id
+  - collection_visibility
   - explorer_s3_uri
     - Note: If the explorer_url field is not present in the database, return an S3_uri computed based on the explorer_url
   - Dataset tombstone status
@@ -86,6 +87,7 @@ All route names below should be prefixed by the standard API base URL, eg, "GET 
 {
   "dataset_id": "uuid",
   "collection_id": "uuid",
+  "collection_visibility": "string",
   "explorer_s3_uri": "string",
   "tombstoned": false
 }
