@@ -1,6 +1,6 @@
 # Defining Communication between the Portal and the Explorer
 
-## Metadata API/Dataset identification endpoint
+## Metadata API/Dataset Identification Endpoint
 
 **Authors:** [Madison Dunitz](mailto:madison.dunitz@chanzuckerberg.com)
 
@@ -25,6 +25,7 @@ This also complicates the process of deleting a dataset that has been published,
 While newly created datasets are displayed in the Explorer under a url referencing their dataset uuid, historically created (but still supported) urls identify the datasets via the dataset names, further complicating references to specific datasets.
 
 ## Out of Scope
+
 Updating information soted in the cxg (such as the dataset name) will require further discussion to determine if we will update the cxg or update the schema for the cxg (and address questions around backwards compatibility that would come with a schema update). Those questions and the accompanying work is out of the scope of this RFC. This RFC is specifically focused on unblocking the revision of collection level metadata that is not stored within the cxg/h5ad/loom files.
 
 ## Product Requirements
@@ -33,15 +34,18 @@ Updating information soted in the cxg (such as the dataset name) will require fu
 
 1. [Data consumers can easily discover and review metadata for a dataset in cellxgene explorer](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/171)
 
-1. [Curators may privately revise a published collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/36) with emphasis on Curators may update published datasets in the private revision of a published collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/141) and [Curators may delete published datasets in a private revision for a public collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/138)
+1. [Curators may privately revise a published collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/36) with emphasis on Curators may update published datasets in the private revision of a published collection](<https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/141>) and [Curators may delete published datasets in a private revision for a public collection](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell/138)
 
 ## Detailed Design | Architecture | Implementation
 
-#### Summary:
+### Summary
+
 #### Deletion/Revisions (product requirement 3)
+
 Create an alias tier between the Explorer and the Data Portal to allow for more flexibility in linkage between a url and a dataset. The explorer will use GET `datasets/meta?url={cellxgene_url}` to retrieve a link to the s3 object containing the dataset to display. This will require changes in both the portal and the explorer code base.
 
 #### Seamless discovery (product requirements 1 & 2)
+
 Create an alias tier between the Explorer and the Data Portal to allow for clarity in linkage between an explorer url and a collection. The explorer will use GET `datasets/meta?url={cellxgene_url}` to retrieve the collection id for the dataset. It will then use the existing GET `collections/{collection_uuid}` endpoint to retrieve metadata about the collection, including links to other datasets in the collection.
 
 ### Portal Changes
@@ -116,8 +120,8 @@ Other alternatives considered include
 - Connecting cellxgene to the explorer database
   - This will further complicate and obscure the boundary between the two repos and create dependencies around the shared orm as well as potential security concerns
 - Add a table hardcoding the mapping between dataset name and dataset id for the datasets use names rather than uuids in the cellxgene url path.
-   - This would add complexity to the code, particularly since the mapping would differ between environments
-   - This would not solve the deletion/replacement issue.
+  - This would add complexity to the code, particularly since the mapping would differ between environments
+  - This would not solve the deletion/replacement issue.
 
 However the explorer will still need to be updated to handle deleted datasets and support breadcrumbs linking back to the data portal which create the same issue concerning self hosting.
 
