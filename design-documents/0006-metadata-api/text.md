@@ -1,6 +1,6 @@
 # Defining Communication between the Portal and the Explorer
 
-## Metadata API
+## Metadata API/Dataset identification endpoint
 
 **Authors:** [Madison Dunitz](mailto:madison.dunitz@chanzuckerberg.com)
 
