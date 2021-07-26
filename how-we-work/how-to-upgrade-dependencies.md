@@ -4,6 +4,8 @@ Once a month at the beginning of the month, the oncall engineer should visit the
 
 As a general rule please do not directly import the latest version of the downstream package that contains the vulnerability. For example, if we import package `A` and package `A` depends on package `B` which depends on package `C` which contains a vulnerability, please do not directly import the latest version of package `C` directly into our package. If a newer version of package `A` exists where they have addressed the vulnerability, directly upgrade `A`. Otherwise, wait until there is a new one available.
 
+If we run into a case where an immediate upstream dependency does not address the vulnerability in a timely manner (i.e. package `C` becomes abandonware), please file an issue noting the problem and start tracking the likely resolution (i.e. migrate to a new dependency, wait, safely ignore, etc.). Please bring the issue to attention for triage during the next issue refinement meeting.
+
 For an overview of current dependency issues we have in cellxgene Explorer and cellxgene Portal, you can check the two corresponding projects in [Snyk](https://app.snyk.io/org/cellxgene). Note that you should take the findings with a grain of salt as some findings may not have remediation and therefore may continue to exist after everything else has been upgraded. It's a good place to double check your work though.
 
 Finally, please check both repos' Dependabot Alerts to ensure that all alerts have been addressed. Please do not clear the alerts unless they are either addressed (via a fully merged PR) or they are not relevant. This means that if one of our dependency packages is unable to be updated because of no available upgrade, leave the alert open so we know to update the package later once an update is available. The Portal dependabot alerts can be found [here](https://github.com/chanzuckerberg/corpora-data-portal/security/dependabot) and the Explorer dependabot alerts can be found [here](https://github.com/chanzuckerberg/cellxgene/security/dependabot).
@@ -11,6 +13,8 @@ Finally, please check both repos' Dependabot Alerts to ensure that all alerts ha
 ## Upgrading cellxgene Explorer
 
 ### Upgrading cellxgene Explorer frontend
+
+When upgrading the frontend package dependencies, please upgrade to the latest _compatible_ version of a dependency. For example, if we are incompatible with a major update, please upgrade to the latest _minor_ version and read below for guidelines on updating the major version at a later point in time. 
 
 There are two commands to run to figure out which npm packages to upgrade:
 
@@ -34,7 +38,7 @@ Besides `npm audit` and `npm outdated`, you may take a look at [`npm-check`](htt
 
 ### Upgrading cellxgene Explorer CZI-hosted backend
 
-The pip package dependency files for the CZI-hosted backend for cellxgene Explorer can be found at `cellxgene/backend/czi-hosted/requirements.txt` as well as `single-cell-infra/terraform/modules/hosted-cellxgene/common/customize/requirements.txt`. These two files should be in sync except that the file in `single-cell-infra` should pin all packages to a single version and the file in `cellxgene` should use the `>=` sign for the same version numbers. This is so that when we are testing locally, we can easily find out if a new release of a package is causing compatibility issues. We MUST pin versions in the `single-cell-infra` repo because these are the versions installed during deployment and we don't want an unexpected incompatibility due to a new package release to cause a production deployment to fail.
+The pip package dependency files for the CZI-hosted backend for cellxgene Explorer can be found at `cellxgene/backend/czi-hosted/requirements.txt` as well as `single-cell-infra/terraform/modules/hosted-cellxgene/common/customize/requirements.txt`. These two files should be in sync except that the file in `single-cell-infra` should pin all packages to a single version and the file in `cellxgene` should use the `>=` sign for the same version numbers. This is so that when we are testing locally, we can easily find out if a new release of a package is causing compatibility issues. We MUST pin versions in the `single-cell-infra` repo because these are the versions installed during deployment and we don't want an unexpected incompatibility due to a new package release to cause a production deployment to fail. Please ensure to upgrade to the latest _compatible_ version of a dependency.
 
 To perform the upgrades you can make use of `pip-upgrader` to figure out which packages have recent updates:
 
