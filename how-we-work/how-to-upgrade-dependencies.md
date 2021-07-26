@@ -14,7 +14,7 @@ Finally, please check both repos' Dependabot Alerts to ensure that all alerts ha
 
 ### Upgrading cellxgene Explorer frontend
 
-When upgrading the frontend package dependencies, please upgrade to the latest _compatible_ version of a dependency. For example, if we are incompatible with a major update, please upgrade to the latest _minor_ version and read below for guidelines on updating the major version at a later point in time. 
+When upgrading the frontend package dependencies, please upgrade to the latest _compatible_ version of a dependency. For example, if we are incompatible with a major update, please upgrade to the latest _minor_ version and read below for guidelines on updating the major version at a later point in time.
 
 There are two commands to run to figure out which npm packages to upgrade:
 
