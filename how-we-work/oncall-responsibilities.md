@@ -32,7 +32,7 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 
 **On Wednesday**:
 
-- Send a note to the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) Slack channel to see if there are any PRs that you should wait on before the `main` to `staging` push.
+- Send a note to the #single-cell-ops Slack channel to see if there are any PRs that you should wait on before the `main` to `staging` push.
 - Once the deployment is in progress, let the team know in the same channel and also notify when the deployment is complete. Please write a quick note on the key new features/bug fixes for the engineering team to help test on staging. If the deployment fails, coordinate the fix.
 - Data Portal
   - Continuous deployment is enabled in staging for the data portal, no further action is required to update.
@@ -42,7 +42,7 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 
 **On Thursday**:
 
-- Send a note to the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) Slack channel checking to make sure that engineers have had a chance to test the staging deployment. If you get a quorum of LGTMs, promote staging to prod.
+- Send a note to the #single-cell-ops Slack channel checking to make sure that engineers have had a chance to test the staging deployment. If you get a quorum of LGTMs, promote staging to prod.
 - Let the channel know when the deployment is in progress and when it is complete. You are also responsible for rolling back to a working version and coordinating any fixes if the deployment fails.
 - Explorer
 
@@ -59,10 +59,10 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 #### Other responsibilities
 
 - If the secondary on-call engineer is new, please pair-program to help them onboard onto the process. Include them when you do deployment and point out various issues to watch out for (i.e. incoming bugs, Sentry, etc.) so that they get an understand of what the role entails.
-- Watch the [#single-cell-ops](https://chanzuckerbergteam.slack.com/archives/CV7PFVABC) and [#single-cell-eng](https://chanzuckerbergteam.slack.com/archives/C01CPJURT0S) Slack channels for any questions or issues reported by any engineers, PM, or our Curation team. Please triage these issues, notify the right person, and if appropriate file an issue to keep track of the bug. For high priority issues, especially ones that do not take too much time (< 1 day effort), please create the issue and pull it into the sprint to be worked on.
+- Watch the #single-cell-ops, #single-cell-eng, and #single-cell-data-wrangling Slack channels for any questions or issues reported by any engineers, PM, or our Curation team. Please triage these issues, notify the right person, and if appropriate file an issue to keep track of the bug. For high priority issues, especially ones that do not take too much time (< 1 day effort), please create the issue and pull it into the sprint to be worked on.
 - We use Infrastructure Engineering's in-house deployment of [sentry.io](https://sentry.prod.si.czi.technology/sci-sc/) for error aggregation. Keep an eye out on Sentry issues throughout the week, especially noting issues that pop up after the deployment in large quantities. This is likely a sign that there is a high priority bug that we need to address. Sentry can help you create Github issues to track these issues.
 - If there is an issue with the deployment or something happened this week that took down our application, please write a postmortem and add it to the postmortems section of this repo. Please also bring up the postmortem and any lessons during the Sprint Retrospective so that we can all learn!
-- If you run into a potential security issue or product incident, need to rollback a deployment, or otherwise are running into some issues, please check out the the Incident Playbook (link to come!) to figure out next steps. If all else fails, please ping the [#single-cell-eng](https://chanzuckerbergteam.slack.com/archives/C01CPJURT0S) Slack channel to start getting help from other engineers and/or notify your manager.
+- If you run into a potential security issue or product incident, need to rollback a deployment, or otherwise are running into some issues, please check out the the Incident Playbook (link to come!) to figure out next steps. If all else fails, please ping the #single-cell-eng Slack channel to start getting help from other engineers and/or notify your manager.
 
 ### Secondary and Tertiary Responsibilities
 
