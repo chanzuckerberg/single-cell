@@ -32,7 +32,7 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 
 **On Wednesday**:
 
-- Send a note to the #single-cell-ops Slack channel checking to make sure that engineers have had a chance to test the staging deployment. If you get a quorum of LGTMs, promote staging to prod.
+- Send a note to the #single-cell-ops Slack channel checking to make sure that engineers have had a chance to test the staging deployment from last week. If you get a quorum of LGTMs, promote `staging` to `prod`.
 - Let the channel know when the deployment is in progress and when it is complete. You are also responsible for rolling back to a working version and coordinating any fixes if the deployment fails.
 - Explorer
 
