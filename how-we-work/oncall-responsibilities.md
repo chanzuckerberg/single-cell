@@ -8,7 +8,7 @@ All engineers, both frontend and backend, will be on the on-call rotation to red
 
 ## Practice and Process
 
-An on-call rotation begins on Monday at 9am PST. Each week, there is a primary and secondary on-call engineer. You will get an email and Slack notification from PagerDuty (PagerDuty manages our on-call schedule) designating you as the on-call engineer. The manager will always be on tertiary on-call duty.
+An on-call rotation begins on Monday at 9am PT. Each week, there is a primary and secondary on-call engineer. You will get an email and Slack notification from PagerDuty (PagerDuty manages our on-call schedule) designating you as the on-call engineer. The manager will always be on tertiary on-call duty.
 
 ### Pre-Requisites
 
@@ -61,7 +61,7 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 - If the secondary on-call engineer is new, please pair-program to help them onboard onto the process. Include them when you do deployment and point out various issues to watch out for (i.e. incoming bugs, Sentry, etc.) so that they get an understand of what the role entails.
 - Watch the #single-cell-ops, #single-cell-eng, and #single-cell-data-wrangling Slack channels for any questions or issues reported by any engineers, PM, or our Curation team. Please triage these issues, notify the right person, and if appropriate file an issue to keep track of the bug. For high priority issues, especially ones that do not take too much time (< 1 day effort), please create the issue and pull it into the sprint to be worked on.
 - We use Infrastructure Engineering's in-house deployment of [sentry.io](https://sentry.prod.si.czi.technology/sci-sc/) for error aggregation. Keep an eye out on Sentry issues throughout the week, especially noting issues that pop up after the deployment in large quantities. This is likely a sign that there is a high priority bug that we need to address. Sentry can help you create Github issues to track these issues.
-- If there is an issue with the deployment or something happened this week that took down our application, please write a postmortem and add it to the postmortems section of this repo. Please also bring up the postmortem and any lessons during the Sprint Retrospective so that we can all learn!
+- Any ops incidents should be logged in the [oncall log](https://docs.google.com/document/d/1G2NTjXTJJeHyhqvnyzYmcO0Um24Ph0dCLUyMIWZvLfg/edit#) so we can learn from them. Please create tickets for any follow-up actions. For serious incidents with large user impact, please also write a postmortem and add it to the postmortems section of this repo. Follow up by sharing the postmortem and any lessons during the Sprint Retrospective so that we can all learn!
 - If you run into a potential security issue or product incident, need to rollback a deployment, or otherwise are running into some issues, please check out the the Incident Playbook (link to come!) to figure out next steps. If all else fails, please ping the #single-cell-eng Slack channel to start getting help from other engineers and/or notify your manager.
 
 ### Secondary and Tertiary Responsibilities
