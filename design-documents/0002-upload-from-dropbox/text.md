@@ -369,12 +369,14 @@ The statuses in the 200 response are enums defined in the [database](#database-s
 
 ##### conversion_status
 
-| Values     | Description                                                       |
-| ---------- | ----------------------------------------------------------------- |
-| Converting | The conversion script is running.                                 |
-| Converted  | Conversion completed and the file was copied to the DP bucket.    |
-| Failed     | Conversion failed.                                                |
-| NA         | Conversion is not being run because this was the uploaded format. |
+| Values     | Description                                                                               |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| Converting | The conversion script is running.                                                         |
+| Converted  | Conversion completed.                                                                     |
+| Uploading  | The file is being uploaded to the S3 artifact bucket                                      |
+| Uploaded   | File successfully uploaded to the S3 artifact bucket and the dataset artifact was updated |
+| Failed     | Conversion failed.                                                                        |
+| NA         | Conversion is not being run because this was the uploaded format.                         |
 
 ##### Processing Status and State
 
