@@ -30,7 +30,7 @@ Deployments for each repository/environment are performed either automatically o
 
 The principal responsibility of the primary on-call is to coordinate deployments on Wednesday (from `staging` to `prod`, 6 days after previous week's staging deploy of the same release), and Thursday (from `main` to `staging`). Both the cellxgene Data Portal and the cellxgene Explorer need to be deployed and require two different processes. On both days, please try to promote by 10am PT/1pm ET.
 
-The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#redeploying-the-application).
+The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#updating-the-application).
 
 **On Wednesday**:
 
