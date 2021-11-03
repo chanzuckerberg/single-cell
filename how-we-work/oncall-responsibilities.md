@@ -22,8 +22,8 @@ An on-call rotation begins on Monday at 9am PT/12pm ET. Each week, there is a pr
 
 Deployments for each repository/environment are performed either automatically or manually, as follows:
 
-| repo                    | dev                            | staging                                                                                  | prod                                                                                     | 
-| ----------------------- | ------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | 
+| repo                    | dev                            | staging                                                                                  | prod                                                                                     |
+| ----------------------- | ------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | single-cell-infra       | Auto-deployed by TFE upon PR merge | Auto-deployed upon TFE PR merge (excl. [explorer](https://github.com/chanzuckerberg/single-cell-infra/blob/a8d1a3cc5f36280de69f7250f4a6422a55d574fc/terraform/tfe/locals.tf.json#L21) infra) | Manually deployed via TFE plan confirmation |
 | single-cell-data-portal | Auto-deployed by TFE upon PR merge | Auto-deployed by Github Action upon PR merge | happy/script Deploy Manual |
 | single-cell-explorer    | Auto-deployed by Github Action upon PR merge | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Auto-deployed by Github Action upon PR merge (does not auto rebase off main) |
