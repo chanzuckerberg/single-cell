@@ -75,5 +75,5 @@ The secondary and tertiary on-call folks' responsibility is to act as backup if 
 - Our on-call process has been inspired by [Google's On-call Guidelines](https://landing.google.com/sre/workbook/chapters/on-call/)
 - [cellxgene Explorer Deployment Instructions](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application)
 - [cellxgene Data Portal Deployment Instructions](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#redeploying-the-application)
-- [Sentry.IO -- Prod Environment](https://sentry.prod.si.czi.technology/sci-sc/)
+- [Sentry.IO -- Prod Environment](https://sentry.prod.si.czi.technology/sci-sc/hosted-cellxgene/?environment=prod)
 - [PagerDuty - Hosted cellxgene](https://chanzuckerberg.pagerduty.com/service-directory/PA7RDSQ)
