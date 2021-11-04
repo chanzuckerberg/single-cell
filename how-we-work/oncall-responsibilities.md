@@ -8,7 +8,7 @@ All engineers, both frontend and backend, will be on the on-call rotation to red
 
 ## Practice and Process
 
-An on-call rotation begins on Monday at 9am PT. Each week, there is a primary and secondary on-call engineer. You will get an email and Slack notification from PagerDuty (PagerDuty manages our on-call schedule) designating you as the on-call engineer. The manager will always be on tertiary on-call duty.
+An on-call rotation begins on Monday at 9am PT/12pm ET. Each week, there is a primary and secondary on-call engineer. You will get an email and Slack notification from PagerDuty (PagerDuty manages our on-call schedule) designating you as the on-call engineer. The manager will always be on tertiary on-call duty.
 
 ### Pre-Requisites
 
@@ -20,15 +20,17 @@ An on-call rotation begins on Monday at 9am PT. Each week, there is a primary an
 
 ##### Deployment summary table
 
-|                   | dev                            | staging                                                                                  | prod                                                                                     | dev-canary                                                |
-| ----------------- | ------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| single-cell-infra | TFE auto                       | TFE auto                                                                                 | TFE manual                                                                               | TFE manual                                                |
-| data-portal       | Need to set up auto deployment | Github Action Auto Deploy                                                                | happy/script Deploy Manual                                                               | no deployment                                             |
-| explorer          | Github Action Auto Deploy      | single-cell-infra deploy script to kick off github action (also possible to run locally) | single-cell-infra deploy script to kick off github action (also possible to run locally) | Github Action Auto Deploy (does not auto rebase off main) |
+Deployments for each repository/environment are performed either automatically or manually, as follows:
 
-The principal responsibility of the primary on-call is to coordinate deployments on Wednesday (from `staging` to `prod`) and Thursday (from `main` to `staging`). Both the cellxgene Data Portal and the cellxgene Explorer need to be deployed and require two different processes. On both days, please try to promote by 1pm PST.
+| repo                    | dev                            | staging                                                                                  | prod                                                                                     |
+| ----------------------- | ------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| single-cell-infra       | Auto-deployed by TFE upon PR merge | Auto-deployed upon TFE PR merge (excl. [explorer](https://github.com/chanzuckerberg/single-cell-infra/blob/a8d1a3cc5f36280de69f7250f4a6422a55d574fc/terraform/tfe/locals.tf.json#L21) infra) | Manually deployed via TFE plan confirmation |
+| single-cell-data-portal | Auto-deployed by TFE upon PR merge | Auto-deployed by Github Action upon PR merge | happy/script Deploy Manual |
+| single-cell-explorer    | Auto-deployed by Github Action upon PR merge | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Auto-deployed by Github Action upon PR merge (does not auto rebase off main) |
 
-The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#redeploying-the-application).
+The principal responsibility of the primary on-call is to coordinate deployments on Wednesday (from `staging` to `prod`, 6 days after previous week's staging deploy of the same release), and Thursday (from `main` to `staging`). Both the cellxgene Data Portal and the cellxgene Explorer need to be deployed and require two different processes. On both days, please try to promote by 10am PT/1pm ET.
+
+The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#updating-the-application).
 
 **On Wednesday**:
 
@@ -56,15 +58,15 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
   - Please follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application).
   - Please manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
 
-#### Other responsibilities
+### Other responsibilities
 
-- If the secondary on-call engineer is new, please pair-program to help them onboard onto the process. Include them when you do deployment and point out various issues to watch out for (i.e. incoming bugs, Sentry, etc.) so that they get an understand of what the role entails.
-- Watch the #single-cell-ops, #single-cell-eng, and #single-cell-data-wrangling Slack channels for any questions or issues reported by any engineers, PM, or our Curation team. Please triage these issues, notify the right person, and if appropriate file an issue to keep track of the bug. For high priority issues, especially ones that do not take too much time (< 1 day effort), please create the issue and pull it into the sprint to be worked on.
+- If the secondary on-call engineer is new, please pair-program to help them onboard onto the process. Include them when you do deployment and point out various issues to watch out for (i.e. incoming bugs, Sentry, etc.) so that they get an understanding of what the role entails.
+- Watch the [#single-cell-ops](https://czi-sci.slack.com/archives/C0244PQK934), [#single-cell-eng](https://czi-sci.slack.com/archives/C023Q1APASK), and [#single-cell-data-wrangling](https://czi-sci.slack.com/archives/C024HCSH9PT) Slack channels for any questions or issues reported by any engineers, PM, or our Curation team. Please triage these issues, notify the right person, and if appropriate file an issue to keep track of the bug. For high priority issues, especially ones that do not take too much time (< 1 day effort), please create the issue and pull it into the sprint to be worked on.
 - We use Infrastructure Engineering's in-house deployment of [sentry.io](https://sentry.prod.si.czi.technology/sci-sc/) for error aggregation. Keep an eye out on Sentry issues throughout the week, especially noting issues that pop up after the deployment in large quantities. This is likely a sign that there is a high priority bug that we need to address. Sentry can help you create Github issues to track these issues.
 - Any ops incidents should be logged in the [oncall log](https://docs.google.com/document/d/1G2NTjXTJJeHyhqvnyzYmcO0Um24Ph0dCLUyMIWZvLfg/edit#) so we can learn from them. Please create tickets for any follow-up actions. For serious incidents with large user impact, please also write a postmortem and add it to the postmortems section of this repo. Follow up by sharing the postmortem and any lessons during the Sprint Retrospective so that we can all learn!
 - If you run into a potential security issue or product incident, need to rollback a deployment, or otherwise are running into some issues, please check out the the Incident Playbook (link to come!) to figure out next steps. If all else fails, please ping the #single-cell-eng Slack channel to start getting help from other engineers and/or notify your manager.
 
-### Secondary and Tertiary Responsibilities
+### Responsibilities for Secondary and Tertiary On-Call Engineers
 
 The secondary and tertiary on-call folks' responsibility is to act as backup if the primary on-call engineer is unable to attend to an issue for any reason. For incidents, PagerDuty will automatically escalate to secondary if there is no acknowledgement from primary after 10 minutes and then to tertiary if there is no acknowledgement from secondary after 30 minutes.
 
@@ -72,5 +74,6 @@ The secondary and tertiary on-call folks' responsibility is to act as backup if 
 
 - Our on-call process has been inspired by [Google's On-call Guidelines](https://landing.google.com/sre/workbook/chapters/on-call/)
 - [cellxgene Explorer Deployment Instructions](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application)
-- [cellxgene Data Portal Deployment Instructions](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#redeploying-the-application)
-- [Sentry.IO -- Prod Environment](https://sentry.prod.si.czi.technology/sci-sc/)
+- [cellxgene Data Portal Deployment Instructions](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#updating-the-application)
+- [Sentry.IO -- Prod Environment](https://sentry.prod.si.czi.technology/sci-sc/hosted-cellxgene/?environment=prod)
+- [PagerDuty - Hosted cellxgene](https://chanzuckerberg.pagerduty.com/service-directory/PA7RDSQ)
