@@ -65,7 +65,6 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
   - Manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
   - Move [Zenhub Board](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/board?repos=105615409,228681195,245246384,280546849,313382406,397736859,383621589,379763149&showPipelineDescriptions=false) issues from the "Ready for Staging" state to "Ready for QA".
 
-
 ### Other responsibilities
 
 - If the secondary on-call engineer is new, please pair-program to help them onboard onto the process. Include them when you do deployment and point out various issues to watch out for (i.e. incoming bugs, Sentry, etc.) so that they get an understanding of what the role entails.
