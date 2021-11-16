@@ -30,7 +30,7 @@ Deployments for each repository/environment are performed either automatically o
 
 The principal responsibility of the primary on-call is to coordinate deployments on Wednesday (from `staging` to `prod`, 6 days after previous week's staging deploy of the same release), and Thursday (from `main` to `staging`). Both the cellxgene Data Portal and the cellxgene Explorer need to be deployed and require two different processes. On both days, please try to promote by 10am PT/1pm ET.
 
-The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#updating-the-application).
+The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#deploying-the-data-portal-application).
 
 **On Wednesday - Production Deployment**:
 
@@ -45,7 +45,7 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 
 - Data Portal
 
-  - Follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#updating-the-application).
+  - Follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#deploying-the-data-portal-application).
   - Manually test that the [Data Portal](https://cellxgene.cziscience.com/) is available and opens a the cellxgene Explorer. Do NOT add new collections or upload datasets (this is prod env).
 
 - Once the deployment is in progress, let the team know in the same channel and also notify when the deployment is complete. Please include a quick note on the key new features/bug fixes for the team to help test. If the deployment fails, coordinate the fix.
