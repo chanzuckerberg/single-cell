@@ -35,8 +35,8 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 **On Wednesday - Production Deployment**:
 
 - At the beginning of the day, post a Slack message to `@sc-eng` team in the  #single-cell-ops channel to confirm whether the state of the [Zenhub Board](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/board?repos=105615409,228681195,245246384,280546849,313382406,397736859,383621589,379763149&showPipelineDescriptions=false):
-    - Are all issues in the `Ready for Prod` state ready to be deployed to production? (they should be!)
-    - Are any issues in the `Ready for QA` state already tested and ready for Prod? If not, pause the prompt the team to test. If so, update issues as needed.
+  - Are all issues in the `Ready for Prod` state ready to be deployed to production? (they should be!)
+  - Are any issues in the `Ready for QA` state already tested and ready for Prod? If not, pause the prompt the team to test. If so, update issues as needed.
 - Let the channel know when the deployment is in progress and when it is complete. You are also responsible for rolling back to a working version and coordinating any fixes if the deployment fails.
 - Explorer
 
@@ -54,9 +54,9 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 **On Thursday - Staging Deployment**:
 
 - At the beginning of the day, post a Slack message to `@sc-eng` team in the  #single-cell-ops channel to confirm whether the state of the [Zenhub Board](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/board?repos=105615409,228681195,245246384,280546849,313382406,397736859,383621589,379763149&showPipelineDescriptions=false):
-    - Are all issues in the `Ready for Staging` state ready to be deployed to staging?  (they should be!)
-    - Are any issues in the `In Progress` state in fact completed and merged to the `main` branch? (Update issues states, as needed)
-    - Are any issues in the `In Progress` state nearly complete and worth waiting on?
+  - Are all issues in the `Ready for Staging` state ready to be deployed to staging?  (they should be!)
+  - Are any issues in the `In Progress` state in fact completed and merged to the `main` branch? (Update issues states, as needed)
+  - Are any issues in the `In Progress` state nearly complete and worth waiting on?
 - Once the deployment is in progress, let the team know in the same channel and also notify when the deployment is complete. Please write a quick note on the key new features/bug fixes for the engineering team to help test on staging. If the deployment fails, coordinate the fix.
 - Data Portal
   - Continuous deployment is enabled in staging for the Data Portal, no further action is required to update.
