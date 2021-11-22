@@ -25,38 +25,45 @@ Deployments for each repository/environment are performed either automatically o
 | repo                    | dev                            | staging                                                                                  | prod                                                                                     |
 | ----------------------- | ------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | single-cell-infra       | Auto-deployed by TFE upon PR merge | Auto-deployed upon TFE PR merge (excl. [explorer](https://github.com/chanzuckerberg/single-cell-infra/blob/a8d1a3cc5f36280de69f7250f4a6422a55d574fc/terraform/tfe/locals.tf.json#L21) infra) | Manually deployed via TFE plan confirmation |
-| single-cell-data-portal | Auto-deployed by TFE upon PR merge | Auto-deployed by Github Action upon PR merge | happy/script Deploy Manual |
-| single-cell-explorer    | Auto-deployed by Github Action upon PR merge | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Auto-deployed by Github Action upon PR merge (does not auto rebase off main) |
+| single-cell-data-portal | Auto-deployed by Github Action upon PR merge on to `main` | Manually deployed by happy/script | Manually deployed by happy/script |
+| single-cell-explorer    | Auto-deployed by Github Action upon PR merge on to `main` | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Auto-deployed by Github Action upon PR merge (does not auto rebase off main) |
 
 The principal responsibility of the primary on-call is to coordinate deployments on Wednesday (from `staging` to `prod`, 6 days after previous week's staging deploy of the same release), and Thursday (from `main` to `staging`). Both the cellxgene Data Portal and the cellxgene Explorer need to be deployed and require two different processes. On both days, please try to promote by 10am PT/1pm ET.
 
-The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#updating-the-application).
+The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application). The instructions to deploy `corpora-data-portal` (a.k.a. cellxgene Data Portal) can be found [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#deploying-the-data-portal-application).
 
-**On Wednesday**:
+**On Wednesday - Production Deployment**:
 
-- Send a note to the #single-cell-ops Slack channel checking to make sure that engineers have had a chance to test the staging deployment from last week. If you get a quorum of LGTMs, promote `staging` to `prod`.
+- At the beginning of the day, post a Slack message to `@sc-eng` team in the  #single-cell-ops channel to confirm whether the state of the [Zenhub Board](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/board?repos=105615409,228681195,245246384,280546849,313382406,397736859,383621589,379763149&showPipelineDescriptions=false):
+  - Are all issues in the `Ready for Prod` state ready to be deployed to production? (they should be!)
+  - Are any issues in the `Ready for QA` state already tested and ready for Prod? If not, pause the prompt the team to test. If so, update issues as needed.
 - Let the channel know when the deployment is in progress and when it is complete. You are also responsible for rolling back to a working version and coordinating any fixes if the deployment fails.
 - Explorer
 
-  - Please follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application).
-  - Please manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
+  - Follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application).
+  - Manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
 
 - Data Portal
 
-  - Note that the name of the image includes the sha of the commit it was built off of.
-  - To deploy the data portal by kicking off a github action, you will need to [create a GITHUB_TOKEN](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) with access to the corpora-data-portal repo (specifically the permission scope will need to include, admin:repo_hook, repo, workflow). Save the token as an environmental variable (GITHUB_TOKEN) in your terminal and enable SSO for it through github.
+  - Follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#deploying-the-data-portal-application).
+  - Manually test that the [Data Portal](https://cellxgene.cziscience.com/) is available and opens a the cellxgene Explorer. Do NOT add new collections or upload datasets (this is prod env).
 
 - Once the deployment is in progress, let the team know in the same channel and also notify when the deployment is complete. Please include a quick note on the key new features/bug fixes for the team to help test. If the deployment fails, coordinate the fix.
+- Move [Zenhub Board](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/board?repos=105615409,228681195,245246384,280546849,313382406,397736859,383621589,379763149&showPipelineDescriptions=false) issues from the "Ready for Prod" state to "Closed".
 
-**On Thursday**:
+**On Thursday - Staging Deployment**:
 
-- Send a note to the #single-cell-ops Slack channel to see if there are any PRs that you should wait on before the `main` to `staging` push.
+- At the beginning of the day, post a Slack message to `@sc-eng` team in the  #single-cell-ops channel to confirm whether the state of the [Zenhub Board](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/board?repos=105615409,228681195,245246384,280546849,313382406,397736859,383621589,379763149&showPipelineDescriptions=false):
+  - Are all issues in the `Ready for Staging` state ready to be deployed to staging?  (they should be!)
+  - Are any issues in the `In Progress` state in fact completed and merged to the `main` branch? (Update issues states, as needed)
+  - Are any issues in the `In Progress` state nearly complete and worth waiting on?
 - Once the deployment is in progress, let the team know in the same channel and also notify when the deployment is complete. Please write a quick note on the key new features/bug fixes for the engineering team to help test on staging. If the deployment fails, coordinate the fix.
 - Data Portal
-  - Continuous deployment is enabled in staging for the data portal, no further action is required to update.
+  - Follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/corpora#deploying-the-data-portal-application).
 - Explorer
-  - Please follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application).
-  - Please manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
+  - Follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application).
+  - Manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
+  - Move [Zenhub Board](https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/board?repos=105615409,228681195,245246384,280546849,313382406,397736859,383621589,379763149&showPipelineDescriptions=false) issues from the "Ready for Staging" state to "Ready for QA".
 
 ### Other responsibilities
 
