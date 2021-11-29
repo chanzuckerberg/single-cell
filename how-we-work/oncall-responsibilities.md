@@ -27,6 +27,7 @@ Deployments for each repository/environment are performed either automatically o
 | single-cell-infra       | Auto-deployed by TFE upon PR merge | Auto-deployed upon TFE PR merge (excl. [explorer](https://github.com/chanzuckerberg/single-cell-infra/blob/a8d1a3cc5f36280de69f7250f4a6422a55d574fc/terraform/tfe/locals.tf.json#L21) infra) | Manually deployed via TFE plan confirmation |
 | single-cell-data-portal | Auto-deployed by Github Action upon PR merge on to `main` | Manually deployed by happy/script | Manually deployed by happy/script |
 | single-cell-explorer    | Auto-deployed by Github Action upon PR merge on to `main` | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Manually deployed via single-cell-infra deploy script that runs Github Action (can also run locally) | Auto-deployed by Github Action upon PR merge (does not auto rebase off main) |
+single-cell-curation (cellxgene-schema) | n/a | [manual](https://github.com/chanzuckerberg/single-cell-curation/blob/main/docs/release_process.md), if needed | manual, if needed
 
 The principal responsibility of the primary on-call is to coordinate deployments on Wednesday (from `staging` to `prod`, 6 days after previous week's staging deploy of the same release), and Thursday (from `main` to `staging`). Both the cellxgene Data Portal and the cellxgene Explorer need to be deployed and require two different processes. On both days, please try to promote by 10am PT/1pm ET.
 
