@@ -42,7 +42,7 @@ The instructions to deploy `hosted-cellxgene` (a.k.a. cellxgene Explorer) can be
 - Explorer
 
   - Follow the deployment instructions [here](https://github.com/chanzuckerberg/single-cell-infra/tree/main/terraform/modules/hosted-cellxgene#redeploying-the-application).
-  - Manually test the cellxgene Explorer deployment, walking through the test cases in [this doc](https://docs.google.com/document/d/1nHdd8cDlmauv27oEemlMy_mEa0Dw7UMCp-w50IhNuK0/edit).
+  - Manually test the cellxgene Explorer deployment, walking through these [test cases](https://docs.google.com/spreadsheets/d/1H8Pr6ZRLiGA7cFNZJvM5LFgD3os4Ixl4RsXJE6O0aQ8/edit#gid=381795618).
 
 - Data Portal
 
