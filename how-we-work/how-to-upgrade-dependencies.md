@@ -50,13 +50,13 @@ You can also make use of the [Snyk reports](https://app.snyk.io/org/cellxgene) t
 
 Finally, besides the `pip` installed packages, please also take a look at the Dockerfile (in the top level directory `cellxgene/Dockerfile`) to ensure that there are no security vulnerabilities there. Snyk is your friend to figure out if there are and what the remediation process is.
 
-### Upgrading cellxgene Explorer desktop backend
+### Upgrading cellxgene (desktop) backend
 
-The policy we have to upgrade the backend of cellxgene Explorer _desktop_ is different than any of the other policies. Because many users may have different versions of the dependent `pip` packages already installed on their laptop, and because many users do not use a virtual environment, we need to be _as permissive as possible_ when defining what the allowable versions of each package are.
+The policy we have to upgrade the backend of cellxgene _desktop_ is different than any of the other policies. Because many users may have different versions of the dependent `pip` packages already installed on their laptop, and because many users do not use a virtual environment, we need to be _as permissive as possible_ when defining what the allowable versions of each package are.
 
 This means that the allowable versions we set for each package:
 
-1. SHOULD be the minimum version that is functionally compatible and includes no medium or high security risks.
+1. SHOULD be the minimum version that is functionally compatible and includes no medium or high security risks (low risk can be ignored).
 
 1. MAY exclude specific versions that have medium or high security vulnerabilities if the specification is easier (e.g. `foo>=1.9.0,!=2.0.0`).
 
@@ -70,7 +70,7 @@ To update the `pip` packages for cellxgene Explorer desktop backend, we recommen
 
 1. Run `safety`: `python -m safety check --full-report`
 
-1. Update requirements as indicated, goto step 2 again.  Repeat until clean.
+1. Update requirements as indicated, goto step 2 again.  Repeat until clean. NB: `safety` reports _all_ vulnerabilities, including low-risk ones for which we should not update the dependency. You will need to check each one against the [Snyk database](https://security.snyk.io/) to get its severity level.
 
 1. Check that cellxgene still works :)
 
