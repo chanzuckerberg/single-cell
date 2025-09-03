@@ -19,7 +19,7 @@
   "devDependencies": {
     "husky": "^4.2.5",
     "lint-staged": "^10.2.11",
-    "markdownlint": "^0.20.4",
+    "markdownlint": "^0.38.0",
     "prettier": "^2.0.5"
   },
   "husky": {
@@ -35,6 +35,6 @@
     ]
   },
   "dependencies": {
-    "markdownlint-cli": "^0.23.2"
+    "markdownlint-cli": "^0.45.0"
   }
 }
